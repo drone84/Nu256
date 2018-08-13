@@ -1,0 +1,32 @@
+00001  0000               SUPERCPU 
+00002  0001               LONGA      ON
+00003  0001               LONGI      ON
+00004  0001               *          = $C000
+00005  C000               START
+00006  C000               ; SWITCH TO NATIVE MODE
+00007  C000               LONGA      OFF
+00008  C000  18                      CLC           ; CLEAR THE CARRY FLAG
+00009  C001  FB                      XCE           ; MOVE CARRY TO EMULATION FLAG.
+00010  C002  C2 30                   REP #$30      ; SET 16-BIT ACCUMULATOR/MEMORY AND 16-BIT INDEX REGISTERS
+00011  C004               LONGA      ON
+00012  C004  A9 00 00                LDA #$0000
+00013  C007  A9 80 00                LDA #$0080
+00014  C00A  A9 00 80                LDA #$8000
+00015  C00D  A2 00 00                LDX #$0000
+00016  C010  A2 00 80                LDX #$8000
+00017  C013  A0 34 12                LDY #$1234
+00018  C016               LONGI      OFF
+00019  C016               LONGA      OFF
+00020  C016  E2 30                   SEP #$30      ; SET 16-BIT ACCUMULATOR/MEMORY AND 16-BIT INDEX REGISTERS
+00021  C018  A2 00                   LDX #$00
+00022  C01A  A2 80                   LDX #$80
+00023  C01C               ; SWITCH BACK TO EMULATED MODE
+00024  C01C  38                      SEC           ; SET THE CARRY FLAG
+00025  C01D  FB                      XCE           ; AND SWITCH BACK TO EMULATED MODE
+00026  C01E  00                      BRK
+00027  C01F               
+
+******* 1 Label(s) *******
+start = $C000
+
+******* 0 Variable(s) *******

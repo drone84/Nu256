@@ -1,0 +1,24 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Nu64
+{
+    /// <summary>
+    ///  base class for I/O device. 
+    /// </summary>
+    public class IODevice : IMappable
+    {
+        public byte ReadByte(int Address)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WriteByte(int Address, byte Data)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
