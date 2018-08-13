@@ -1,5 +1,5 @@
-# Nu64
-Nu64 virtual 65816 computer
+# Nu64 
+Nu64 Virtual Computer and 65816 Emulator
 
 This is a virtual WDC 65816 powered computer. It is intended to be used as a software devlopment tool and learning platform for assembly language and BASIC programming. The software will be relesed with an open soruce license and may be used for whatever purpose you want, including personal projects, education, and commercial use. 
 
