@@ -3,9 +3,13 @@ Nu256 virtual 65816 computer
 
 This is a virtual WDC 65816 powered computer. It is intended to be used as a software devlopment tool and learning platform for assembly language and BASIC programming. The software will be relesed with an open soruce license and may be used for whatever purpose you want, including personal projects, education, and commercial use. 
 
+Nu256 is owned by Tom Wilson. 
+
 # C256 Foenix
 
-This is designed to be a partner project to the [url=https://www.c256foenix.com/]C256 Foenix Computer[/url]. While it doesn't seek to perfectly reproduce the Foenix, it will replicate the proramming environment for the purposes of software development. 
+This is designed to be a partner project to the C256 Foenix Computer (https://www.c256foenix.com/). While it doesn't seek to perfectly reproduce the Foenix, it will replicate the proramming environment for the purposes of software development. 
+
+The C256 Foenix and its associated materials are owned by Stefany Allaire. 
 
 # License 
 Please see License.txt.
