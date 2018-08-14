@@ -22,7 +22,9 @@ namespace Nu64.Processor
         /// <summary>
         /// Currently executing opcode 
         /// </summary>
-        public byte Opcode = 0;
+        public byte Instruction = 0;
+        public OpCode OC = null;
+        public int SignatureBytes = 0;
 
         /// <summary>
         /// Length of the currently executing opcode
@@ -72,7 +74,7 @@ namespace Nu64.Processor
             this.opcodes = new OpcodeList(this.operations, this);
         }
 
-        public void Execute(int Address)
+        public void Start(int Address)
         {
             Halted = false;
             SetPC(Address);
@@ -81,13 +83,30 @@ namespace Nu64.Processor
 
         public void ExecuteNext()
         {
-            Opcode = GetNextOpcode();
-            DispatchInstruction(Opcode);
+            Instruction = GetNextInstruction();
+            Decode(Instruction);
+            OC.Execute(SignatureBytes);
             PC.Value += OpcodeLength;
             clockCyles += OpcodeCycles;
         }
 
-        private byte GetNextOpcode()
+        public void Decode(byte instruction)
+        {
+            OC = opcodes[Instruction];
+            OpcodeLength = OC.Length;
+            OpcodeCycles = 3;
+
+            int s = 0;
+            if (OC.Length == 2)
+                s = GetNextByte(0);
+            else if (OC.Length == 3)
+                s = GetNextWord(0);
+            else if (OC.Length == 4)
+                s = GetNextLong(0);
+            SignatureBytes = s;
+        }
+
+        private byte GetNextInstruction()
         {
             int address = GetLongPC();
             byte ret = Memory[address];
@@ -139,25 +158,10 @@ namespace Nu64.Processor
         /// to the number of CPU cycles used. 
         /// </summary>
         /// <param name="Opcode">Opcode to execute</param>
-        private void DispatchInstruction(byte opcodeByte)
+        private void Execute(byte opcodeByte)
         {
-            OpcodeLength = 0;
-            OpcodeCycles= 4;
 
-            // value to act on.
-            int val = 0;
-            int addr = 0;
-
-            Nu64.Processor.OpCode oc = opcodes[Opcode];
-            if (oc.Length == 2)
-                val = GetNextByte(0);
-            else if (oc.Length == 3)
-                val = GetNextWord(0);
-            else if (oc.Length == 4)
-                val = GetNextLong(0);
-
-            oc.Execute(val);
-
+            #region old Opcode Implementation
             //switch (Opcode)
             //{
             //    case 0x00: //BRK
@@ -344,9 +348,10 @@ namespace Nu64.Processor
             //        operations.OpNotImplemented();
             //        break;
             //}
+            #endregion
 
             if (OpcodeLength == 0)
-                throw new Exception("Instruction must be >0, got " + OpcodeLength.ToString());
+                throw new Exception("OpcodeLength must be >0, got " + OpcodeLength.ToString());
         }
 
         #region support routines
@@ -407,6 +412,126 @@ namespace Nu64.Processor
 
         #endregion
 
+        /// <summary>
+        /// Change execution to anohter address in the same bank
+        /// </summary>
+        /// <param name="addr"></param>
+        public void JumpShort(int addr)
+        {
+            PC.Value = addr;
+        }
 
+        /// <summary>
+        /// Change execution to a 24-bit address
+        /// </summary>
+        /// <param name="addr"></param>
+        public void JumpLong(int addr)
+        {
+            ProgramBank.Value = addr >> 16;
+            PC.Value = addr;
+        }
+
+        public void JumpVector(int VectorAddress)
+        {
+            int addr = Memory.ReadWord(VectorAddress);
+            ProgramBank.Value = 0;
+            PC.Value = addr;
+        }
+
+        public byte GetByte(int Value, int Offset)
+        {
+            if (Offset == 0)
+                return (byte)(Value & 0xff);
+            if (Offset == 1)
+                return (byte)(Value >> 8 & 0xff);
+            if (Offset == 2)
+                return (byte)(Value >> 16 & 0xff);
+
+            throw new Exception("Offset must be 0-2. Got " + Offset.ToString());
+        }
+
+        public void Push(int value, int bytes)
+        {
+            if (bytes < 1 || bytes > 3)
+                throw new Exception("bytes must be between 1 and 3. got " + bytes.ToString());
+
+            int address = Stack.Value;
+            Memory[address] = GetByte(value, 0);
+            if (bytes >= 2)
+                Memory[address - 1] = GetByte(value, 1);
+            if (bytes >= 3)
+                Memory[address - 2] = GetByte(value, 2);
+            Stack.Value -= bytes;
+        }
+
+        public void Push(Register Reg, int Offset)
+        {
+            Push(Reg.Value + Offset, Reg.Bytes);
+        }
+
+        public void Push(Register Reg)
+        {
+            Push(Reg.Value, Reg.Bytes);
+        }
+
+        public int Pop(int bytes)
+        {
+            if (bytes < 1 || bytes > 3)
+                throw new Exception("bytes must be between 1 and 3. got " + bytes.ToString());
+
+            Stack.Value += bytes;
+            int address = Stack.Value;
+            int ret = Memory[address - 1];
+            if (bytes >= 2)
+                ret = ret + Memory[address + 2] << 8;
+            if (bytes >= 3)
+                ret = ret + Memory[address + 3] << 16;
+
+            return ret;
+        }
+
+        public void PopInto(Register Register)
+        {
+            Register.Value = Pop(Register.Bytes);
+        }
+
+        public void Interrupt(InteruptTypes T)
+        {
+            if (!Flags.Emulation)
+                Push(ProgramBank);
+            Push(PC, 2);
+            Push(Flags);
+
+            int addr = MemoryMap_DirectPage.VECTOR_BRK;
+            int eaddr = MemoryMap_DirectPage.VECTOR_EBRK;
+            switch (T)
+            {
+                case InteruptTypes.ABORT:
+                    eaddr = MemoryMap_DirectPage.VECTOR_EABORT;
+                    addr = MemoryMap_DirectPage.VECTOR_ABORT;
+                    break;
+                case InteruptTypes.IRQ:
+                    eaddr = MemoryMap_DirectPage.VECTOR_EIRQ;
+                    addr = MemoryMap_DirectPage.VECTOR_IRQ;
+                    break;
+                case InteruptTypes.NMI:
+                    eaddr = MemoryMap_DirectPage.VECTOR_ENMI;
+                    addr = MemoryMap_DirectPage.VECTOR_NMI;
+                    break;
+                case InteruptTypes.RESET:
+                    eaddr = MemoryMap_DirectPage.VECTOR_ERESET;
+                    addr = MemoryMap_DirectPage.VECTOR_RESET;
+                    break;
+                case InteruptTypes.COP:
+                    eaddr = MemoryMap_DirectPage.VECTOR_ECOP;
+                    addr = MemoryMap_DirectPage.VECTOR_COP;
+                    break;
+            }
+
+            if (Flags.Emulation)
+                JumpVector(eaddr);
+            else
+                JumpVector(addr);
+        }
     }
 }

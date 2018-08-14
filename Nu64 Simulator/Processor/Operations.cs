@@ -19,78 +19,38 @@ namespace Nu64.Processor
             this.cpu = cPU;
         }
 
+        public void Reset()
+        {
+            cpu.A.Reset();
+            cpu.X.Reset();
+            cpu.Y.Reset();
+            cpu.Flags.Reset();
+            cpu.DataBank.Reset();
+            cpu.DirectPage.Reset();
+            cpu.ProgramBank.Reset();
+            cpu.PC.Reset();
+
+            cpu.PC.Value = cpu.Memory.ReadWord(MemoryMap_DirectPage.VECTOR_RESET);
+        }
+
         /// <summary>
-        /// This opcode is not implemented yet. Attempting to Execute it will crash the program. 
-        /// Call the kernel "abort with error message" routine. 
+        /// This opcode is not implemented yet. 
         /// </summary>
-        public void OpNotImplemented()
+        public void ExecuteAbort()
         {
-            cpu.Halted = true;
             cpu.OpcodeLength = 1;
-            cpu.OpcodeCycles = 3;
-            SystemLog.WriteLine(SystemLog.SeverityCodes.Recoverable, "Invalid Instruction (Not implemented.) CPU halted.");
-        }
+            cpu.OpcodeCycles = 1;
+            SystemLog.WriteLine(SystemLog.SeverityCodes.Recoverable, "Invalid Instruction (Not implemented.) Abort processed."
+                + "\r\nPC: " + cpu.ProgramBank.GetLongAddress(cpu.PC)
+                + "\r\ninstruction: " + cpu.OC.ToString());
 
-        public byte GetByte(int Value, int Offset)
-        {
-            if (Offset == 0)
-                return (byte)(Value & 0xff);
-            if (Offset == 1)
-                return (byte)(Value >> 8 & 0xff);
-            if (Offset == 2)
-                return (byte)(Value >> 16 & 0xff);
 
-            throw new Exception("Offset must be 0-2. Got " + Offset.ToString());
-        }
-
-        public void Push(int value, int bytes)
-        {
-            if (bytes < 1 || bytes > 3)
-                throw new Exception("bytes must be between 1 and 3. got " + bytes.ToString());
-
-            int address = cpu.Stack.Value;
-            cpu.Memory[address] = GetByte(value, 0);
-            if (bytes >= 2)
-                cpu.Memory[address - 1] = GetByte(value, 1);
-            if (bytes >= 3)
-                cpu.Memory[address - 2] = GetByte(value, 2);
-            cpu.Stack.Value -= bytes;
-        }
-
-        public void Push(Register Reg, int Offset)
-        {
-            Push(Reg.Value + Offset, Reg.Bytes);
-        }
-
-        public void Push(Register Reg)
-        {
-            Push(Reg.Value, Reg.Bytes);
-        }
-
-        public int Pull(int bytes)
-        {
-            if (bytes < 1 || bytes > 3)
-                throw new Exception("bytes must be between 1 and 3. got " + bytes.ToString());
-
-            cpu.Stack.Value += bytes;
-            int address = cpu.Stack.Value;
-            int ret = cpu.Memory[address - 1];
-            if (bytes >= 2)
-                ret = ret + cpu.Memory[address + 2] << 8;
-            if (bytes >= 3)
-                ret = ret + cpu.Memory[address + 3] << 16;
-
-            return ret;
-        }
-
-        public void Pull(Register Register)
-        {
-            Register.Value = Pull(Register.Bytes);
+            cpu.Halted = true;
         }
 
         public void OpORA(int val)
         {
-            if (cpu.A.Length == Register.BitLengthEnum.Bits8)
+            if (cpu.A.Width == Register.BitWidthEnum.Bits8)
                 val = val & 0xff;
 
             cpu.A.Value = cpu.A.Value | val;
@@ -117,6 +77,11 @@ namespace Nu64.Processor
         public sbyte MakeSignedByte(byte b)
         {
             return (sbyte)b;
+        }
+
+        public Int16 MakeSignedInt(UInt16 b)
+        {
+            return (Int16)b;
         }
 
         public Int16 MakeSignedWord(UInt16 b)
@@ -147,13 +112,13 @@ namespace Nu64.Processor
                     return GetAbsolute(signatureBytes, cpu.DataBank);
                 case AddressModes.AbsoluteLong:
                     return GetAbsoluteLong(signatureBytes);
-                case AddressModes.AbsoluteIndirect:
+                case AddressModes.JmpAbsoluteIndirect:
                     // JMP (addr)
                     return GetAbsoluteIndirectAddress(signatureBytes, cpu.ProgramBank);
-                case AddressModes.AbsoluteIndirectLong:
+                case AddressModes.JmpAbsoluteIndirectLong:
                     // JMP [addr] - jumps to a 24-bit address pointed to by addr in direct page.
                     return GetAbsoluteIndirectAddressLong(signatureBytes);
-                case AddressModes.AbsoluteIndexedIndirectWithX:
+                case AddressModes.JmpAbsoluteIndexedIndirectWithX:
                     // JMP (addr,X)
                     return GetJumpAbsoluteIndexedIndirect(signatureBytes, cpu.ProgramBank, cpu.X);
                 case AddressModes.AbsoluteIndexedWithX:
@@ -206,7 +171,7 @@ namespace Nu64.Processor
                     throw new NotImplementedException();
                     break;
             }
-            return 0;
+            return signatureBytes;
         }
 
         private int GetDirectIndirect(int Address)
@@ -346,26 +311,16 @@ namespace Nu64.Processor
             cpu.OpcodeLength = 2;
             cpu.OpcodeCycles = 8;
 
-            if (!cpu.Flags.Emulation)
-                Push(cpu.K);
-            Push(cpu.PC, 2);
-            Push(cpu.P);
-
-            int vector = MemoryMap_DirectPage.VECTOR_BRK;
-
-            if (cpu.Flags.Emulation)
+            switch (instruction)
             {
-                if (instruction == 0x00) // BRK
-                    cpu.PC.Value = MemoryMap_DirectPage.VECTOR_EBRK;
-                else if (instruction == 0x02) // COP
-                    cpu.PC.Value = MemoryMap_DirectPage.VECTOR_ECOP;
-            }
-            else
-            {
-                if (instruction == 0x00) // BRK
-                    cpu.PC.Value = MemoryMap_DirectPage.VECTOR_BRK;
-                else if (instruction == 0x02) // COP
-                    cpu.PC.Value = MemoryMap_DirectPage.VECTOR_COP;
+                case OpcodeList.BRK_Interrupt:
+                    cpu.Interrupt(InteruptTypes.BRK);
+                    break;
+                case OpcodeList.COP_Interrupt:
+                    cpu.Interrupt(InteruptTypes.COP);
+                    break;
+                default:
+                    throw new NotImplementedException("Unknown opcode for ExecuteInterrupt: " + instruction.ToString("X2"));
             }
         }
 
@@ -393,14 +348,43 @@ namespace Nu64.Processor
         {
             switch (instruction)
             {
-                case 0x18: //CLC
+                case OpcodeList.CLC_Implied:
                     cpu.Flags.Carry = false;
                     break;
-                case 0x38: //SEC
+                case OpcodeList.SEC_Implied:
                     cpu.Flags.Carry = true;
                     break;
+                case OpcodeList.CLD_Implied:
+                    cpu.Flags.Decimal = false;
+                    break;
+                case OpcodeList.SED_Implied:
+                    cpu.Flags.Decimal = true;
+                    break;
+                case OpcodeList.CLI_Implied:
+                    cpu.Flags.Irqdisable = false;
+                    break;
+                case OpcodeList.SEI_Implied:
+                    cpu.Flags.Irqdisable = true;
+                    break;
+                case OpcodeList.CLV_Implied:
+                    cpu.Flags.oVerflow = false;
+                    break;
+                case OpcodeList.REP_Immediate:
+                    // reset (clear) flag bits that are 1 in the argument
+                    // do this by flipping the argument bits, then ANDing 
+                    // them to the flag bits 
+                    int flip = signature ^ 0xff;
+                    cpu.Flags.Value = cpu.Flags.Value & flip;
+                    break;
+                case OpcodeList.SEP_Immediate:
+                    // set flag bits that are 1 in the argument. 
+                    cpu.Flags.Value = cpu.Flags.Value | signature;
+                    break;
+                case OpcodeList.XCE_Implied:
+                    cpu.Flags.SwapCE();
+                    break;
                 default:
-                    throw new NotImplementedException("Unknown opcode for ExecuteStatusReg: " + instruction.ToString());
+                    throw new NotImplementedException("Unknown opcode for ExecuteStatusReg: " + instruction.ToString("X2"));
             }
 
             cpu.SyncFlags();
@@ -409,7 +393,7 @@ namespace Nu64.Processor
         public void ExecuteINCDEC(byte instruction, AddressModes addressMode, int signature)
         {
             byte bval = (byte)GetData(addressMode, signature);
-            int addr = GetAddress(addressMode, signature);
+            int addr = GetAddress(addressMode, signature, cpu.DataBank);
 
             switch (instruction)
             {
@@ -423,7 +407,7 @@ namespace Nu64.Processor
                 case OpcodeList.DEC_AbsoluteIndexedWithX:
                     bval--;
                     cpu.Memory.WriteByte(addr, bval);
-                    cpu.Flags.SetNZ(bval, Register.BitLengthEnum.Bits8);
+                    cpu.Flags.SetNZ(bval, Register.BitWidthEnum.Bits8);
                     break;
 
                 case OpcodeList.INC_Accumulator:
@@ -437,7 +421,7 @@ namespace Nu64.Processor
                     addr = cpu.DirectPage.GetLongAddress(addr);
                     bval++;
                     cpu.Memory.WriteByte(addr, bval);
-                    cpu.Flags.SetNZ(bval, Register.BitLengthEnum.Bits8);
+                    cpu.Flags.SetNZ(bval, Register.BitWidthEnum.Bits8);
                     break;
 
                 case OpcodeList.DEX_Implied:
@@ -463,86 +447,188 @@ namespace Nu64.Processor
 
         }
 
-        private int GetAddress(AddressModes addressMode, int SignatureBytes)
+        private int GetAddress(AddressModes addressMode, int SignatureBytes, RegisterBankNumber Bank)
         {
             int addr = 0;
             int ptr = 0;
             switch (addressMode)
             {
                 case AddressModes.Absolute:
-                    return cpu.DataBank.GetLongAddress(SignatureBytes);
+                    return Bank.GetLongAddress(SignatureBytes);
                 case AddressModes.AbsoluteLong:
                     return SignatureBytes;
-                case AddressModes.AbsoluteIndirect:
-                    addr = cpu.DirectPage.GetLongAddress(SignatureBytes);
-                    ptr = cpu.Memory.ReadWord(addr);
-                    return cpu.ProgramBank.GetLongAddress(ptr);
-                case AddressModes.AbsoluteIndirectLong:
-                    addr = cpu.DirectPage.GetLongAddress(SignatureBytes);
-                    ptr = cpu.Memory.ReadLong(addr);
-                    return ptr;
-                case AddressModes.AbsoluteIndexedIndirectWithX:
-                    break;
                 case AddressModes.AbsoluteIndexedWithX:
-                    return cpu.DataBank.GetLongAddress(SignatureBytes + cpu.X.Value);
+                    return Bank.GetLongAddress(SignatureBytes + cpu.X.Value);
                 case AddressModes.AbsoluteLongIndexedWithX:
-                    break;
+                    return SignatureBytes + cpu.X.Value;
                 case AddressModes.AbsoluteIndexedWithY:
-                    break;
+                    return SignatureBytes + cpu.Y.Value;
                 case AddressModes.AbsoluteLongIndexedWithY:
-                    break;
+                    return Bank.GetLongAddress(SignatureBytes + cpu.X.Value);
                 case AddressModes.DirectPage:
                     return cpu.DirectPage.GetLongAddress(SignatureBytes);
                 case AddressModes.DirectPageIndexedWithX:
                     return cpu.DirectPage.GetLongAddress(SignatureBytes + cpu.X.Value);
                 case AddressModes.DirectPageIndexedWithY:
-                    break;
+                    return cpu.DirectPage.GetLongAddress(SignatureBytes + cpu.Y.Value);
                 case AddressModes.DirectPageIndexedIndirectWithX:
-                    break;
+                    addr = cpu.DirectPage.GetLongAddress(SignatureBytes) + cpu.X.Value;
+                    ptr = cpu.Memory.ReadWord(addr);
+                    return cpu.ProgramBank.GetLongAddress(ptr);
                 case AddressModes.DirectPageIndirect:
-                    break;
+                    addr = cpu.DirectPage.GetLongAddress(SignatureBytes);
+                    ptr = cpu.Memory.ReadWord(addr);
+                    return cpu.ProgramBank.GetLongAddress(ptr);
                 case AddressModes.DirectPageIndirectIndexedWithY:
-                    break;
+                    addr = cpu.DirectPage.GetLongAddress(SignatureBytes);
+                    ptr = cpu.Memory.ReadWord(addr) + cpu.Y.Value;
+                    return cpu.ProgramBank.GetLongAddress(ptr);
                 case AddressModes.DirectPageIndirectLong:
-                    break;
+                    addr = cpu.DirectPage.GetLongAddress(SignatureBytes);
+                    ptr = cpu.Memory.ReadLong(addr);
+                    return cpu.ProgramBank.GetLongAddress(ptr);
                 case AddressModes.DirectPageIndirectLongIndexedWithY:
-                    break;
+                    addr = cpu.DirectPage.GetLongAddress(SignatureBytes);
+                    ptr = cpu.Memory.ReadLong(addr) + cpu.Y.Value;
+                    return cpu.ProgramBank.GetLongAddress(ptr);
                 case AddressModes.ProgramCounterRelative:
-                    break;
+                    ptr = MakeSignedByte((byte)SignatureBytes);
+                    addr = cpu.PC.Value + ptr;
+                    return addr;
                 case AddressModes.ProgramCounterRelativeLong:
-                    break;
+                    ptr = MakeSignedInt((UInt16)SignatureBytes);
+                    addr = cpu.PC.Value + ptr;
+                    return addr;
                 case AddressModes.StackImplied:
-                    break;
                 case AddressModes.StackAbsolute:
-                    break;
+                    return 0;
                 case AddressModes.StackDirectPageIndirect:
-                    break;
+                    return cpu.DirectPage.GetLongAddress(SignatureBytes);
                 case AddressModes.StackRelative:
-                    break;
+                    return cpu.Stack.Value + SignatureBytes;
                 case AddressModes.StackRelativeIndirectIndexedWithY:
-                    break;
+                    return cpu.Stack.Value + SignatureBytes + cpu.Y.Value;
                 case AddressModes.StackProgramCounterRelativeLong:
-                    break;
+                    return SignatureBytes;
+
+                // Jump and JSR indirect references vectors located in Bank 0
+                case AddressModes.JmpAbsoluteIndirect:
+                    addr = SignatureBytes;
+                    ptr = cpu.Memory.ReadWord(addr);
+                    return cpu.ProgramBank.GetLongAddress(ptr);
+                case AddressModes.JmpAbsoluteIndirectLong:
+                    addr = SignatureBytes;
+                    ptr = cpu.Memory.ReadLong(addr);
+                    return ptr;
+                case AddressModes.JmpAbsoluteIndexedIndirectWithX:
+                    addr = SignatureBytes + cpu.X.Value;
+                    ptr = cpu.Memory.ReadWord(addr);
+                    return cpu.ProgramBank.GetLongAddress(ptr);
+
                 default:
-                    break;
+                    throw new NotImplementedException("GetAddress() Address mode not implemented: " + addressMode.ToString());
             }
-            throw new NotImplementedException("GetAddress() Address mode not implemented: " + addressMode.ToString());
         }
 
         public void ExecuteTransfer(byte instruction, AddressModes addressMode, int signature)
         {
+            switch (instruction)
+            {
+                case OpcodeList.TCD_Implied:
+                    cpu.DirectPage.Value = cpu.A.Value16;
+                    break;
+                case OpcodeList.TDC_Implied:
+                    cpu.A.Value16 = cpu.DirectPage.Value;
+                    break;
+                case OpcodeList.TCS_Implied:
+                    cpu.Stack.Value = cpu.A.Value16;
+                    break;
+                case OpcodeList.TSC_Implied:
+                    cpu.A.Value16 = cpu.Stack.Value;
+                    break;
+                case OpcodeList.TAX_Implied:
+                    cpu.X.Value = cpu.A.Value16;
+                    break;
+                case OpcodeList.TAY_Implied:
+                    cpu.Y.Value = cpu.A.Value16;
+                    break;
+                case OpcodeList.TSX_Implied:
+                    cpu.X.Value = cpu.Stack.Value;
+                    break;
+                case OpcodeList.TXA_Implied:
+                    cpu.A.Value = cpu.X.Value;
+                    break;
+                case OpcodeList.TXS_Implied:
+                    cpu.Stack.Value = cpu.X.Value;
+                    break;
+                case OpcodeList.TXY_Implied:
+                    cpu.Y.Value = cpu.X.Value;
+                    break;
+                case OpcodeList.TYA_Implied:
+                    cpu.A.Value = cpu.Y.Value;
+                    break;
+                case OpcodeList.TYX_Implied:
+                    cpu.X.Value = cpu.Y.Value;
+                    break;
+                default:
+                    throw new NotImplementedException("ExecuteTransfer() opcode not implemented: " + instruction.ToString("X2"));
+            }
         }
 
         public void ExecuteJumpReturn(byte instruction, AddressModes addressMode, int signature)
         {
+            int addr = GetAddress(addressMode, signature, cpu.ProgramBank);
+            switch (instruction)
+            {
+                case OpcodeList.JSR_Absolute:
+                case OpcodeList.JSR_AbsoluteIndexedIndirectWithX:
+                    cpu.Push(cpu.PC);
+                    cpu.JumpShort(addr);
+                    return;
+                case OpcodeList.JSR_AbsoluteLong:
+                    cpu.Push(cpu.ProgramBank);
+                    cpu.Push(cpu.PC);
+                    cpu.JumpLong(addr);
+                    return;
+                case OpcodeList.JMP_Absolute:
+                case OpcodeList.JMP_AbsoluteLong:
+                case OpcodeList.JMP_AbsoluteIndirect:
+                case OpcodeList.JMP_AbsoluteIndexedIndirectWithX:
+                case OpcodeList.JMP_AbsoluteIndirectLong:
+                    cpu.JumpLong(addr);
+                    return;
+                case OpcodeList.RTS_StackImplied:
+                    cpu.JumpShort(cpu.Pop(2));
+                    return;
+                case OpcodeList.RTL_StackImplied:
+                    cpu.JumpLong(cpu.Pop(3));
+                    return;
+                default:
+                    throw new NotImplementedException("ExecuteJumpReturn() opcode not implemented: " + instruction.ToString("X2"));
+            }
         }
 
         public void ExecuteAND(byte instruction, AddressModes addressMode, int signature)
         {
+            int data = GetData(addressMode, signature);
+            cpu.A.Value = cpu.A.Value & data;
+            cpu.Flags.SetNZ(cpu.A);
         }
 
         public void ExecuteBIT(byte instruction, AddressModes addressMode, int signature)
         {
+            int data = GetData(addressMode, signature);
+            int result = cpu.A.Value & data;
+            if (addressMode != AddressModes.Immediate)
+            {
+                cpu.Flags.SetNZ(result, cpu.A.Width);
+                if (cpu.A.Width == Register.BitWidthEnum.Bits16)
+                    cpu.Flags.oVerflow = (result & 0x4000) == 0x4000;
+                else
+                    cpu.Flags.oVerflow = (result & 0x400) == 0x40;
+            }
+            else
+                cpu.Flags.SetZ(result);
         }
 
         public void ExecuteROL(byte instruction, AddressModes addressMode, int signature)
@@ -555,6 +641,14 @@ namespace Nu64.Processor
 
         public void ExecuteMisc(byte instruction, AddressModes addressMode, int signature)
         {
+            switch (instruction)
+            {
+                case OpcodeList.STP_Implied: //stop
+                    cpu.Halted = true;
+                    break;
+                default:
+                    break;
+            }
         }
 
         public void ExecuteLSR(byte instruction, AddressModes addressMode, int signature)
@@ -587,14 +681,20 @@ namespace Nu64.Processor
 
         public void ExecuteLDY(byte instruction, AddressModes addressMode, int signature)
         {
+            int val = GetData(addressMode, signature);
+            cpu.Y.Value = val;
         }
 
         public void ExecuteLDA(byte instruction, AddressModes addressMode, int signature)
         {
+            int val = GetData(addressMode, signature);
+            cpu.A.Value = val;
         }
 
         public void ExecuteLDX(byte instruction, AddressModes addressMode, int signature)
         {
+            int val = GetData(addressMode, signature);
+            cpu.X.Value = val;
         }
 
         public void ExecuteCPXCPY(byte instruction, AddressModes addressMode, int signature)
@@ -613,6 +713,7 @@ namespace Nu64.Processor
 
         public void ExecuteWAI(byte Instruction, AddressModes AddressMode, int Signature)
         {
+            cpu.Halted = true;
         }
     }
 }

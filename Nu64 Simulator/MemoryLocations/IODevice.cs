@@ -13,12 +13,13 @@ namespace Nu64
     {
         public byte ReadByte(int Address)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("IODevice: Cannot read address " + Address.ToString("X4"));
+
         }
 
         public void WriteByte(int Address, byte Data)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("IODevice: Cannot write address " + Address.ToString("X4"));
         }
     }
 }

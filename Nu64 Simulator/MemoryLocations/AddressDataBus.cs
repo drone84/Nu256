@@ -145,13 +145,13 @@ namespace Nu64
             device.WriteByte(Address - offset + 2, (byte)(Value >> 16 & 0xff));
         }
 
-        internal int Read(int addr, Register.BitLengthEnum length)
+        internal int Read(int addr, Register.BitWidthEnum length)
         {
             switch (length)
             {
-                case Register.BitLengthEnum.Bits16:
+                case Register.BitWidthEnum.Bits16:
                     return ReadWord(addr);
-                case Register.BitLengthEnum.Bits24:
+                case Register.BitWidthEnum.Bits24:
                     return ReadLong(addr);
                 default:
                     return ReadByte(addr);

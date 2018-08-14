@@ -16,9 +16,9 @@ namespace Nu64.Processor
 
         Absolute,
         AbsoluteLong,
-        AbsoluteIndirect,
-        AbsoluteIndirectLong,
-        AbsoluteIndexedIndirectWithX,
+        JmpAbsoluteIndirect,
+        JmpAbsoluteIndirectLong,
+        JmpAbsoluteIndexedIndirectWithX,
         AbsoluteIndexedWithX,
         AbsoluteLongIndexedWithX,
         AbsoluteIndexedWithY,

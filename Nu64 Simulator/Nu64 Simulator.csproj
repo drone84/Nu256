@@ -56,6 +56,8 @@
     <Compile Include="Basic\Immediate.cs" />
     <Compile Include="Basic\Parser.cs" />
     <Compile Include="DeviceEnum.cs" />
+    <Compile Include="Processor\InteruptTypes.cs" />
+    <Compile Include="Processor\RegisterAccumulator.cs" />
     <Compile Include="Processor\AddressingModeEnum.cs" />
     <Compile Include="Processor\OpCode.cs" />
     <Compile Include="Processor\OpcodeList.cs" />

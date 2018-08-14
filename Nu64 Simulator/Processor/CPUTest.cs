@@ -65,9 +65,9 @@ namespace Nu64.Processor
 
             kernel.OutputDevice = DeviceEnum.DebugWindow;
             kernel.CPU.PC.Value = 0xc000;
-            kernel.PrintTab(10);
+            kernel.PrintTab(20);
             kernel.Monitor.PrintRegisterHeader();
-            kernel.PrintTab(10);
+            kernel.PrintTab(20);
             kernel.Monitor.PrintRegisters(false);
             while (!CPU.Halted)
             {
@@ -82,6 +82,8 @@ namespace Nu64.Processor
                     kernel.Print(" ");
                 }
                 kernel.PrintTab(10);
+                kernel.Print(CPU.OC.ToString(CPU.SignatureBytes));
+                kernel.PrintTab(20);
                 kernel.Monitor.PrintRegisters(false);
             }
 

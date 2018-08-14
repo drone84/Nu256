@@ -55,7 +55,7 @@ namespace Nu64.Processor
                 if (ActionRegister == null)
                     return Length8Bit;
 
-                if (ActionRegister.Length == Register.BitLengthEnum.Bits16)
+                if (ActionRegister.Width == Register.BitWidthEnum.Bits16)
                     return Length8Bit + 1;
 
                 return Length8Bit;
@@ -65,6 +65,83 @@ namespace Nu64.Processor
         public override string ToString()
         {
             return this.Mnemonic + " " + this.AddressMode.ToString();
+        }
+
+        public string ToString(int Signature)
+        {
+            string arg, sig;
+            if (this.Length == 3)
+                sig = Signature.ToString("X4");
+            else if (this.Length == 4)
+                sig = Signature.ToString("X6");
+            else
+                sig = Signature.ToString("X2");
+
+            switch (this.AddressMode)
+            {
+                case AddressModes.Interrupt:
+                    arg = sig;
+                    break;
+                case AddressModes.Immediate:
+                    arg = "#" + sig;
+                    break;
+                case AddressModes.DirectPage:
+                case AddressModes.Absolute:
+                case AddressModes.AbsoluteLong:
+                    arg = sig;
+                    break;
+                case AddressModes.DirectPageIndirect:
+                case AddressModes.JmpAbsoluteIndirect:
+                    arg = "(" + sig + ")";
+                    break;
+                case AddressModes.DirectPageIndexedIndirectWithX:
+                case AddressModes.JmpAbsoluteIndexedIndirectWithX:
+                    arg = "(" + sig + ",X)";
+                    break;
+                case AddressModes.DirectPageIndexedWithX:
+                case AddressModes.AbsoluteIndexedWithX:
+                case AddressModes.AbsoluteLongIndexedWithX:
+                    arg = sig + ",X";
+                    break;
+                case AddressModes.DirectPageIndexedWithY:
+                case AddressModes.AbsoluteIndexedWithY:
+                case AddressModes.AbsoluteLongIndexedWithY:
+                    arg = sig + ",Y";
+                    break;
+                case AddressModes.DirectPageIndirectIndexedWithY:
+                    arg = "(" + sig + "),Y";
+                    break;
+                case AddressModes.DirectPageIndirectLong:
+                case AddressModes.JmpAbsoluteIndirectLong:
+                    arg = "[" + sig + "]";
+                    break;
+                case AddressModes.DirectPageIndirectLongIndexedWithY:
+                    arg = "[" + sig + "],Y";
+                    break;
+                case AddressModes.ProgramCounterRelative:
+                case AddressModes.ProgramCounterRelativeLong:
+                    arg = sig;
+                    break;
+                case AddressModes.StackAbsolute:
+                    arg = sig;
+                    break;
+                case AddressModes.StackDirectPageIndirect:
+                    arg = sig;
+                    break;
+                case AddressModes.StackRelative:
+                    arg = sig;
+                    break;
+                case AddressModes.StackRelativeIndirectIndexedWithY:
+                    arg = "(" + sig + ",S),Y";
+                    break;
+                case AddressModes.StackProgramCounterRelativeLong:
+                    arg = sig;
+                    break;
+                default:
+                    arg = "";
+                    break;
+            }
+            return this.Mnemonic + " " + arg;
         }
 
     }

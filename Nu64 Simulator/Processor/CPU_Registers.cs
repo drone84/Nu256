@@ -11,7 +11,7 @@ namespace Nu64.Processor
         /// <summary>
         /// Accumulator
         /// </summary>
-        public Register A = new Register();
+        public RegisterAccumulator A = new RegisterAccumulator();
         /// <summary>
         /// Data Bank Register
         /// </summary>

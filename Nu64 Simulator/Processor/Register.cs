@@ -9,7 +9,7 @@ namespace Nu64.Processor
     public class Register
     {
         protected int _value;
-        private BitLengthEnum bitLength = BitLengthEnum.Bits16;
+        private BitWidthEnum bitLength = BitWidthEnum.Bits16;
         /// <summary>
         /// Forces the upper 8 bits to 0 when the register changes to 8 bit mode, or when writing or reading 
         /// the value in 8 bit mode. If this is false, the value is hidden, but preserved. If this is true, 
@@ -17,7 +17,7 @@ namespace Nu64.Processor
         /// </summary>
         public bool DiscardUpper = false;
 
-        public enum BitLengthEnum
+        public enum BitWidthEnum
         {
             Bits8 = 1,
             Bits16 = 2,
@@ -28,14 +28,14 @@ namespace Nu64.Processor
         {
             get
             {
-                if (bitLength == BitLengthEnum.Bits8)
+                if (bitLength == BitWidthEnum.Bits8)
                     return (int)(this._value & 0xff);
                 return this._value;
             }
 
             set
             {
-                if (Length == BitLengthEnum.Bits8)
+                if (Width == BitWidthEnum.Bits8)
                 {
                     if (DiscardUpper)
                         this._value = (int)(value & 0xff);
@@ -66,7 +66,7 @@ namespace Nu64.Processor
             High = l;
         }
 
-        public virtual BitLengthEnum Length
+        public virtual BitWidthEnum Width
         {
             get
             {
@@ -83,7 +83,7 @@ namespace Nu64.Processor
         {
             get
             {
-                if (this.bitLength == BitLengthEnum.Bits16)
+                if (this.bitLength == BitWidthEnum.Bits16)
                     return 2;
                 return 1;
             }
@@ -101,11 +101,11 @@ namespace Nu64.Processor
 
         public override string ToString()
         {
-            switch (Length)
+            switch (Width)
             {
-                case Register.BitLengthEnum.Bits16:
+                case Register.BitWidthEnum.Bits16:
                     return "$" + Value.ToString("X4");
-                case Register.BitLengthEnum.Bits8:
+                case Register.BitWidthEnum.Bits8:
                     return "$" + Value.ToString("X2");
                 default:
                     return Value.ToString();
@@ -119,9 +119,9 @@ namespace Nu64.Processor
         /// <returns></returns>
         public virtual int GetLongAddress(int Address)
         {
-            if (this.bitLength == BitLengthEnum.Bits16)
+            if (this.bitLength == BitWidthEnum.Bits16)
                 return (this.Value << 8) + Address;
-            else if (this.bitLength == BitLengthEnum.Bits8)
+            else if (this.bitLength == BitWidthEnum.Bits8)
                 return (this.Value << 16) + Address;
             else
                 return this.Value;
@@ -134,12 +134,18 @@ namespace Nu64.Processor
         /// <returns></returns>
         public virtual int GetLongAddress(Register Address)
         {
-            if (this.bitLength == BitLengthEnum.Bits16)
+            if (this.bitLength == BitWidthEnum.Bits16)
                 return (this.Value << 8) + Address.Value;
-            else if (this.bitLength == BitLengthEnum.Bits8)
+            else if (this.bitLength == BitWidthEnum.Bits8)
                 return (this.Value << 16) + Address.Value;
             else
                 return this.Value;
+        }
+
+        public virtual void Reset()
+        {
+            this.Value = 0;
+            this.bitLength = BitWidthEnum.Bits8;
         }
     }
 
@@ -148,16 +154,16 @@ namespace Nu64.Processor
     /// </summary>
     public class Register16 : Register
     {
-        public override BitLengthEnum Length
+        public override BitWidthEnum Width
         {
             get
             {
-                return BitLengthEnum.Bits16;
+                return BitWidthEnum.Bits16;
             }
 
             set
             {
-                base.Length = BitLengthEnum.Bits16;
+                base.Width = BitWidthEnum.Bits16;
             }
         }
         
@@ -194,16 +200,16 @@ namespace Nu64.Processor
     /// </summary>
     public class Register8 : Register
     {
-        public override BitLengthEnum Length
+        public override BitWidthEnum Width
         {
             get
             {
-                return BitLengthEnum.Bits8;
+                return BitWidthEnum.Bits8;
             }
 
             set
             {
-                base.Length = BitLengthEnum.Bits8;
+                base.Width = BitWidthEnum.Bits8;
             }
         }
     }
@@ -236,16 +242,16 @@ namespace Nu64.Processor
     /// </summary>
     public class RegisterDirectPage : Register
     {
-        public override BitLengthEnum Length
+        public override BitWidthEnum Width
         {
             get
             {
-                return BitLengthEnum.Bits16;
+                return BitWidthEnum.Bits16;
             }
 
             set
             {
-                base.Length = BitLengthEnum.Bits16;
+                base.Width = BitWidthEnum.Bits16;
             }
         }
 

@@ -20,6 +20,14 @@ namespace Nu64.Processor
         public bool Carry;
         public bool Emulation;
 
+        /// <summary>
+        /// Swap the Carry and Emulation flags. Used by the XCE instruction.
+        /// This sets the CPU's emulation mode based on the Carry flag. When
+        /// in emulation mode, the CPU can only access 64KB of RAM, cannot use
+        /// the PBR and DBR registers, and can only store 8-bit values in A, X, and Y.
+        /// <para>To set the CPU to emulation mode, call SEC XCE</para>
+        /// <para>To set the CPU to native mode, call CLC XCE</para>
+        /// </summary>
         public void SwapCE()
         {
             bool temp = Emulation;
@@ -126,17 +134,17 @@ namespace Nu64.Processor
 
         public void SetN(Register X)
         {
-            if (X.Length == BitLengthEnum.Bits16)
+            if (X.Width == BitWidthEnum.Bits16)
                 Negative = ((int)this.Value & 0x8000) == 0x8000;
             else
                 Negative = (X.Value & 0x80) == 0x80;
         }
 
-        public void SetN(int Value, BitLengthEnum Width)
+        public void SetN(int Value, BitWidthEnum Width)
         {
-            if (Width == BitLengthEnum.Bits8 && (Value & 0x80) != 0)
+            if (Width == BitWidthEnum.Bits8 && (Value & 0x80) != 0)
                 Negative = true;
-            else if (Width == BitLengthEnum.Bits16 && (Value & 0x8000) != 0)
+            else if (Width == BitWidthEnum.Bits16 && (Value & 0x8000) != 0)
                 Negative = true;
         }
 
@@ -146,10 +154,24 @@ namespace Nu64.Processor
             SetN(X);
         }
 
-        public void SetNZ(int Value, Register.BitLengthEnum Width)
+        public void SetNZ(int Value, Register.BitWidthEnum Width)
         {
             Zero = Value == 0;
             SetN(Value, Width);
+        }
+
+        public override void Reset()
+        {
+            Negative = false;
+            oVerflow = false;
+            Break = false;
+            accMemWidth = false;
+            indeXregisterwidth = false;
+            Decimal = false;
+            Irqdisable = false;
+            Zero = false;
+            Carry = false;
+            Emulation = false;
         }
     }
 }
