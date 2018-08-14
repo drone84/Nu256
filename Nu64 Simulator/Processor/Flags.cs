@@ -148,10 +148,10 @@ namespace Nu64.Processor
                 Negative = true;
         }
 
-        public void SetNZ(Register X)
+        public void SetNZ(Register Reg)
         {
-            Zero = X.Value == 0;
-            SetN(X);
+            Zero = Reg.Value == 0;
+            SetN(Reg);
         }
 
         public void SetNZ(int Value, int Width)

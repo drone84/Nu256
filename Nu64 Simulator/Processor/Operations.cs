@@ -322,18 +322,125 @@ namespace Nu64.Processor
 
         public void ExecuteORA(byte instruction, AddressModes addressMode, int signature)
         {
+            int val = GetData(addressMode, signature, cpu.A.Bytes);
+            cpu.A.Value = cpu.A.Value | val;
+            cpu.Flags.SetNZ(cpu.A);
         }
 
+        /// <summary>
+        /// Test memory against the Accumulator. Sets Z based on the result of an AND. 
+        /// Also sets or clears bits in memory based on the bitmask in the accumulator. 
+        /// TSB sets bits in memory based on A. TRB clears bits in memory based on A.
+        /// </summary>
+        /// <param name="instruction"></param>
+        /// <param name="addressMode"></param>
+        /// <param name="signature"></param>
         public void ExecuteTSBTRB(byte instruction, AddressModes addressMode, int signature)
         {
+            int val = GetData(addressMode, signature, cpu.A.Width);
+            int test = val & cpu.A.Value;
+            cpu.Flags.SetZ(test);
+
+            int addr = GetAddress(addressMode, signature, cpu.DataBank);
+
+            switch (instruction)
+            {
+                case OpcodeList.TSB_Absolute:
+                case OpcodeList.TSB_DirectPage:
+                    cpu.Memory.Write(addr, val | cpu.A.Value, cpu.A.Width);
+                    break;
+                case OpcodeList.TRB_Absolute:
+                case OpcodeList.TRB_DirectPage:
+                    // reset bits in memory when that bit is 1 in A
+                    // AND to get bits that are both 1
+                    // XOR to force thoses off in memory.
+                    int mask = val & cpu.A.Value;
+                    cpu.Memory.Write(addr, val ^ mask, cpu.A.Width);
+                    break;
+                default:
+                    throw new NotImplementedException("ExecuteTSBTRB() opcode not implemented: " + instruction.ToString("X2"));
+            }
         }
 
-        public void ExecuteASL(byte instruction, AddressModes addressMode, int signature)
+        public void ExecuteShift(byte instruction, AddressModes addressMode, int signature)
         {
+            int val = GetData(addressMode, signature, cpu.A.Width);
+            int addr = GetAddress(addressMode, signature, cpu.DataBank);
+            switch (instruction)
+            {
+                case OpcodeList.ASL_DirectPage:
+                case OpcodeList.ASL_Accumulator:
+                case OpcodeList.ASL_Absolute:
+                case OpcodeList.ASL_DirectPageIndexedWithX:
+                case OpcodeList.ASL_AbsoluteIndexedWithX:
+                    val = val << 1;
+                    if (cpu.A.Width == 1)
+                    {
+                        cpu.Flags.Carry = val > 0xff;
+                        val = val & 0xff;
+                    }
+                    else if (cpu.A.Width == 2)
+                    {
+                        cpu.Flags.Carry = val > 0xffff;
+                        val = val & 0xffff;
+                    }
+                    break;
+                case OpcodeList.LSR_DirectPage:
+                case OpcodeList.LSR_Accumulator:
+                case OpcodeList.LSR_Absolute:
+                case OpcodeList.LSR_DirectPageIndexedWithX:
+                case OpcodeList.LSR_AbsoluteIndexedWithX:
+                    cpu.Flags.Carry = (val & 1) == 1;
+                    val = val >> 1;
+                    break;
+                case OpcodeList.ROL_DirectPage:
+                case OpcodeList.ROL_Accumulator:
+                case OpcodeList.ROL_Absolute:
+                case OpcodeList.ROL_DirectPageIndexedWithX:
+                case OpcodeList.ROL_AbsoluteIndexedWithX:
+                    val = val << 1;
+                    if (cpu.Flags.Carry)
+                        val += 1;
+                    if (cpu.A.Width == 1)
+                    {
+                        cpu.Flags.Carry = val > 0xff;
+                        val = val & 0xff;
+                    }
+                    else if (cpu.A.Width == 2)
+                    {
+                        cpu.Flags.Carry = val > 0xffff;
+                        val = val & 0xffff;
+                    }
+                    break;
+                case OpcodeList.ROR_DirectPage:
+                case OpcodeList.ROR_Accumulator:
+                case OpcodeList.ROR_Absolute:
+                case OpcodeList.ROR_DirectPageIndexedWithX:
+                case OpcodeList.ROR_AbsoluteIndexedWithX:
+                    if (cpu.Flags.Carry)
+                    {
+                        if (cpu.A.Width == 8)
+                            val += 0x100;
+                        else if (cpu.A.Width == 16)
+                            val += 0x10000;
+                    }
+                    cpu.Flags.Carry = (val & 1) == 1;
+                    val = val >> 1;
+                    break;
+                default:
+                    throw new NotImplementedException("ExecuteASL() opcode not implemented: " + instruction.ToString("X2"));
+            }
+
+            cpu.Flags.SetNZ(val, cpu.A.Width);
+            if (addressMode == AddressModes.Accumulator)
+                cpu.A.Value = val;
+            else
+                cpu.Memory.Write(addr, val, cpu.A.Width);
         }
 
         public void ExecuteStack(byte instruction, AddressModes addressMode, int signature)
         {
+            here
         }
 
         public void ExecuteBranch(byte instruction, AddressModes addressMode, int signature)
