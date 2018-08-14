@@ -134,17 +134,17 @@ namespace Nu64.Processor
 
         public void SetN(Register X)
         {
-            if (X.Width == BitWidthEnum.Bits16)
+            if (X.Width == 2)
                 Negative = ((int)this.Value & 0x8000) == 0x8000;
             else
                 Negative = (X.Value & 0x80) == 0x80;
         }
 
-        public void SetN(int Value, BitWidthEnum Width)
+        public void SetN(int Value, int Width)
         {
-            if (Width == BitWidthEnum.Bits8 && (Value & 0x80) != 0)
+            if (Width == 1 && (Value & 0x80) != 0)
                 Negative = true;
-            else if (Width == BitWidthEnum.Bits16 && (Value & 0x8000) != 0)
+            else if (Width == 2 && (Value & 0x8000) != 0)
                 Negative = true;
         }
 
@@ -154,7 +154,7 @@ namespace Nu64.Processor
             SetN(X);
         }
 
-        public void SetNZ(int Value, Register.BitWidthEnum Width)
+        public void SetNZ(int Value, int Width)
         {
             Zero = Value == 0;
             SetN(Value, Width);

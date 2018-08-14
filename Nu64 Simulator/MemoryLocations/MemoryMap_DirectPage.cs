@@ -41,11 +41,17 @@ namespace Nu64
         public const int MARG6 = 0x228;     // 3 bytes
         public const int MARG7 = 0x22B;     // 3 bytes
         public const int MARG8 = 0x22E;     // 3 bytes
-        //public const int MARG8 = 0x221;     // 3 bytes
 
         // BASIC variables, may overlap Monitor variables
         public const int BLINE = 0x200;     // 3 bytes 
 
+        /// Video frame buffer
+        public const int GPU_PAGE_0 = 0x001000;
+        public const int GPU_PAGE_1 = 0x003000;
+        public const int GPU_PAGE_2 = 0x005000;
+        public const int GPU_PAGE_3 = 0x007000;
+
+        // vector handlers
         public const int HANDLE_RESET = 0xFF00;
         /* 
         18          CLC       ; CLEAR THE CARRY FLAG
@@ -61,6 +67,7 @@ namespace Nu64
         // Push X
         // Push Y
         // JMP KDUMPREG
+
         public const int HANDLE_ABORT = 0xFF30;
         public const int HANDLE_NMI = 0xFF40;
         public const int HANDLE_IRQ = 0xFF50;

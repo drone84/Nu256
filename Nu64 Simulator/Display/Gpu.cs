@@ -18,12 +18,14 @@ namespace Nu64.Display
         public const int VRAM_SIZE = 0x100000;
         private const int REGISTER_BLOCK_SIZE = 256;
 
-        public MemoryRAM VRAM = new MemoryRAM(VRAM_SIZE);
+        public MemoryRAM VRAM = null;
 
-        private int characterMatrixStart = 0;
-        private int colorMatrixStart = 2000;
-        private int attributeStart = 4000;
-        private int characterSetStart = 0xF0000;
+        // Video page 0 is 0x1000. Each page is 2000 bytes long.
+        private int characterMatrixStart = MemoryMap_DirectPage.GPU_PAGE_0;
+        //private int colorMatrixStart = 6096;
+        //private int attributeStart = 8096;
+        // character bitmaps are stored in the reserved video memory space.
+        private int characterSetStart = 0x7F0000;
 
         public List<CharacterSet> CharacterSetSlots = new List<CharacterSet>();
 
@@ -38,7 +40,8 @@ namespace Nu64.Display
 
         int columns = 80;
         int rows = 25;
-        bool halfWidth = false;
+        int bufferSize = 2000;
+        //bool halfWidth = false;
         int _cursorCol = 0;
         int _cursorRow = 0;
         int cursorPos = 0;
@@ -59,12 +62,12 @@ namespace Nu64.Display
         /// <summary>
         /// Screen character data. Data is addressed as Data[i].
         /// </summary>
-        public char[] CharacterData = null;
+        //public char[] CharacterData = null;
 
         /// <summary>
         /// Screen color data. Upper nibble is background color. Lower nibble is foreground color. 
         /// </summary>
-        public ColorCodes[] ColorData = null;
+        //public ColorCodes[] ColorData = null;
 
         private int GetCharPos(int row, int col)
         {
@@ -100,7 +103,7 @@ namespace Nu64.Display
         {
             //TextFont = GetBestFont();
 
-            this.SetBufferSize(25, 80, false);
+            this.SetScreenSize(25, 80);
             //this.SetBufferSize(25, 40);
             this.Paint += new PaintEventHandler(FrameBufferControl_Paint);
             timer.Tick += new EventHandler(timer_Tick);
@@ -121,10 +124,6 @@ namespace Nu64.Display
             X = 0;
             Y = 0;
 
-            LoadCharacterSet("ASCII-PET", @"Resources\FOENIX-CHARACTER-ASCII.bin", 0, CharacterSet.CharTypeCodes.ASCII_PET, CharacterSet.SizeCodes.Size8x8);
-            //LoadCharacterSet("PETSCII_GRAPHICS", @"Resources\PETSCII.901225-01.bin", 0, CharacterSet.CharTypeCodes.PETSCII_GRAPHICS, CharacterSet.SizeCodes.Size8x8);
-            //LoadCharacterSet("PETSCII_TEXT", @"Resources\PETSCII.901225-01.bin", 4096, CharacterSet.CharTypeCodes.PETSCII_TEXT, CharacterSet.SizeCodes.Size8x8);
-
             if (DesignMode)
             {
             }
@@ -138,6 +137,14 @@ namespace Nu64.Display
                 ParentForm.Height = htarget + topmargin;
                 ParentForm.Width = (int)Math.Ceiling(htarget * 1.6) + sidemargin;
             }
+        }
+
+        public void LoadCharacterData(MemoryRAM newVRAM)
+        {
+            this.VRAM = newVRAM;
+            LoadCharacterSet("ASCII-PET", @"Resources\FOENIX-CHARACTER-ASCII.bin", 0, CharacterSet.CharTypeCodes.ASCII_PET, CharacterSet.SizeCodes.Size8x8);
+            //LoadCharacterSet("PETSCII_GRAPHICS", @"Resources\PETSCII.901225-01.bin", 0, CharacterSet.CharTypeCodes.PETSCII_GRAPHICS, CharacterSet.SizeCodes.Size8x8);
+            //LoadCharacterSet("PETSCII_TEXT", @"Resources\PETSCII.901225-01.bin", 4096, CharacterSet.CharTypeCodes.PETSCII_TEXT, CharacterSet.SizeCodes.Size8x8);
         }
 
         private Font GetBestFont()
@@ -246,10 +253,13 @@ namespace Nu64.Display
         {
             get
             {
-                return CharacterData.Length;
+                return bufferSize;
             }
         }
 
+        /// <summary>
+        /// Memory offset of the cursor position on the screen. The top-left corner is 0. 
+        /// </summary>
         public int CursorPos
         {
             get
@@ -278,63 +288,67 @@ namespace Nu64.Display
         private void DrawVectorText(Graphics g)
         {
 
-            float x;
-            float y;
+            //float x;
+            //float y;
 
-            if (TextFont == null)
-                TextFont = GetBestFont();
-            SizeF charSize = MeasureFont(TextFont, g);
-            float charWidth = charSize.Width / MEASURE_STRING.Length;
-            float charHeight = charSize.Height;
-            float Col80 = charWidth * columns;
-            float Row25 = charWidth * rows;
+            //if (TextFont == null)
+            //    TextFont = GetBestFont();
+            //SizeF charSize = MeasureFont(TextFont, g);
+            //float charWidth = charSize.Width / MEASURE_STRING.Length;
+            //float charHeight = charSize.Height;
+            //float Col80 = charWidth * columns;
+            //float Row25 = charWidth * rows;
 
-            if (halfWidth)
-            {
-                g.ScaleTransform(0.5f, 1.0f);
-            }
-            float ScaleX = this.ClientRectangle.Width / Col80;
-            float ScaleY = this.ClientRectangle.Height / Row25;
-            g.ScaleTransform(ScaleX, ScaleY);
+            //if (halfWidth)
+            //{
+            //    g.ScaleTransform(0.5f, 1.0f);
+            //}
+            //float ScaleX = this.ClientRectangle.Width / Col80;
+            //float ScaleY = this.ClientRectangle.Height / Row25;
+            //g.ScaleTransform(ScaleX, ScaleY);
 
-            g.Clear(Color.Blue);
-            int col = 0, row = 0;
-            for (int i = 0; i < BufferSize; i++)
-            {
-                x = col * charWidth;
-                y = row * charHeight;
+            //g.Clear(Color.Blue);
 
-                if ((ColorData[i] & ColorCodes.Reverse) == 0)
-                    g.DrawString(CharacterData[i].ToString(), TextFont, TextBrush, x, y, StringFormat.GenericTypographic);
-                else
-                {
-                    g.FillRectangle(CursorBrush, x, y, charWidth, charHeight);
-                    g.DrawString(CharacterData[i].ToString(),
-                        TextFont,
-                        InvertedBrush,
-                        x, y,
-                        StringFormat.GenericTypographic);
-                }
+            //if (VRAM == null)
+            //    return;
 
-                col++;
-                if (col >= Columns)
-                {
-                    col = 0;
-                    row++;
-                }
-            }
+            //int col = 0, row = 0;
+            //for (int i = 0; i < BufferSize; i++)
+            //{
+            //    x = col * charWidth;
+            //    y = row * charHeight;
 
-            if (CursorState && CursorEnabled)
-            {
-                x = X * charWidth;
-                y = Y * charHeight;
-                g.FillRectangle(CursorBrush, x, y, charWidth, charHeight);
-                g.DrawString(CharacterData[GetCharPos(Y, X)].ToString(),
-                    TextFont,
-                    InvertedBrush,
-                    x, y,
-                    StringFormat.GenericTypographic);
-            }
+            //    if ((ColorData[i] & ColorCodes.Reverse) == 0)
+            //        g.DrawString(CharacterData[i].ToString(), TextFont, TextBrush, x, y, StringFormat.GenericTypographic);
+            //    else
+            //    {
+            //        g.FillRectangle(CursorBrush, x, y, charWidth, charHeight);
+            //        g.DrawString(CharacterData[i].ToString(),
+            //            TextFont,
+            //            InvertedBrush,
+            //            x, y,
+            //            StringFormat.GenericTypographic);
+            //    }
+
+            //    col++;
+            //    if (col >= Columns)
+            //    {
+            //        col = 0;
+            //        row++;
+            //    }
+            //}
+
+            //if (CursorState && CursorEnabled)
+            //{
+            //    x = X * charWidth;
+            //    y = Y * charHeight;
+            //    g.FillRectangle(CursorBrush, x, y, charWidth, charHeight);
+            //    g.DrawString(CharacterData[GetCharPos(Y, X)].ToString(),
+            //        TextFont,
+            //        InvertedBrush,
+            //        x, y,
+            //        StringFormat.GenericTypographic);
+            //}
         }
 
         private void DrawBitmapText(Graphics controlGraphics)
@@ -370,14 +384,27 @@ namespace Nu64.Display
             g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
 
             g.Clear(Color.Blue);
+
+            if (VRAM == null)
+            {
+                controlGraphics.Clear(Color.Blue);
+                controlGraphics.DrawString("VRAM not initialized", this.Font, TextBrush, 0, 0);
+                return;
+            }
+            if (CharacterSetSlots.Count == 0)
+            {
+                controlGraphics.Clear(Color.Blue);
+                controlGraphics.DrawString("Character ROM not initialized", this.Font, TextBrush, 0, 0);
+                return;
+            }
+
             int col = 0, row = 0;
             for (int i = 0; i < BufferSize; i++)
             {
                 x = col * charWidth;
                 y = row * charHeight;
 
-                byte c = (byte)CharacterData[i];
-
+                byte c = VRAM.ReadByte(characterMatrixStart + i);
                 Bitmap bmp = CharacterSetSlots[0].Bitmaps[c];
                 RectangleF rect = new RectangleF((int)x, (int)y, bmp.Width, bmp.Height);
                 //g.DrawImage(bmp, rect, 0, 0, rect.Width, rect.Height, GraphicsUnit.Pixel, attr);
@@ -443,19 +470,19 @@ namespace Nu64.Display
             return 0;
         }
 
-        public virtual void SetBufferSize(int Rows, int Columns, bool HalfWidth = false)
+        public virtual void SetScreenSize(int Rows, int Columns)
         {
-            CharacterData = new char[Rows * Columns];
-            characterMatrixStart = REGISTER_BLOCK_SIZE;
-            ColorData = new ColorCodes[Rows * Columns];
-            colorMatrixStart = REGISTER_BLOCK_SIZE + CharacterData.Length;
+            //CharacterData = new char[Rows * Columns];
+            //characterMatrixStart = REGISTER_BLOCK_SIZE;
+            //ColorData = new ColorCodes[Rows * Columns];
+            //colorMatrixStart = REGISTER_BLOCK_SIZE + CharacterData.Length;
 
             this.columns = Columns;
             this.rows = Rows;
-            this.halfWidth = HalfWidth;
+            this.bufferSize = Columns * Rows;
 
-            TextFont = GetBestFont();
-            MEASURE_STRING = new string('W', Columns);
+            //TextFont = GetBestFont();
+            //MEASURE_STRING = new string('W', Columns);
         }
 
         public byte ReadByte(int Address)
@@ -464,14 +491,14 @@ namespace Nu64.Display
             {
                 return GetGPURegister(Address);
             }
-            else if (Address >= characterMatrixStart && Address < (characterMatrixStart + CharacterData.Length))
-            {
-                return (byte)CharacterData[Address - characterMatrixStart];
-            }
-            else if (Address >= colorMatrixStart && Address < (colorMatrixStart + ColorData.Length))
-            {
-                return (byte)ColorData[Address - colorMatrixStart];
-            }
+            //else if (Address >= characterMatrixStart && Address < (characterMatrixStart + CharacterData.Length))
+            //{
+            //    return (byte)CharacterData[Address - characterMatrixStart];
+            //}
+            //else if (Address >= colorMatrixStart && Address < (colorMatrixStart + ColorData.Length))
+            //{
+            //    return (byte)ColorData[Address - colorMatrixStart];
+            //}
             return 0;
         }
 
@@ -497,14 +524,14 @@ namespace Nu64.Display
             {
                 SetGPURegister(Address, Data);
             }
-            else if (Address >= characterMatrixStart && Address < (characterMatrixStart + CharacterData.Length))
-            {
-                CharacterData[Address - characterMatrixStart] = (char)Data;
-            }
-            else if (Address >= colorMatrixStart && Address < (colorMatrixStart + ColorData.Length))
-            {
-                ColorData[Address - colorMatrixStart] = (ColorCodes)Data;
-            }
+            //else if (Address >= characterMatrixStart && Address < (characterMatrixStart + CharacterData.Length))
+            //{
+            //    CharacterData[Address - characterMatrixStart] = (char)Data;
+            //}
+            //else if (Address >= colorMatrixStart && Address < (colorMatrixStart + ColorData.Length))
+            //{
+            //    ColorData[Address - colorMatrixStart] = (ColorCodes)Data;
+            //}
         }
 
         /// <summary>
@@ -515,7 +542,7 @@ namespace Nu64.Display
         public CharacterSet LoadCharacterSet(string Name, string Filename, int Offset, CharacterSet.CharTypeCodes CharType, CharacterSet.SizeCodes CharSize)
         {
             CharacterSet cs = new CharacterSet();
-            cs.Load(Filename, Offset, VRAM, characterSetStart + CharacterSetSlots.Count * 8192, CharSize);
+            cs.Load(Filename, Offset, VRAM, characterSetStart + CharacterSetSlots.Count * CharacterSet.SlotSize, CharSize);
             CharacterSetSlots.Add(cs);
             cs.CharType = CharType;
             return cs;

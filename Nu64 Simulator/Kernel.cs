@@ -13,7 +13,7 @@ namespace Nu64
     public class Kernel
     {
         private const int TAB_WIDTH = 4;
-        public SystemBus MemoryMap = null;
+        public SystemBus Memory = null;
         public Processor.CPU CPU = null;
         public Gpu gpu = null;
         public RingBuffer<Char> KeyboardBuffer = new RingBuffer<char>(256);
@@ -32,12 +32,19 @@ namespace Nu64
 
         public Kernel(Gpu gpu)
         {
-            MemoryMap = new SystemBus();
-            MemoryMap.RAM = new MemoryRAM(0x800000); // 8MB RAM
-            MemoryMap.GPU = gpu;
-            MemoryMap.ROM = new MemoryRAM(0x100000); // 1MB ROM
-            this.CPU = new CPU(MemoryMap);
+            Memory = new SystemBus();
+            Memory.RAM = new MemoryRAM(0x800000); // 8MB RAM
+            Memory.GPU = gpu;
+            Memory.ROM = new MemoryRAM(0x100000); // 1MB ROM
+            this.CPU = new CPU(Memory);
             this.gpu = gpu;
+            gpu.LoadCharacterData(Memory.RAM);
+
+            for(int i=MemoryMap_DirectPage.GPU_PAGE_0; i< MemoryMap_DirectPage.GPU_PAGE_1; i++)
+            {
+                this.Memory[i] = 0x40;
+            }
+
             this.Basic = new Basic.Immediate(this);
             this.Monitor = new Monitor.Monitor(this);
 
@@ -112,7 +119,7 @@ namespace Nu64
                     Y = 0;
                     break;
                 case (char)PETSCIICommandCodes.Clear:
-                    Fill(' ');
+                    Fill(0x20);
                     X = 0;
                     Y = 0;
                     break;
@@ -135,8 +142,8 @@ namespace Nu64
                     gpu.CurrentColor = gpu.CurrentColor & (int.MaxValue - ColorCodes.Reverse);
                     break;
                 default:
-                    gpu.CharacterData[gpu.CursorPos] = c;
-                    gpu.ColorData[gpu.CursorPos] = CurrentColor;
+                    Memory[MemoryMap_DirectPage.GPU_PAGE_0 + gpu.CursorPos] = (byte)c;
+                    //gpu.ColorData[gpu.CursorPos] = CurrentColor;
                     AdvanceCursor();
                     break;
             }
@@ -149,11 +156,11 @@ namespace Nu64
         /// <param name="Col"></param>
         public void PrintTab(int Col)
         {
-            if(OutputDevice == DeviceEnum.Screen)
+            if (OutputDevice == DeviceEnum.Screen)
             {
                 this.X = Col;
             }
-            else if(OutputDevice == DeviceEnum.DebugWindow)
+            else if (OutputDevice == DeviceEnum.DebugWindow)
             {
                 UI.RegisterWindow.PrintTab(Col);
             }
@@ -164,7 +171,7 @@ namespace Nu64
             X = X - 1;
             if (X < 0)
                 Y = Y - 1;
-            gpu.CharacterData[gpu.CursorPos] = ' ';
+            Memory[gpu.CursorPos] = 0x20;
         }
 
         private void PrintTab()
@@ -199,19 +206,20 @@ namespace Nu64
 
         public void Scroll1()
         {
+            int addr = MemoryMap_DirectPage.GPU_PAGE_0;
             for (int c = 0; c < gpu.BufferSize - gpu.Columns; c++)
             {
                 for (int col = 0; col < gpu.Columns; col++)
                 {
-                    gpu.CharacterData[c] = gpu.CharacterData[c + gpu.Columns];
-                    gpu.ColorData[c] = gpu.ColorData[c + gpu.Columns];
+                    Memory[addr + c] = Memory[addr + c + gpu.Columns];
+                    //gpu.ColorData[c] = gpu.ColorData[c + gpu.Columns];
                 }
             }
 
             for (int c = gpu.BufferSize - gpu.Columns; c < gpu.BufferSize; c++)
             {
-                gpu.CharacterData[c] = ' ';
-                gpu.ColorData[c] = _currentForeground;
+                Memory[addr + c] = 0x20;
+                //gpu.ColorData[c] = _currentForeground;
             }
         }
 
@@ -304,16 +312,16 @@ namespace Nu64
 
         public virtual void Cls()
         {
-            Fill(' ');
+            Fill(0x20);
             Locate(0, 0);
         }
 
-        public virtual void Fill(char c)
+        public virtual void Fill(byte c)
         {
             for (int i = 0; i < gpu.BufferSize; i++)
             {
-                gpu.CharacterData[i] = c;
-                gpu.ColorData[i] = _currentForeground;
+                Memory[MemoryMap_DirectPage.GPU_PAGE_0 + i] = c;
+                //gpu.ColorData[i] = _currentForeground;
             }
         }
 
@@ -410,12 +418,12 @@ namespace Nu64
 
         public byte Peek(int bank, int Address)
         {
-            return MemoryMap[bank, Address];
+            return Memory[bank, Address];
         }
 
         public byte Peek(int Address)
         {
-            return MemoryMap[Address];
+            return Memory[Address];
         }
 
         public void PrintGreeting()

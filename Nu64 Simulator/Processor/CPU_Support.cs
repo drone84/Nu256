@@ -15,11 +15,11 @@ namespace Nu64.Processor
         public void SetEmulationMode()
         {
             Flags.Emulation = true;
-            A.Width = Register.BitWidthEnum.Bits8;
+            A.Width = 1;
             A.DiscardUpper = false;
-            X.Width = Register.BitWidthEnum.Bits8;
+            X.Width = 1;
             X.DiscardUpper = true;
-            Y.Width = Register.BitWidthEnum.Bits8;
+            Y.Width = 1;
             Y.DiscardUpper = true;
         }
 
@@ -41,9 +41,9 @@ namespace Nu64.Processor
                 Flags.accMemWidth = true;
                 Flags.indeXregisterwidth = true;
             }
-            A.Width = Flags.accMemWidth ? Register.BitWidthEnum.Bits8 : Register.BitWidthEnum.Bits16;
-            X.Width = Flags.indeXregisterwidth ? Register.BitWidthEnum.Bits8 : Register.BitWidthEnum.Bits16;
-            Y.Width = Flags.indeXregisterwidth ? Register.BitWidthEnum.Bits8 : Register.BitWidthEnum.Bits16;
+            A.Width = Flags.accMemWidth ? 1 : 2;
+            X.Width = Flags.indeXregisterwidth ? 1 : 2;
+            Y.Width = Flags.indeXregisterwidth ? 1 : 2;
         }
 
     }

@@ -145,18 +145,26 @@ namespace Nu64
             device.WriteByte(Address - offset + 2, (byte)(Value >> 16 & 0xff));
         }
 
-        internal int Read(int addr, Register.BitWidthEnum length)
+        public int Read(int Address, int Length)
         {
-            switch (length)
-            {
-                case Register.BitWidthEnum.Bits16:
-                    return ReadWord(addr);
-                case Register.BitWidthEnum.Bits24:
-                    return ReadLong(addr);
-                default:
-                    return ReadByte(addr);
-            }
+            GetDeviceAt(Address, out IMappable device, out int offset);
+            int addr = Address - offset;
+            int ret = device.ReadByte(addr);
+            if (Length >= 2)
+                ret += device.ReadByte(addr + 1) << 8;
+            if (Length >= 3)
+                ret += device.ReadByte(addr + 1) << 16;
+            return ret;
         }
 
+        internal void Write(int Address, int Value, int Length)
+        {
+            GetDeviceAt(Address, out IMappable device, out int offset);
+            device.WriteByte(Address - offset, (byte)(Value & 0xff));
+            if (Length >= 2)
+                device.WriteByte(Address - offset + 1, (byte)(Value >> 8 & 0xff));
+            if (Length >= 3)
+                device.WriteByte(Address - offset + 2, (byte)(Value >> 16 & 0xff));
+        }
     }
 }

@@ -9,33 +9,34 @@ namespace Nu64.Processor
     public class Register
     {
         protected int _value;
-        private BitWidthEnum bitLength = BitWidthEnum.Bits16;
+        private int byteLength = 2;
         /// <summary>
         /// Forces the upper 8 bits to 0 when the register changes to 8 bit mode, or when writing or reading 
         /// the value in 8 bit mode. If this is false, the value is hidden, but preserved. If this is true, 
         /// the top 8 bits are destroyed when the width is set to 8 bits. 
         /// </summary>
         public bool DiscardUpper = false;
+        string[] formatWidth = new string[] { "X", "X1", "X2", "X3", "X4" };
 
-        public enum BitWidthEnum
-        {
-            Bits8 = 1,
-            Bits16 = 2,
-            Bits24 = 3,
-        }
+        //public enum int
+        //{
+        //    Bits8 = 1,
+        //    Bits16 = 2,
+        //    Bits24 = 3,
+        //}
 
         public virtual int Value
         {
             get
             {
-                if (bitLength == BitWidthEnum.Bits8)
+                if (byteLength == 1)
                     return (int)(this._value & 0xff);
                 return this._value;
             }
 
             set
             {
-                if (Width == BitWidthEnum.Bits8)
+                if (Width == 1)
                 {
                     if (DiscardUpper)
                         this._value = (int)(value & 0xff);
@@ -66,16 +67,19 @@ namespace Nu64.Processor
             High = l;
         }
 
-        public virtual BitWidthEnum Width
+        /// <summary>
+        /// Register width in bytes. 1=8 bits, 2=16 bits
+        /// </summary>
+        public virtual int Width
         {
             get
             {
-                return this.bitLength;
+                return this.byteLength;
             }
 
             set
             {
-                this.bitLength = value;
+                this.byteLength = value;
             }
         }
 
@@ -83,7 +87,7 @@ namespace Nu64.Processor
         {
             get
             {
-                if (this.bitLength == BitWidthEnum.Bits16)
+                if (this.byteLength == 2)
                     return 2;
                 return 1;
             }
@@ -103,9 +107,9 @@ namespace Nu64.Processor
         {
             switch (Width)
             {
-                case Register.BitWidthEnum.Bits16:
+                case 2:
                     return "$" + Value.ToString("X4");
-                case Register.BitWidthEnum.Bits8:
+                case 1:
                     return "$" + Value.ToString("X2");
                 default:
                     return Value.ToString();
@@ -119,9 +123,9 @@ namespace Nu64.Processor
         /// <returns></returns>
         public virtual int GetLongAddress(int Address)
         {
-            if (this.bitLength == BitWidthEnum.Bits16)
+            if (this.byteLength == 2)
                 return (this.Value << 8) + Address;
-            else if (this.bitLength == BitWidthEnum.Bits8)
+            else if (this.byteLength == 1)
                 return (this.Value << 16) + Address;
             else
                 return this.Value;
@@ -134,9 +138,9 @@ namespace Nu64.Processor
         /// <returns></returns>
         public virtual int GetLongAddress(Register Address)
         {
-            if (this.bitLength == BitWidthEnum.Bits16)
+            if (this.byteLength == 2)
                 return (this.Value << 8) + Address.Value;
-            else if (this.bitLength == BitWidthEnum.Bits8)
+            else if (this.byteLength == 1)
                 return (this.Value << 16) + Address.Value;
             else
                 return this.Value;
@@ -145,7 +149,7 @@ namespace Nu64.Processor
         public virtual void Reset()
         {
             this.Value = 0;
-            this.bitLength = BitWidthEnum.Bits8;
+            this.byteLength = 1;
         }
     }
 
@@ -154,19 +158,19 @@ namespace Nu64.Processor
     /// </summary>
     public class Register16 : Register
     {
-        public override BitWidthEnum Width
+        public override int Width
         {
             get
             {
-                return BitWidthEnum.Bits16;
+                return 2;
             }
 
             set
             {
-                base.Width = BitWidthEnum.Bits16;
+                base.Width = 2;
             }
         }
-        
+
         /// <summary>
         /// Get a direct page address. Offsets the register's value by 8 bits, then adds 
         /// the supplied address.
@@ -200,16 +204,16 @@ namespace Nu64.Processor
     /// </summary>
     public class Register8 : Register
     {
-        public override BitWidthEnum Width
+        public override int Width
         {
             get
             {
-                return BitWidthEnum.Bits8;
+                return 1;
             }
 
             set
             {
-                base.Width = BitWidthEnum.Bits8;
+                base.Width = 1;
             }
         }
     }
@@ -231,9 +235,9 @@ namespace Nu64.Processor
         /// </summary>
         /// <param name="Address"></param>
         /// <returns></returns>
-        public virtual int GetLongAddress(int Address)
+        public override int GetLongAddress(int Address)
         {
-            return this.Value << 16 + Address;
+            return (this.Value << 16) + Address;
         }
     }
 
@@ -242,16 +246,16 @@ namespace Nu64.Processor
     /// </summary>
     public class RegisterDirectPage : Register
     {
-        public override BitWidthEnum Width
+        public override int Width
         {
             get
             {
-                return BitWidthEnum.Bits16;
+                return 2;
             }
 
             set
             {
-                base.Width = BitWidthEnum.Bits16;
+                base.Width = 2;
             }
         }
 
@@ -261,7 +265,7 @@ namespace Nu64.Processor
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        public int GetLongAddress(int address)
+        public override int GetLongAddress(int address)
         {
             return this.Value << 8 + address;
         }

@@ -8,6 +8,8 @@ namespace Nu64.Processor
 {
     class CPUTest : ReadyHandler
     {
+        private const int REGISTER_COLUMN = 22;
+        private const int MNEMONIC_COLUMN = 10;
         Kernel kernel = null;
         Processor.CPU CPU = null;
 
@@ -22,8 +24,6 @@ namespace Nu64.Processor
             // test LDA immediate, zero and Negative flags
             0xA9, 0x00, 0X00, // LDA #$0000   Zero should be set
             0xA9, 0x00, 0x80, // LDA #$8000   Negative should be set 
-            0xA9, 0xFF, 0x00, // LDA #$00FF   
-            0xA9, 0xFF, 0xFF, // LDA #$FFFF   Negative should be set 
             
             // test LDX and LDY with 16-bit values
             0xA2, 0x00, 0x00, // LDX #$0000   Zero should be set
@@ -34,6 +34,8 @@ namespace Nu64.Processor
             0xE2, 0x30,       // SEP #$30     Set 8-bit A and Index registers
             0xA9, 0x00,       // LDA #$00     
             0xA9, 0xFF,       // LDA #$FF
+            0xA9, (byte)'?',  // LDA #$4040   Load "?@" into A
+            0x8D, 0x30, 0x12, // STA $1190 stores @@ at row 5 on the screen
             0xA2, 0x00,       // LDX #$00                               
             0xA2, 0xFF,       // LDX #$FF                             
             0xA0, 0x00,       // LDY #$00     
@@ -56,18 +58,18 @@ namespace Nu64.Processor
             int pc = 0xc000;
             for (int i = 0; i < TestProg.Length; i++)
             {
-                kernel.MemoryMap[pc] = TestProg[i];
+                kernel.Memory[pc] = TestProg[i];
                 pc++;
             }
-            kernel.MemoryMap.WriteWord(MemoryMap_DirectPage.VECTOR_RESET, 0xc000);
-            kernel.MemoryMap.WriteWord(MemoryMap_DirectPage.VECTOR_BRK, 0xc000);
+            kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_RESET, 0xc000);
+            kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_BRK, 0xc000);
             kernel.CPU.Stack.Value = MemoryMap_DirectPage.END_OF_STACK;
 
             kernel.OutputDevice = DeviceEnum.DebugWindow;
             kernel.CPU.PC.Value = 0xc000;
-            kernel.PrintTab(20);
+            kernel.PrintTab(REGISTER_COLUMN);
             kernel.Monitor.PrintRegisterHeader();
-            kernel.PrintTab(20);
+            kernel.PrintTab(REGISTER_COLUMN);
             kernel.Monitor.PrintRegisters(false);
             while (!CPU.Halted)
             {
@@ -81,9 +83,9 @@ namespace Nu64.Processor
                     kernel.PrintMemHex(1, i);
                     kernel.Print(" ");
                 }
-                kernel.PrintTab(10);
+                kernel.PrintTab(MNEMONIC_COLUMN);
                 kernel.Print(CPU.OC.ToString(CPU.SignatureBytes));
-                kernel.PrintTab(20);
+                kernel.PrintTab(REGISTER_COLUMN);
                 kernel.Monitor.PrintRegisters(false);
             }
 

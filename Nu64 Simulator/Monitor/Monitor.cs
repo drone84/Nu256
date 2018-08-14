@@ -88,7 +88,7 @@ namespace Nu64.Monitor
             StringBuilder s = new StringBuilder();
             for (int i = 0; i < kernel.gpu.Columns; i++)
             {
-                s.Append(kernel.gpu.CharacterData[LineStart + i]);
+                s.Append(kernel.Memory[LineStart]+i);
             }
 
             Execute(s.ToString());

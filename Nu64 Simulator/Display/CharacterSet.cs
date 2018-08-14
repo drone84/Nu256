@@ -10,6 +10,7 @@ namespace Nu64.Display
     public class CharacterSet
     {
         public string Name = "";
+        public const int SlotSize = 8192;
 
         /// <summary>
         /// Character types. Ths is used to pick the "slot" the character set lives in.

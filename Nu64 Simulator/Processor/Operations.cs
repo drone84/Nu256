@@ -50,7 +50,7 @@ namespace Nu64.Processor
 
         public void OpORA(int val)
         {
-            if (cpu.A.Width == Register.BitWidthEnum.Bits8)
+            if (cpu.A.Width == 1)
                 val = val & 0xff;
 
             cpu.A.Value = cpu.A.Value | val;
@@ -102,7 +102,7 @@ namespace Nu64.Processor
         /// <param name="isCode">Assume the address is code and uses the Program Bank Register. 
         /// Otherwise uses the Data Bank Register, if appropriate.</param>
         /// <returns></returns>
-        public int GetData(AddressModes mode, int signatureBytes)
+        public int GetData(AddressModes mode, int signatureBytes, int bytes = 2)
         {
             switch (mode)
             {
@@ -160,16 +160,12 @@ namespace Nu64.Processor
                     return signatureBytes;
                 case AddressModes.StackDirectPageIndirect:
                     throw new NotImplementedException();
-                    break;
                 case AddressModes.StackRelative:
                     throw new NotImplementedException();
-                    break;
                 case AddressModes.StackRelativeIndirectIndexedWithY:
                     throw new NotImplementedException();
-                    break;
                 case AddressModes.StackProgramCounterRelativeLong:
                     throw new NotImplementedException();
-                    break;
             }
             return signatureBytes;
         }
@@ -242,7 +238,7 @@ namespace Nu64.Processor
         /// <param name="Address"></param>
         /// <param name="bank"></param>
         /// <returns></returns>
-        private int GetAbsolute(int Address, Register bank)
+        private int GetAbsolute(int Address, Register bank, int Bytes = 2)
         {
             return cpu.Memory.ReadWord(bank.GetLongAddress(Address));
         }
@@ -407,7 +403,7 @@ namespace Nu64.Processor
                 case OpcodeList.DEC_AbsoluteIndexedWithX:
                     bval--;
                     cpu.Memory.WriteByte(addr, bval);
-                    cpu.Flags.SetNZ(bval, Register.BitWidthEnum.Bits8);
+                    cpu.Flags.SetNZ(bval, 1);
                     break;
 
                 case OpcodeList.INC_Accumulator:
@@ -421,7 +417,7 @@ namespace Nu64.Processor
                     addr = cpu.DirectPage.GetLongAddress(addr);
                     bval++;
                     cpu.Memory.WriteByte(addr, bval);
-                    cpu.Flags.SetNZ(bval, Register.BitWidthEnum.Bits8);
+                    cpu.Flags.SetNZ(bval, 1);
                     break;
 
                 case OpcodeList.DEX_Implied:
@@ -622,7 +618,7 @@ namespace Nu64.Processor
             if (addressMode != AddressModes.Immediate)
             {
                 cpu.Flags.SetNZ(result, cpu.A.Width);
-                if (cpu.A.Width == Register.BitWidthEnum.Bits16)
+                if (cpu.A.Width == 2)
                     cpu.Flags.oVerflow = (result & 0x4000) == 0x4000;
                 else
                     cpu.Flags.oVerflow = (result & 0x400) == 0x40;
@@ -647,6 +643,7 @@ namespace Nu64.Processor
                     cpu.Halted = true;
                     break;
                 default:
+                    throw new NotImplementedException("ExecuteJumpReturn() opcode not implemented: " + instruction.ToString("X2"));
                     break;
             }
         }
@@ -669,14 +666,20 @@ namespace Nu64.Processor
 
         public void ExecuteSTA(byte instruction, AddressModes addressMode, int signature)
         {
+            int addr = GetAddress(addressMode, signature, cpu.DataBank);
+            cpu.Memory.Write(addr, cpu.A.Value, cpu.A.Width);
         }
 
         public void ExecuteSTY(byte instruction, AddressModes addressMode, int signature)
         {
+            int addr = GetAddress(addressMode, signature, cpu.DataBank);
+            cpu.Memory.Write(addr, cpu.Y.Value, cpu.Y.Width);
         }
 
         public void ExecuteSTX(byte instruction, AddressModes addressMode, int signature)
         {
+            int addr = GetAddress(addressMode, signature, cpu.DataBank);
+            cpu.Memory.Write(addr, cpu.X.Value, cpu.X.Width);
         }
 
         public void ExecuteLDY(byte instruction, AddressModes addressMode, int signature)

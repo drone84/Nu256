@@ -55,7 +55,7 @@ namespace Nu64.Processor
                 if (ActionRegister == null)
                     return Length8Bit;
 
-                if (ActionRegister.Width == Register.BitWidthEnum.Bits16)
+                if (ActionRegister.Width == 2)
                     return Length8Bit + 1;
 
                 return Length8Bit;
@@ -71,11 +71,11 @@ namespace Nu64.Processor
         {
             string arg, sig;
             if (this.Length == 3)
-                sig = Signature.ToString("X4");
+                sig = "$"+Signature.ToString("X4");
             else if (this.Length == 4)
-                sig = Signature.ToString("X6");
+                sig = "$"+Signature.ToString("X6");
             else
-                sig = Signature.ToString("X2");
+                sig = "$"+Signature.ToString("X2");
 
             switch (this.AddressMode)
             {
