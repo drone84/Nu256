@@ -338,7 +338,7 @@ namespace Nu64.Processor
             Add(new OpCode(0x41, "EOR", 2, AddressModes.DirectPageIndexedIndirectWithX, new OpCode.ExecuteDelegate(operations.ExecuteEOR)));
             Add(new OpCode(0x42, "WDM", 2, AddressModes.Implied, new OpCode.ExecuteDelegate(operations.ExecuteMisc)));
             Add(new OpCode(0x43, "EOR", 2, AddressModes.StackRelative, new OpCode.ExecuteDelegate(operations.ExecuteEOR)));
-            Add(new OpCode(0x44, "MVP", 3, AddressModes.BlockMove, new OpCode.ExecuteDelegate(operations.ExecuteMisc)));
+            Add(new OpCode(0x44, "MVP", 3, AddressModes.BlockMove, new OpCode.ExecuteDelegate(operations.ExecuteBlockMove)));
             Add(new OpCode(0x45, "EOR", 2, AddressModes.DirectPage, new OpCode.ExecuteDelegate(operations.ExecuteEOR)));
             Add(new OpCode(0x46, "LSR", 2, AddressModes.DirectPage, new OpCode.ExecuteDelegate(operations.ExecuteShift)));
             Add(new OpCode(0x47, "EOR", 2, AddressModes.DirectPageIndirectLong, new OpCode.ExecuteDelegate(operations.ExecuteEOR)));
@@ -354,7 +354,7 @@ namespace Nu64.Processor
             Add(new OpCode(0x51, "EOR", 2, AddressModes.DirectPageIndirectIndexedWithY, new OpCode.ExecuteDelegate(operations.ExecuteEOR)));
             Add(new OpCode(0x52, "EOR", 2, AddressModes.DirectPageIndirect, new OpCode.ExecuteDelegate(operations.ExecuteEOR)));
             Add(new OpCode(0x53, "EOR", 2, AddressModes.StackRelativeIndirectIndexedWithY, new OpCode.ExecuteDelegate(operations.ExecuteEOR)));
-            Add(new OpCode(0x54, "MVN", 3, AddressModes.BlockMove, new OpCode.ExecuteDelegate(operations.ExecuteMisc)));
+            Add(new OpCode(0x54, "MVN", 3, AddressModes.BlockMove, new OpCode.ExecuteDelegate(operations.ExecuteBlockMove)));
             Add(new OpCode(0x55, "EOR", 2, AddressModes.DirectPageIndexedWithX, new OpCode.ExecuteDelegate(operations.ExecuteEOR)));
             Add(new OpCode(0x56, "LSR", 2, AddressModes.DirectPageIndexedWithX, new OpCode.ExecuteDelegate(operations.ExecuteShift)));
             Add(new OpCode(0x57, "EOR", 2, AddressModes.DirectPageIndirectLongIndexedWithY, new OpCode.ExecuteDelegate(operations.ExecuteEOR)));
@@ -462,11 +462,11 @@ namespace Nu64.Processor
             Add(new OpCode(0xBD, "LDA", 3, AddressModes.AbsoluteIndexedWithX, new OpCode.ExecuteDelegate(operations.ExecuteLDA)));
             Add(new OpCode(0xBE, "LDX", 3, AddressModes.AbsoluteIndexedWithY, new OpCode.ExecuteDelegate(operations.ExecuteLDX)));
             Add(new OpCode(0xBF, "LDA", 4, AddressModes.AbsoluteLongIndexedWithX, new OpCode.ExecuteDelegate(operations.ExecuteLDA)));
-            Add(new OpCode(0xC0, "CPY", 2, CPU.Y, AddressModes.Immediate, new OpCode.ExecuteDelegate(operations.ExecuteCPXCPY)));
+            Add(new OpCode(0xC0, "CPY", 2, CPU.Y, AddressModes.Immediate, new OpCode.ExecuteDelegate(operations.ExecuteCPY)));
             Add(new OpCode(0xC1, "CMP", 2, AddressModes.DirectPageIndexedIndirectWithX, new OpCode.ExecuteDelegate(operations.ExecuteCMP)));
             Add(new OpCode(0xC2, "REP", 2, AddressModes.Immediate, new OpCode.ExecuteDelegate(operations.ExecuteStatusReg)));
             Add(new OpCode(0xC3, "CMP", 2, AddressModes.StackRelative, new OpCode.ExecuteDelegate(operations.ExecuteCMP)));
-            Add(new OpCode(0xC4, "CPY", 2, AddressModes.DirectPage, new OpCode.ExecuteDelegate(operations.ExecuteCPXCPY)));
+            Add(new OpCode(0xC4, "CPY", 2, AddressModes.DirectPage, new OpCode.ExecuteDelegate(operations.ExecuteCPY)));
             Add(new OpCode(0xC5, "CMP", 2, AddressModes.DirectPage, new OpCode.ExecuteDelegate(operations.ExecuteCMP)));
             Add(new OpCode(0xC6, "DEC", 2, AddressModes.DirectPage, new OpCode.ExecuteDelegate(operations.ExecuteINCDEC)));
             Add(new OpCode(0xC7, "CMP", 2, AddressModes.DirectPageIndirectLong, new OpCode.ExecuteDelegate(operations.ExecuteCMP)));
@@ -474,7 +474,7 @@ namespace Nu64.Processor
             Add(new OpCode(0xC9, "CMP", 2, CPU.A, AddressModes.Immediate, new OpCode.ExecuteDelegate(operations.ExecuteCMP)));
             Add(new OpCode(0xCA, "DEX", 1, AddressModes.Implied, new OpCode.ExecuteDelegate(operations.ExecuteINCDEC)));
             Add(new OpCode(0xCB, "WAI", 1, AddressModes.Implied, new OpCode.ExecuteDelegate(operations.ExecuteWAI)));
-            Add(new OpCode(0xCC, "CPY", 3, AddressModes.Absolute, new OpCode.ExecuteDelegate(operations.ExecuteCPXCPY)));
+            Add(new OpCode(0xCC, "CPY", 3, AddressModes.Absolute, new OpCode.ExecuteDelegate(operations.ExecuteCPY)));
             Add(new OpCode(0xCD, "CMP", 3, AddressModes.Absolute, new OpCode.ExecuteDelegate(operations.ExecuteCMP)));
             Add(new OpCode(0xCE, "DEC", 3, AddressModes.Absolute, new OpCode.ExecuteDelegate(operations.ExecuteINCDEC)));
             Add(new OpCode(0xCF, "CMP", 4, AddressModes.AbsoluteLong, new OpCode.ExecuteDelegate(operations.ExecuteCMP)));
@@ -494,11 +494,11 @@ namespace Nu64.Processor
             Add(new OpCode(0xDD, "CMP", 3, AddressModes.AbsoluteIndexedWithX, new OpCode.ExecuteDelegate(operations.ExecuteCMP)));
             Add(new OpCode(0xDE, "DEC", 3, AddressModes.AbsoluteIndexedWithX, new OpCode.ExecuteDelegate(operations.ExecuteINCDEC)));
             Add(new OpCode(0xDF, "CMP", 4, AddressModes.AbsoluteLongIndexedWithX, new OpCode.ExecuteDelegate(operations.ExecuteCMP)));
-            Add(new OpCode(0xE0, "CPX", 2, CPU.X, AddressModes.Immediate, new OpCode.ExecuteDelegate(operations.ExecuteCPXCPY)));
+            Add(new OpCode(0xE0, "CPX", 2, CPU.X, AddressModes.Immediate, new OpCode.ExecuteDelegate(operations.ExecuteCPX)));
             Add(new OpCode(0xE1, "SBC", 2, AddressModes.DirectPageIndexedIndirectWithX, new OpCode.ExecuteDelegate(operations.ExecuteSBC)));
             Add(new OpCode(0xE2, "SEP", 2, AddressModes.Immediate, new OpCode.ExecuteDelegate(operations.ExecuteStatusReg)));
             Add(new OpCode(0xE3, "SBC", 2, AddressModes.StackRelative, new OpCode.ExecuteDelegate(operations.ExecuteSBC)));
-            Add(new OpCode(0xE4, "CPX", 2, AddressModes.DirectPage, new OpCode.ExecuteDelegate(operations.ExecuteCPXCPY)));
+            Add(new OpCode(0xE4, "CPX", 2, AddressModes.DirectPage, new OpCode.ExecuteDelegate(operations.ExecuteCPX)));
             Add(new OpCode(0xE5, "SBC", 2, AddressModes.DirectPage, new OpCode.ExecuteDelegate(operations.ExecuteSBC)));
             Add(new OpCode(0xE6, "INC", 2, AddressModes.DirectPage, new OpCode.ExecuteDelegate(operations.ExecuteINCDEC)));
             Add(new OpCode(0xE7, "SBC", 2, AddressModes.DirectPageIndirectLong, new OpCode.ExecuteDelegate(operations.ExecuteSBC)));
@@ -506,7 +506,7 @@ namespace Nu64.Processor
             Add(new OpCode(0xE9, "SBC", 2, CPU.A, AddressModes.Immediate, new OpCode.ExecuteDelegate(operations.ExecuteSBC)));
             Add(new OpCode(0xEA, "NOP", 1, AddressModes.Implied, new OpCode.ExecuteDelegate(operations.ExecuteMisc)));
             Add(new OpCode(0xEB, "XBA", 1, AddressModes.Implied, new OpCode.ExecuteDelegate(operations.ExecuteMisc)));
-            Add(new OpCode(0xEC, "CPX", 3, AddressModes.Absolute, new OpCode.ExecuteDelegate(operations.ExecuteCPXCPY)));
+            Add(new OpCode(0xEC, "CPX", 3, AddressModes.Absolute, new OpCode.ExecuteDelegate(operations.ExecuteCPX)));
             Add(new OpCode(0xED, "SBC", 3, AddressModes.Absolute, new OpCode.ExecuteDelegate(operations.ExecuteSBC)));
             Add(new OpCode(0xEE, "INC", 3, AddressModes.Absolute, new OpCode.ExecuteDelegate(operations.ExecuteINCDEC)));
             Add(new OpCode(0xEF, "SBC", 4, AddressModes.AbsoluteLong, new OpCode.ExecuteDelegate(operations.ExecuteSBC)));
@@ -514,7 +514,7 @@ namespace Nu64.Processor
             Add(new OpCode(0xF1, "SBC", 2, AddressModes.DirectPageIndirectIndexedWithY, new OpCode.ExecuteDelegate(operations.ExecuteSBC)));
             Add(new OpCode(0xF2, "SBC", 2, AddressModes.DirectPageIndirect, new OpCode.ExecuteDelegate(operations.ExecuteSBC)));
             Add(new OpCode(0xF3, "SBC", 2, AddressModes.StackRelativeIndirectIndexedWithY, new OpCode.ExecuteDelegate(operations.ExecuteSBC)));
-            Add(new OpCode(0xF4, "PEA", 3, AddressModes.StackAbsolute, new OpCode.ExecuteDelegate(operations.ExecuteStack)));
+            Add(new OpCode(0xF4, "PEA", 3, AddressModes.Immediate, new OpCode.ExecuteDelegate(operations.ExecuteStack)));
             Add(new OpCode(0xF5, "SBC", 2, AddressModes.DirectPageIndexedWithX, new OpCode.ExecuteDelegate(operations.ExecuteSBC)));
             Add(new OpCode(0xF6, "INC", 2, AddressModes.DirectPageIndexedWithX, new OpCode.ExecuteDelegate(operations.ExecuteINCDEC)));
             Add(new OpCode(0xF7, "SBC", 2, AddressModes.DirectPageIndirectLongIndexedWithY, new OpCode.ExecuteDelegate(operations.ExecuteSBC)));

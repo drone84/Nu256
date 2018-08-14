@@ -83,13 +83,41 @@ namespace Nu64.Processor
             }
         }
 
-        public virtual int Bytes
+        public virtual int MinUnsigned
         {
             get
             {
-                if (this.byteLength == 2)
-                    return 2;
-                return 1;
+                return 0;
+            }
+        }
+
+        public virtual int MaxUnsigned
+        {
+            get
+            {
+                if (Width == 8)
+                    return 0xff;
+                return 0xffff;
+            }
+        }
+
+        public virtual int MinSigned
+        {
+            get
+            {
+                if (Width == 8)
+                    return -128;
+                return -32768;
+            }
+        }
+
+        public virtual int MaxSigned
+        {
+            get
+            {
+                if (Width == 8)
+                    return 127;
+                return 32767;
             }
         }
 

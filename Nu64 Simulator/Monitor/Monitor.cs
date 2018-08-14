@@ -13,7 +13,6 @@ namespace Nu64.Monitor
 
         char commmand = ' ';
         int[] args = new int[5];
-        string argStr = "";
 
         public Monitor(Kernel NewKernel)
         {

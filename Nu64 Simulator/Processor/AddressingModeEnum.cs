@@ -37,7 +37,7 @@ namespace Nu64.Processor
         ProgramCounterRelativeLong,
 
         StackImplied,
-        StackAbsolute,
+        //StackAbsolute,
         StackDirectPageIndirect,
         StackRelative,
         StackRelativeIndirectIndexedWithY,

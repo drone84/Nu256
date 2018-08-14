@@ -44,7 +44,6 @@ namespace Nu64.Processor
                 + "\r\nPC: " + cpu.ProgramBank.GetLongAddress(cpu.PC)
                 + "\r\ninstruction: " + cpu.OC.ToString());
 
-
             cpu.Halted = true;
         }
 
@@ -64,14 +63,14 @@ namespace Nu64.Processor
         }
 
         /// <summary>
-        /// Branch instructions take a *signed* 8-bit value. This is added to the program counter if
-        /// the test is true.
+        /// Branch instructions take a *signed* 8-bit value. The offset is added to the address of the NEXT instruction, so 
+        /// branches are always PC + 2 + offset.
         /// </summary>
         /// <param name="b"></param>
         public void BranchNear(byte b)
         {
             int offset = MakeSignedByte(b);
-            cpu.PC.Value += offset;
+            cpu.PC.Value += offset + 2;
         }
 
         public sbyte MakeSignedByte(byte b)
@@ -102,7 +101,7 @@ namespace Nu64.Processor
         /// <param name="isCode">Assume the address is code and uses the Program Bank Register. 
         /// Otherwise uses the Data Bank Register, if appropriate.</param>
         /// <returns></returns>
-        public int GetData(AddressModes mode, int signatureBytes, int bytes = 2)
+        public int GetValue(AddressModes mode, int signatureBytes, int bytes = 2)
         {
             switch (mode)
             {
@@ -156,8 +155,8 @@ namespace Nu64.Processor
                     return cpu.PC.Value + 3 + MakeSignedWord((UInt16)signatureBytes);
                 case AddressModes.StackImplied:
                     return cpu.Stack.Value;
-                case AddressModes.StackAbsolute:
-                    return signatureBytes;
+                //case AddressModes.StackAbsolute:
+                //    return signatureBytes;
                 case AddressModes.StackDirectPageIndirect:
                     throw new NotImplementedException();
                 case AddressModes.StackRelative:
@@ -322,7 +321,7 @@ namespace Nu64.Processor
 
         public void ExecuteORA(byte instruction, AddressModes addressMode, int signature)
         {
-            int val = GetData(addressMode, signature, cpu.A.Bytes);
+            int val = GetValue(addressMode, signature, cpu.A.Width);
             cpu.A.Value = cpu.A.Value | val;
             cpu.Flags.SetNZ(cpu.A);
         }
@@ -337,7 +336,7 @@ namespace Nu64.Processor
         /// <param name="signature"></param>
         public void ExecuteTSBTRB(byte instruction, AddressModes addressMode, int signature)
         {
-            int val = GetData(addressMode, signature, cpu.A.Width);
+            int val = GetValue(addressMode, signature, cpu.A.Width);
             int test = val & cpu.A.Value;
             cpu.Flags.SetZ(test);
 
@@ -364,7 +363,7 @@ namespace Nu64.Processor
 
         public void ExecuteShift(byte instruction, AddressModes addressMode, int signature)
         {
-            int val = GetData(addressMode, signature, cpu.A.Width);
+            int val = GetValue(addressMode, signature, cpu.A.Width);
             int addr = GetAddress(addressMode, signature, cpu.DataBank);
             switch (instruction)
             {
@@ -440,11 +439,72 @@ namespace Nu64.Processor
 
         public void ExecuteStack(byte instruction, AddressModes addressMode, int signature)
         {
-            here
+            switch (instruction)
+            {
+                case OpcodeList.PHB_StackImplied:
+                    cpu.Push(cpu.DataBank);
+                    break;
+                case OpcodeList.PHD_StackImplied:
+                    cpu.Push(cpu.DirectPage);
+                    break;
+                case OpcodeList.PHK_StackImplied:
+                    cpu.Push(cpu.ProgramBank);
+                    break;
+                case OpcodeList.PHP_StackImplied:
+                    cpu.Push(cpu.Flags);
+                    break;
+                case OpcodeList.PLB_StackImplied:
+                    cpu.PopInto(cpu.DataBank);
+                    break;
+                case OpcodeList.PLD_StackImplied:
+                    cpu.PopInto(cpu.DirectPage);
+                    break;
+                case OpcodeList.PLP_StackImplied:
+                    cpu.PopInto(cpu.Flags);
+                    break;
+                default:
+                    throw new NotImplementedException("ExecuteStack() opcode not implemented: " + instruction.ToString("X2"));
+            }
         }
 
         public void ExecuteBranch(byte instruction, AddressModes addressMode, int signature)
         {
+            bool takeBranch = false;
+            switch (instruction)
+            {
+                case OpcodeList.BCC_ProgramCounterRelative:
+                    takeBranch = !cpu.Flags.Carry;
+                    break;
+                case OpcodeList.BCS_ProgramCounterRelative:
+                    takeBranch = cpu.Flags.Carry;
+                    break;
+                case OpcodeList.BEQ_ProgramCounterRelative:
+                    takeBranch = cpu.Flags.Zero;
+                    break;
+                case OpcodeList.BMI_ProgramCounterRelative:
+                    takeBranch = cpu.Flags.Negative;
+                    break;
+                case OpcodeList.BNE_ProgramCounterRelative:
+                    takeBranch = !cpu.Flags.Zero;
+                    break;
+                case OpcodeList.BPL_ProgramCounterRelative:
+                    takeBranch = !cpu.Flags.Negative;
+                    break;
+                case OpcodeList.BRA_ProgramCounterRelative:
+                    takeBranch = true;
+                    break;
+                case OpcodeList.BVC_ProgramCounterRelative:
+                    takeBranch = !cpu.Flags.oVerflow;
+                    break;
+                case OpcodeList.BVS_ProgramCounterRelative:
+                    takeBranch = cpu.Flags.oVerflow;
+                    break;
+                default:
+                    throw new NotImplementedException("ExecuteBranch() opcode not implemented: " + instruction.ToString("X2"));
+            }
+
+            if (takeBranch)
+                BranchNear((byte)signature);
         }
 
         public void ExecuteStatusReg(byte instruction, AddressModes addressMode, int signature)
@@ -495,7 +555,7 @@ namespace Nu64.Processor
 
         public void ExecuteINCDEC(byte instruction, AddressModes addressMode, int signature)
         {
-            byte bval = (byte)GetData(addressMode, signature);
+            byte bval = (byte)GetValue(addressMode, signature);
             int addr = GetAddress(addressMode, signature, cpu.DataBank);
 
             switch (instruction)
@@ -556,6 +616,10 @@ namespace Nu64.Processor
             int ptr = 0;
             switch (addressMode)
             {
+                // immediate is a special case, since no address is referenced. So use the address
+                // of the signature byte, as the argument is the data. 
+                case AddressModes.Immediate:
+                    return cpu.GetLongPC() + 1;
                 case AddressModes.Absolute:
                     return Bank.GetLongAddress(SignatureBytes);
                 case AddressModes.AbsoluteLong:
@@ -603,7 +667,7 @@ namespace Nu64.Processor
                     addr = cpu.PC.Value + ptr;
                     return addr;
                 case AddressModes.StackImplied:
-                case AddressModes.StackAbsolute:
+                    //case AddressModes.StackAbsolute:
                     return 0;
                 case AddressModes.StackDirectPageIndirect:
                     return cpu.DirectPage.GetLongAddress(SignatureBytes);
@@ -713,14 +777,14 @@ namespace Nu64.Processor
 
         public void ExecuteAND(byte instruction, AddressModes addressMode, int signature)
         {
-            int data = GetData(addressMode, signature);
+            int data = GetValue(addressMode, signature);
             cpu.A.Value = cpu.A.Value & data;
             cpu.Flags.SetNZ(cpu.A);
         }
 
         public void ExecuteBIT(byte instruction, AddressModes addressMode, int signature)
         {
-            int data = GetData(addressMode, signature);
+            int data = GetValue(addressMode, signature);
             int result = cpu.A.Value & data;
             if (addressMode != AddressModes.Immediate)
             {
@@ -734,41 +798,81 @@ namespace Nu64.Processor
                 cpu.Flags.SetZ(result);
         }
 
-        public void ExecuteROL(byte instruction, AddressModes addressMode, int signature)
-        {
-        }
-
         public void ExecuteEOR(byte instruction, AddressModes addressMode, int signature)
         {
+            int val = GetValue(addressMode, signature, cpu.A.Width);
+            cpu.A.Value = cpu.A.Value ^ val;
+            cpu.Flags.SetNZ(cpu.A);
         }
 
         public void ExecuteMisc(byte instruction, AddressModes addressMode, int signature)
         {
             switch (instruction)
             {
+                // WDM is a 2-byte NOP and an easter egg. William D Mensch designed the 6502 and 65816.
+                case OpcodeList.WDM_Implied:
+                case OpcodeList.NOP_Implied:
+                    break;
                 case OpcodeList.STP_Implied: //stop
                     cpu.Halted = true;
                     break;
                 default:
-                    throw new NotImplementedException("ExecuteJumpReturn() opcode not implemented: " + instruction.ToString("X2"));
-                    break;
+                    throw new NotImplementedException("ExecuteMisc() opcode not implemented: " + instruction.ToString("X2"));
             }
         }
 
-        public void ExecuteLSR(byte instruction, AddressModes addressMode, int signature)
+        /// <summary>
+        /// Block moves.
+        /// <para>C = bytes to move -1 (so if we're moving 20 bytes, C=19</para>
+        /// <para>X=16-bit source address</para>
+        /// <para>Y=16-bit destination address</para>
+        /// <para>Operand bytes are the source and destination banks.</para>
+        /// <para>After the move, the destination bank is stored in the DBR.</para>
+        /// <para>In the assembled code, order is dest,source. In source code, specify source,dest.</para>
+        /// </summary>
+        /// <param name="instruction"></param>
+        /// <param name="addressMode"></param>
+        /// <param name="signature"></param>
+        public void ExecuteBlockMove(byte instruction, AddressModes addressMode, int signature)
         {
+            int sourceBank = (signature << 16) & 0xff0000;
+            int destBank = (signature << 8) & 0xff0000;
+
+            int sourceAddr = sourceBank + cpu.X.Value;
+            int destAddr = sourceBank + cpu.Y.Value;
+            int bytesToMove = cpu.A.Value;
+
+            int dir = (instruction == OpcodeList.MVP_BlockMove) ? 1 : -1;
+
+            while (cpu.A.Value >= 0)
+            {
+                cpu.Memory[destAddr] = cpu.Memory[sourceAddr];
+                cpu.X.Value += dir;
+                cpu.Y.Value += dir;
+                cpu.A.Value--;
+            }
         }
 
         public void ExecuteADC(byte instruction, AddressModes addressMode, int signature)
         {
+            int val = GetValue(addressMode, signature, cpu.A.Width);
+
+            if (cpu.Flags.Decimal)
+                throw new NotImplementedException("Decimal mode addition not implemented.");
+            else
+                val = val + cpu.A.Value + cpu.Flags.CarryBit;
+
+            cpu.Flags.Carry = (val < 0 || val > cpu.A.MaxUnsigned);
+            cpu.Flags.oVerflow = (val < cpu.A.MinSigned || val > cpu.A.MaxSigned);
+            cpu.Flags.SetNZ(val, cpu.A.Width);
+
+            cpu.A.Value = val;
         }
 
         public void ExecuteSTZ(byte instruction, AddressModes addressMode, int signature)
         {
-        }
-
-        public void ExecuteROR(byte instruction, AddressModes addressMode, int signature)
-        {
+            int addr = GetAddress(addressMode, signature, cpu.DataBank);
+            cpu.Memory.Write(addr, 0, cpu.A.Width);
         }
 
         public void ExecuteSTA(byte instruction, AddressModes addressMode, int signature)
@@ -791,34 +895,68 @@ namespace Nu64.Processor
 
         public void ExecuteLDY(byte instruction, AddressModes addressMode, int signature)
         {
-            int val = GetData(addressMode, signature);
+            int val = GetValue(addressMode, signature);
             cpu.Y.Value = val;
         }
 
         public void ExecuteLDA(byte instruction, AddressModes addressMode, int signature)
         {
-            int val = GetData(addressMode, signature);
+            int val = GetValue(addressMode, signature);
             cpu.A.Value = val;
         }
 
         public void ExecuteLDX(byte instruction, AddressModes addressMode, int signature)
         {
-            int val = GetData(addressMode, signature);
+            int val = GetValue(addressMode, signature);
             cpu.X.Value = val;
         }
 
-        public void ExecuteCPXCPY(byte instruction, AddressModes addressMode, int signature)
+        public void ExecuteCPX(byte instruction, AddressModes addressMode, int signature)
         {
+            Compare(addressMode, signature, cpu.X);
         }
 
+        public void ExecuteCPY(byte instruction, AddressModes addressMode, int signature)
+        {
+            Compare(addressMode, signature, cpu.Y);
+        }
 
         public void ExecuteCMP(byte instruction, AddressModes addressMode, int signature)
         {
+            Compare(addressMode, signature, cpu.A);
         }
 
+        public void Compare(AddressModes addressMode, int signature, Register Reg)
+        {
+            int val = GetValue(addressMode, signature, Reg.Width);
+            int test = Reg.Value - val;
 
+            cpu.Flags.Zero = test == 0;
+            cpu.Flags.Carry = test >= 0;
+            cpu.Flags.SetN(val, Reg.Width);
+        }
+
+        /// <summary>
+        /// Subtract value from accumulator. Carry acts as a "borrow". When Carry is 0,
+        /// subtract one more from Accumulator. Carry will be 0 if result < 0 and 1 if result >= 0.
+        /// </summary>
+        /// <param name="instruction"></param>
+        /// <param name="addressMode"></param>
+        /// <param name="signature"></param>
         public void ExecuteSBC(byte instruction, AddressModes addressMode, int signature)
         {
+            int val = GetValue(addressMode, signature, cpu.A.Width);
+
+            if (cpu.Flags.Decimal)
+                throw new NotImplementedException("Decimal mode subtraction not implemented.");
+            else
+                val = val - cpu.A.Value - 1 + cpu.Flags.CarryBit;
+
+            cpu.Flags.Carry = (val >= 0 && val <= cpu.A.MaxUnsigned);
+            cpu.Flags.oVerflow = (val < cpu.A.MinSigned || val > cpu.A.MaxSigned);
+            cpu.Flags.SetNZ(val, cpu.A.Width);
+
+            cpu.A.Value = val;
         }
 
         public void ExecuteWAI(byte Instruction, AddressModes AddressMode, int Signature)

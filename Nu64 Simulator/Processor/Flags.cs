@@ -67,6 +67,18 @@ namespace Nu64.Processor
             }
         }
 
+        public virtual int CarryBit
+        {
+            get
+            {
+                return Carry ? 1 : 0;
+            }
+            set
+            {
+                Carry = value != 0;
+            }
+        }
+
         public UInt16 GetFlags(params bool[] flags)
         {
             UInt16 bits = 0;
@@ -120,8 +132,6 @@ namespace Nu64.Processor
                     + " " + (Emulation ? "E" : " ");
         }
 
-
-
         public void SetZ(int Val)
         {
             Zero = Val == 0;
@@ -173,5 +183,6 @@ namespace Nu64.Processor
             Carry = false;
             Emulation = false;
         }
+
     }
 }

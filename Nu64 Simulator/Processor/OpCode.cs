@@ -122,9 +122,9 @@ namespace Nu64.Processor
                 case AddressModes.ProgramCounterRelativeLong:
                     arg = sig;
                     break;
-                case AddressModes.StackAbsolute:
-                    arg = sig;
-                    break;
+                //case AddressModes.StackAbsolute:
+                //    arg = sig;
+                //    break;
                 case AddressModes.StackDirectPageIndirect:
                     arg = sig;
                     break;

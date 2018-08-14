@@ -466,12 +466,12 @@ namespace Nu64.Processor
 
         public void Push(Register Reg, int Offset)
         {
-            Push(Reg.Value + Offset, Reg.Bytes);
+            Push(Reg.Value + Offset, Reg.Width);
         }
 
         public void Push(Register Reg)
         {
-            Push(Reg.Value, Reg.Bytes);
+            Push(Reg.Value, Reg.Width);
         }
 
         public int Pop(int bytes)
@@ -492,7 +492,7 @@ namespace Nu64.Processor
 
         public void PopInto(Register Register)
         {
-            Register.Value = Pop(Register.Bytes);
+            Register.Value = Pop(Register.Width);
         }
 
         public void Interrupt(InteruptTypes T)
