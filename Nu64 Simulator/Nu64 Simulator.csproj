@@ -56,6 +56,7 @@
     <Compile Include="Basic\Immediate.cs" />
     <Compile Include="Basic\Parser.cs" />
     <Compile Include="DeviceEnum.cs" />
+    <Compile Include="HexFile.cs" />
     <Compile Include="Processor\InteruptTypes.cs" />
     <Compile Include="Processor\RegisterAccumulator.cs" />
     <Compile Include="Processor\AddressingModeEnum.cs" />
@@ -171,6 +172,9 @@
     <None Include="Resources\FOENIX-CHARACTER-ASCII.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="ROMs\kernel.hex">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

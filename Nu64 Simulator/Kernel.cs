@@ -47,23 +47,25 @@ namespace Nu64
 
             this.Basic = new Basic.Immediate(this);
             this.Monitor = new Monitor.Monitor(this);
-
-            Reset();
         }
 
         public void Reset()
         {
             Cls();
-            PrintGreeting();
-            Basic.PrintGreeting();
-            Monitor.PrintGreeting();
-            PrintCopyright();
-            ShowFlag();
-            Y = 4;
+            gpu.Refresh();
 
-            this.PrintLine();
-            //this.ReadyHandler = Monitor;
-            this.ReadyHandler = new CPUTest(this);
+            //PrintGreeting();
+            //Basic.PrintGreeting();
+            //Monitor.PrintGreeting();
+            //PrintCopyright();
+            //ShowFlag();
+            Y = 4;
+            //this.PrintLine();
+            this.ReadyHandler = Monitor;
+            HexFile h = new HexFile(Memory, @"ROMs\kernel.hex");
+            CPUTest test= new CPUTest(this);
+            //test.BeginTest(0xf01000);
+            test.BeginTestFast(0xf01000);
 
             this.TickTimer.Interval = 1000 / 60;
             this.TickTimer.Elapsed += TickTimer_Elapsed;
@@ -442,5 +444,6 @@ namespace Nu64
             PrintLine(" \xf0\xa2\xa2\xa2\xa2\xf1\xa6");
             PrintLine("  \xf9\xf9\xf9\xf9\xf9\xf9");
         }
+
     }
 }

@@ -44,7 +44,7 @@ namespace Nu64.Processor
                         this._value = (int)((value & 0xff) | (this._value & 0xff00));
                 }
                 else
-                    this._value = value;
+                    this._value = value & 0xffff;
             }
         }
 
@@ -56,8 +56,8 @@ namespace Nu64.Processor
 
         public virtual int High
         {
-            get { return (int)(this._value & 0xff00 >> 8); }
-            set { this.Value = (int)((this.Value & 0xff) | (value & 0xff << 8)); }
+            get { return (int)((this._value & 0xff00) >> 8); }
+            set { this.Value = (int)((this.Value & 0xff) | ((value & 0xff) << 8)); }
         }
 
         public virtual void Swap()
@@ -207,7 +207,7 @@ namespace Nu64.Processor
         /// <returns></returns>
         public int GetLongAdddress(int address)
         {
-            return this.Value << 8 + address;
+            return (this.Value << 8) + address;
         }
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace Nu64.Processor
         /// <returns></returns>
         public int GetLongAdddress(Register index)
         {
-            return this.Value << 8 + index.Value;
+            return (this.Value << 8) + index.Value;
         }
     }
 
@@ -295,7 +295,7 @@ namespace Nu64.Processor
         /// <returns></returns>
         public override int GetLongAddress(int address)
         {
-            return this.Value << 8 + address;
+            return this.Value + (address & 0Xff);
         }
 
     }

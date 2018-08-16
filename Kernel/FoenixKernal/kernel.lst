@@ -1,0 +1,163 @@
+
+; 64tass Turbo Assembler Macro V1.53.1515 listing file
+; 64tass --long-address --intel-hex -o kernel.hex --list kernel.lst kernel.asm
+; Wed Aug 15 16:53:35 2018
+
+;Offset	;Hex		;Monitor	;Source
+
+;******  Processing input file: kernel.asm
+
+
+;******  Processing file: macros_inc.asm
+
+
+;******  Return to file: kernel.asm
+
+
+;******  Processing file: directpage_inc.asm
+
+=$000000				DPRESET        = $000000 ;4 Bytes
+=$000100				RETURN         = $000100 ;4 Bytes
+=$000104				KEYDOWN        = $000104 ;4 Bytes
+=$000108				KEYWP          = $000108 ;2 Bytes
+=$00010a				KEYRP          = $00010A ;2 Bytes
+=$00010c				SCREENBEGIN    = $00010C ;3 Bytes Start of screen in video RAM
+=$00010f				CURSORPOS      = $00010F ;3 Bytes Cursor position in video RAM. SCREENBEGIN is upper left corner
+=$000112				CURSORX        = $000112 ;2 Bytes cursor column
+=$000114				CURSORY        = $000114 ;2 Bytes cursor row
+=$000116				CURCOLOR       = $000116 ;2 Bytes
+=$000118				CURATTR        = $000118 ;2 Bytes
+=$00011a				STACKBOT       = $00011A ;2 Bytes
+=$00011c				STACKTOP       = $00011C ;2 Bytes
+=$000200				SYSPBR         = $000200 ;1 Byte  Program Bank
+=$000201				SYSPC          = $000201 ;2 Bytes Program Counter
+=$000203				SYSP           = $000203 ;1 Byte  Flags
+=$000204				SYSA           = $000204 ;2 Bytes Accumulator
+=$000206				SYSX           = $000206 ;2 Bytes X Index
+=$000208				SYSY           = $000208 ;2 Bytes Y Index
+=$00020a				SYSDBR         = $00020A ;1 Byte  Data Bank
+=$00020b				SYSSP          = $00020B ;2 Bytes Stack Pointer
+=$000210				MTEXTADDR      = $000210 ;3 Bytes
+=$000213				MPOS           = $000213 ;3 Bytes
+=$000216				MTLEN          = $000216 ;2 Bytes
+=$000218				MCMD           = $000218 ;3 Bytes
+=$00021b				MARG1          = $00021B ;3 Bytes
+=$00021e				MARG2          = $00021E ;3 Bytes
+=$000221				MARG3          = $000221 ;3 Bytes
+=$000224				MARG4          = $000224 ;3 Bytes
+=$000227				MARG5          = $000227 ;3 Bytes
+=$00022a				MARG6          = $00022A ;3 Bytes
+=$00022d				MARG7          = $00022D ;3 Bytes
+=$000230				MARG8          = $000230 ;3 Bytes
+=$000200				BLINE          = $000200 ;3 Bytes Pointer to current BASIC line on screen
+=$001000				GPU_PAGE_0     = $001000 ;6400 Bytes
+=$002900				GPU_PAGE_1     = $002900 ;6400 Bytes
+=$004200				GPU_PAGE_2     = $004200 ;6400 Bytes
+=$005b00				GPU_PAGE_3     = $005B00 ;6400 Bytes
+=$0073ff				GPU_END        = $0073FF ;1 Byte
+=$009700				STACK_BEGIN    = $009700 ;16384 Bytes
+=$00d6ff				STACK_END      = $00D6FF ;1 Byte
+=$00ffe4				VECTOR_COP     = $00FFE4 ;2 Bytes
+=$00ffe6				VECTOR_BRK     = $00FFE6 ;2 Bytes
+=$00ffe8				VECTOR_ABORT   = $00FFE8 ;2 Bytes
+=$00ffea				VECTOR_NMI     = $00FFEA ;2 Bytes
+=$00fffc				VECTOR_RESET   = $00FFFC ;2 Bytes
+=$00ffee				VECTOR_IRQ     = $00FFEE ;2 Bytes
+=$00fff4				VECTOR_ECOP    = $00FFF4 ;2 Bytes
+=$00fff6				VECTOR_EBRK    = $00FFF6 ;2 Bytes
+=$00fff8				VECTOR_EABORT  = $00FFF8 ;2 Bytes
+=$00fffa				VECTOR_ENMI    = $00FFFA ;2 Bytes
+=$00fffc				VECTOR_ERESET  = $00FFFC ;2 Bytes
+=$00fffe				VECTOR_EIRQ    = $00FFFE ;2 Bytes
+
+;******  Return to file: kernel.asm
+
+
+;******  Processing file: monitor_inc.asm
+
+=$f10000				MONITOR     = $F10000
+=$f10004				MBREAK      = $F10004
+=$f10008				MSTATUS     = $F10008
+=$f1000b				MREADY      = $F1000B
+=$f10010				MRETURN		= $F10010
+=$f10014				MPARSE      = $F10014
+
+;******  Return to file: kernel.asm
+
+.f00000	5c 03 10 f0	jmp $f01003	BOOT        JML IBOOT
+.f00004	5c 00 10 f0	jmp $f01000	RESET       JML IRESET
+.f01000	4c 03 10	jmp $f01003	IRESET          JMP IBOOT
+.f01003					IBOOT
+.f01003	18		clc		                CLC           ; clear the carry flag
+.f01004	fb		xce		                XCE           ; move carry to emulation flag.
+.f01005	c2 10		rep #$10	                REP #$10
+.f01007	c2 20		rep #$20	                REP #$20
+.f01009	a9 00 00	lda #$0000	                LDA #$0000      ; init direct page
+.f0100c	5b		tcd		                TCD
+.f0100d	c2 20		rep #$20	                REP #$20
+.f0100f	a9 00 10	lda #$1000	                LDA #$1000      ; store the initial screen buffer location
+.f01012	8d 0c 01	sta $010c	                STA SCREENBEGIN
+.f01015	e2 20		sep #$20	                SEP #$20
+.f01017	a9 00		lda #$00	                LDA #$00
+.f01019	8d 0e 01	sta $010e	                STA SCREENBEGIN+2
+.f0101c	c2 20		rep #$20	                REP #$20
+.f0101e	a9 00 10	lda #$1000	                LDA #$1000      ; store the initial cursor position
+.f01021	8d 0f 01	sta $010f	                STA CURSORPOS
+.f01024	e2 20		sep #$20	                SEP #$20
+.f01026	a9 00		lda #$00	                LDA #$00
+.f01028	8d 11 01	sta $0111	                STA CURSORPOS+2
+.f0102b	a9 f0		lda #$f0	greet           LDA #$F0        ;Set data bank to $F0
+.f0102d	48		pha		                PHA             ;
+.f0102e	ab		plb		                PLB             ;
+.f0102f	a2 6f 10	ldx #$106f	                LDX #<>greet_msg
+.f01032	a0 28 00	ldy #$0028	                LDY #40
+.f01035	20 59 10	jsr $f01059	                JSR IPUTS       ; print the string
+.f01038	e2 20		sep #$20	                SEP #$20
+.f0103a	a9 01		lda #$01	                LDA #$01        ;set data bank to 1 (Kernel Variables)
+.f0103c	48		pha		                PHA
+.f0103d	ab		plb		                PLB
+.f0103e	db		stp		                STP
+.f0103f	00		brk #		greet_done      BRK             ;halt the CPU
+.f01040	00		brk #		IKEYDOWN        BRK             ; Keyboard key pressed
+.f01041	00		brk #		IRETURN         BRK
+.f01042					IPUTC
+.f01042	08		php		                PHP             ; stash the flags (we'll be changing M)
+.f01043	0b		phd		                PHD
+.f01044	e2 20		sep #$20	                SEP #$20
+.f01046	48		pha		                PHA
+.f01047	c2 20		rep #$20	                REP #$20
+.f01049	a9 00 01	lda #$0100	                LDA #$100       ; set DP to page 0
+.f0104c	5b		tcd		                TCD             ; and get character back
+.f0104d	e2 20		sep #$20	                SEP #$20
+.f0104f	68		pla		                PLA
+.f01050	87 0f		sta [$010f]	                STA [CURSORPOS] ; Save the character on the screen
+.f01052	e6 0f		inc $010f	                INC CURSORPOS   ; Move the cursor to the next position
+.f01054	e6 12		inc $0112	                INC CURSORX     ;
+.f01056	2b		pld		                PLD
+.f01057	28		plp		                PLP
+.f01058	60		rts		                RTS
+.f01059					IPUTS
+.f01059	48		pha		                PHA
+.f0105a	08		php		                PHP
+.f0105b	e2 20		sep #$20	                SEP #$20
+.f0105d	bd 00 00	lda $f00000,x	iputs1          LDA $0,b,x ; read from the string
+.f01060	f0 0a		beq $f0106c	                BEQ iputs_done
+.f01062	20 42 10	jsr $f01042	                JSR IPUTC
+.f01065	e8		inx		                INX
+.f01066	88		dey		                DEY
+.f01067	f0 03		beq $f0106c	                BEQ iputs_done
+.f01069	4c 5d 10	jmp $f0105d	                jmp iputs1
+.f0106c	28		plp		iputs_done      PLP
+.f0106d	68		pla		                PLA
+.f0106e	60		rts		                RTS
+>f0106f	2a 2a 2f 2f 2f 2f 2f 20		greet_msg       .text "**///// NU64 DEVELOPMENT SYSTEM",$0d,$00
+>f01077	4e 55 36 34 20 44 45 56 45 4c 4f 50 4d 45 4e 54
+>f01087	20 53 59 53 54 45 4d 0d 00
+>f01090	2a 2f 2f 2f 2f 2f 2a 20		greet_msg1      .text "*/////* NU64 BASIC (Not Implemented)",$0d,$00
+>f01098	4e 55 36 34 20 42 41 53 49 43 20 28 4e 6f 74 20
+>f010a8	49 6d 70 6c 65 6d 65 6e 74 65 64 29 0d 00
+>f010b6	2f 2f 2f 2f 2f 2a 2a 20		greet_msg2      .text "/////** Machine Monitor v0.1 (dev)",$0d,$00
+>f010be	4d 61 63 68 69 6e 65 20 4d 6f 6e 69 74 6f 72 20
+>f010ce	76 30 2e 31 20 28 64 65 76 29 0d 00
+
+;******  End of listing

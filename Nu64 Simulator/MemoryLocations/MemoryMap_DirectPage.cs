@@ -8,14 +8,16 @@ namespace Nu64
 {
     public static class MemoryMap_DirectPage
     {
-        public const int RETURN = 0x100;   // 4 bytes
-        public const int KEYDOWN = 0x104;  // 4 bytes
-        public const int STACKBOT = 0x108; // 2 bytes
-        public const int STACKTOP = 0x10A; // 2 bytes
-        public const int CMDADDR = 0x10C;  // 4 bytes
-        public const int CURSORX = 0x110;  // 1 byte
-        public const int CURSORY = 0x111;  // 1 byte
-        public const int CURCOLOR = 0x112; // 1 byte
+        public const int RESET = 0X000000;
+
+        public const int RETURN = 0x000100;
+        public const int KEYDOWN = 0x000104;
+        public const int KEYWP = 0x000108;
+        public const int KEYRP = 0x000109;
+        public const int CURSORX = 0x00010A;
+        public const int CURSORY = 0x00010B;
+        public const int CURCOLOR = 0x00010C;
+        public const int CURATTR = 0x00010D;
 
         public const int SYSPC = 0x200;     // 2 bytes
         public const int SYSPBR = 0x202;    // 1 byte

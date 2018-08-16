@@ -50,6 +50,59 @@ namespace Nu64.Processor
             this.CPU = kernel.CPU;
         }
 
+        public void BeginTest(int Address)
+        {
+            kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_RESET, 0xc000);
+            kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_BRK, 0xc000);
+            kernel.CPU.Stack.Value = MemoryMap_DirectPage.END_OF_STACK;
+            kernel.CPU.SetPC(Address);
+
+            kernel.OutputDevice = DeviceEnum.DebugWindow;
+            kernel.PrintTab(REGISTER_COLUMN);
+            kernel.Monitor.PrintRegisterHeader();
+            kernel.PrintTab(REGISTER_COLUMN);
+            kernel.Monitor.PrintRegisters(false);
+            while (!CPU.Halted)
+            {
+
+                int p1 = CPU.GetLongPC();
+                CPU.ExecuteNext();
+                int pc2 = p1 + CPU.OC.Length;
+
+                for (int i = p1; i < pc2; i++)
+                {
+                    kernel.PrintMemHex(1, i);
+                    kernel.Print(" ");
+                }
+                kernel.PrintTab(MNEMONIC_COLUMN);
+                kernel.Print(CPU.OC.ToString(CPU.SignatureBytes));
+                kernel.PrintTab(REGISTER_COLUMN);
+                kernel.Monitor.PrintRegisters(false);
+                kernel.gpu.Refresh();
+                System.Windows.Forms.Application.DoEvents();
+            }
+
+            kernel.OutputDevice = DeviceEnum.Screen;
+            kernel.ReadyHandler = kernel.Monitor;
+            kernel.READY();
+        }
+
+        internal void BeginTestFast(int Address)
+        {
+            kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_RESET, 0xc000);
+            kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_BRK, 0xc000);
+            kernel.CPU.Stack.Value = MemoryMap_DirectPage.END_OF_STACK;
+            kernel.CPU.SetPC(Address);
+
+            while (!CPU.Halted)
+            {
+                CPU.ExecuteNext();
+            }
+
+            kernel.ReadyHandler = kernel.Monitor;
+            kernel.READY();
+        }
+
         public void BeginTest()
         {
             sbyte test1 = -1;
@@ -61,37 +114,8 @@ namespace Nu64.Processor
                 kernel.Memory[pc] = TestProg[i];
                 pc++;
             }
-            kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_RESET, 0xc000);
-            kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_BRK, 0xc000);
-            kernel.CPU.Stack.Value = MemoryMap_DirectPage.END_OF_STACK;
 
-            kernel.OutputDevice = DeviceEnum.DebugWindow;
-            kernel.CPU.PC.Value = 0xc000;
-            kernel.PrintTab(REGISTER_COLUMN);
-            kernel.Monitor.PrintRegisterHeader();
-            kernel.PrintTab(REGISTER_COLUMN);
-            kernel.Monitor.PrintRegisters(false);
-            while (!CPU.Halted)
-            {
-                int p1 = CPU.GetLongPC();
-
-                CPU.ExecuteNext();
-
-                int pc2 = CPU.GetLongPC();
-                for (int i = p1; i < pc2; i++)
-                {
-                    kernel.PrintMemHex(1, i);
-                    kernel.Print(" ");
-                }
-                kernel.PrintTab(MNEMONIC_COLUMN);
-                kernel.Print(CPU.OC.ToString(CPU.SignatureBytes));
-                kernel.PrintTab(REGISTER_COLUMN);
-                kernel.Monitor.PrintRegisters(false);
-            }
-
-            kernel.OutputDevice = DeviceEnum.Screen;
-            kernel.ReadyHandler = kernel.Monitor;
-            kernel.READY();
+            BeginTest(pc);
         }
 
         public void Ready()

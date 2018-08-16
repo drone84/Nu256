@@ -72,21 +72,22 @@ namespace Nu64.Processor
             this.clockCyles = 0;
             this.operations = new Operations(this);
             this.opcodes = new OpcodeList(this.operations, this);
+            this.Flags.Emulation = true;
         }
 
-        public void Start(int Address)
+        public void Start(int Address, int newDataBank)
         {
-            Halted = false;
+            this.DataBank.Value = newDataBank;
             SetPC(Address);
-            ExecuteNext();
+            Halted = false;
         }
 
         public void ExecuteNext()
         {
             Instruction = GetNextInstruction();
             Decode(Instruction);
-            OC.Execute(SignatureBytes);
             PC.Value += OpcodeLength;
+            OC.Execute(SignatureBytes);
             clockCyles += OpcodeCycles;
         }
 
@@ -455,13 +456,9 @@ namespace Nu64.Processor
             if (bytes < 1 || bytes > 3)
                 throw new Exception("bytes must be between 1 and 3. got " + bytes.ToString());
 
-            int address = Stack.Value;
-            Memory[address] = GetByte(value, 0);
-            if (bytes >= 2)
-                Memory[address - 1] = GetByte(value, 1);
-            if (bytes >= 3)
-                Memory[address - 2] = GetByte(value, 2);
             Stack.Value -= bytes;
+            int address = Stack.Value + 1;
+            Memory.Write(address, value, bytes);
         }
 
         public void Push(Register Reg, int Offset)
@@ -474,25 +471,20 @@ namespace Nu64.Processor
             Push(Reg.Value, Reg.Width);
         }
 
-        public int Pop(int bytes)
+        public int Pull(int bytes)
         {
             if (bytes < 1 || bytes > 3)
                 throw new Exception("bytes must be between 1 and 3. got " + bytes.ToString());
 
+            int address = Stack.Value + 1;
+            int ret = Memory.Read(address, bytes);
             Stack.Value += bytes;
-            int address = Stack.Value;
-            int ret = Memory[address - 1];
-            if (bytes >= 2)
-                ret = ret + Memory[address + 2] << 8;
-            if (bytes >= 3)
-                ret = ret + Memory[address + 3] << 16;
-
             return ret;
         }
 
-        public void PopInto(Register Register)
+        public void PullInto(Register Register)
         {
-            Register.Value = Pop(Register.Width);
+            Register.Value = Pull(Register.Width);
         }
 
         public void Interrupt(InteruptTypes T)

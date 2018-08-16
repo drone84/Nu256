@@ -14,6 +14,7 @@ namespace Nu64
     {
         public Kernel kernel;
         public UI.RegisterWindow RegisterWindow;
+        public Timer BootTimer = new Timer();
 
         public MainWindow()
         {
@@ -34,7 +35,16 @@ namespace Nu64
             RegisterWindow.registerDisplay1.CPU = kernel.CPU;
             RegisterWindow.Show();
 
-            kernel.READY();
+            BootTimer.Interval = 1000;
+            BootTimer.Tick += BootTimer_Tick;
+            BootTimer.Enabled = true;
+            //kernel.READY();
+        }
+
+        private void BootTimer_Tick(object sender, EventArgs e)
+        {
+            BootTimer.Enabled = false;
+            kernel.Reset();
         }
 
         private void BasicWindow_KeyDown(object sender, KeyEventArgs e)

@@ -13,6 +13,11 @@ namespace Nu64.Processor
     public class Operations
     {
         private CPU cpu;
+        /// <summary>
+        /// Used for addressing modes that 
+        /// </summary>
+        public const int ADDRESS_IMMEDIATE = 0xf000001;
+        public const int ADDRESS_IMPLIED = 0xf000002;
 
         public Operations(CPU cPU)
         {
@@ -70,7 +75,7 @@ namespace Nu64.Processor
         public void BranchNear(byte b)
         {
             int offset = MakeSignedByte(b);
-            cpu.PC.Value += offset + 2;
+            cpu.PC.Value += offset;
         }
 
         public sbyte MakeSignedByte(byte b)
@@ -227,7 +232,9 @@ namespace Nu64.Processor
 
         private int GetAbsoluteLongIndexed(int Address, Register Index)
         {
-            return cpu.Memory.ReadWord(Address + Index.Value);
+            int addr = Address + Index.Value;
+            int val = cpu.Memory.ReadWord(Address + Index.Value);
+            return val;
         }
 
         /// <summary>
@@ -441,6 +448,12 @@ namespace Nu64.Processor
         {
             switch (instruction)
             {
+                case OpcodeList.PHA_StackImplied:
+                    cpu.Push(cpu.A);
+                    break;
+                case OpcodeList.PLA_StackImplied:
+                    cpu.PullInto(cpu.A);
+                    break;
                 case OpcodeList.PHB_StackImplied:
                     cpu.Push(cpu.DataBank);
                     break;
@@ -454,13 +467,13 @@ namespace Nu64.Processor
                     cpu.Push(cpu.Flags);
                     break;
                 case OpcodeList.PLB_StackImplied:
-                    cpu.PopInto(cpu.DataBank);
+                    cpu.PullInto(cpu.DataBank);
                     break;
                 case OpcodeList.PLD_StackImplied:
-                    cpu.PopInto(cpu.DirectPage);
+                    cpu.PullInto(cpu.DirectPage);
                     break;
                 case OpcodeList.PLP_StackImplied:
-                    cpu.PopInto(cpu.Flags);
+                    cpu.PullInto(cpu.Flags);
                     break;
                 default:
                     throw new NotImplementedException("ExecuteStack() opcode not implemented: " + instruction.ToString("X2"));
@@ -592,7 +605,7 @@ namespace Nu64.Processor
                     cpu.Flags.SetNZ(cpu.X);
                     break;
                 case OpcodeList.DEY_Implied:
-                    cpu.X.Value -= 1;
+                    cpu.Y.Value -= 1;
                     cpu.Flags.SetNZ(cpu.X);
                     break;
                 case OpcodeList.INX_Implied:
@@ -616,10 +629,11 @@ namespace Nu64.Processor
             int ptr = 0;
             switch (addressMode)
             {
-                // immediate is a special case, since no address is referenced. So use the address
-                // of the signature byte, as the argument is the data. 
+                // The address will not be used in Immediate or Implied mode, but 
                 case AddressModes.Immediate:
-                    return cpu.GetLongPC() + 1;
+                    return ADDRESS_IMMEDIATE;
+                case AddressModes.Implied:
+                    return ADDRESS_IMPLIED;
                 case AddressModes.Absolute:
                     return Bank.GetLongAddress(SignatureBytes);
                 case AddressModes.AbsoluteLong:
@@ -653,7 +667,7 @@ namespace Nu64.Processor
                 case AddressModes.DirectPageIndirectLong:
                     addr = cpu.DirectPage.GetLongAddress(SignatureBytes);
                     ptr = cpu.Memory.ReadLong(addr);
-                    return cpu.ProgramBank.GetLongAddress(ptr);
+                    return ptr;
                 case AddressModes.DirectPageIndirectLongIndexedWithY:
                     addr = cpu.DirectPage.GetLongAddress(SignatureBytes);
                     ptr = cpu.Memory.ReadLong(addr) + cpu.Y.Value;
@@ -765,10 +779,10 @@ namespace Nu64.Processor
                     cpu.JumpLong(addr);
                     return;
                 case OpcodeList.RTS_StackImplied:
-                    cpu.JumpShort(cpu.Pop(2));
+                    cpu.JumpShort(cpu.Pull(2));
                     return;
                 case OpcodeList.RTL_StackImplied:
-                    cpu.JumpLong(cpu.Pop(3));
+                    cpu.JumpLong(cpu.Pull(3));
                     return;
                 default:
                     throw new NotImplementedException("ExecuteJumpReturn() opcode not implemented: " + instruction.ToString("X2"));
@@ -893,22 +907,25 @@ namespace Nu64.Processor
             cpu.Memory.Write(addr, cpu.X.Value, cpu.X.Width);
         }
 
-        public void ExecuteLDY(byte instruction, AddressModes addressMode, int signature)
-        {
-            int val = GetValue(addressMode, signature);
-            cpu.Y.Value = val;
-        }
-
         public void ExecuteLDA(byte instruction, AddressModes addressMode, int signature)
         {
             int val = GetValue(addressMode, signature);
             cpu.A.Value = val;
+            cpu.Flags.SetNZ(cpu.A);
         }
 
         public void ExecuteLDX(byte instruction, AddressModes addressMode, int signature)
         {
             int val = GetValue(addressMode, signature);
             cpu.X.Value = val;
+            cpu.Flags.SetNZ(cpu.A);
+        }
+
+        public void ExecuteLDY(byte instruction, AddressModes addressMode, int signature)
+        {
+            int val = GetValue(addressMode, signature);
+            cpu.Y.Value = val;
+            cpu.Flags.SetNZ(cpu.A);
         }
 
         public void ExecuteCPX(byte instruction, AddressModes addressMode, int signature)

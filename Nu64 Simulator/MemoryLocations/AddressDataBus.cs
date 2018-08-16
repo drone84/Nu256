@@ -56,17 +56,17 @@ namespace Nu64
                 return;
             }
 
+            if (Address >= MemoryLocations.MemoryMap_Blocks.START_OF_ROM && Address <= MemoryLocations.MemoryMap_Blocks.END_OF_ROM)
+            {
+                Device = ROM;
+                Offset = MemoryLocations.MemoryMap_Blocks.START_OF_ROM;
+                return;
+            }
+
             if (Address >= MemoryLocations.MemoryMap_Blocks.START_OF_GPU && Address <= MemoryLocations.MemoryMap_Blocks.END_OF_GPU)
             {
                 Device = GPU;
                 Offset = MemoryLocations.MemoryMap_Blocks.START_OF_GPU;
-                return;
-            }
-
-            if (Address >= MemoryLocations.MemoryMap_Blocks.START_OF_ROM && Address <= MemoryLocations.MemoryMap_Blocks.START_OF_ROM)
-            {
-                Device = ROM;
-                Offset = MemoryLocations.MemoryMap_Blocks.START_OF_ROM;
                 return;
             }
 
