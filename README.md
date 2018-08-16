@@ -7,7 +7,7 @@ The Nu64 is loosely based around the concept of the world's most popular compute
 
 The Nu64 attempt to replicate this experience on a modern computer: you will be able to write and run BASIC programs, 65816 assembler programs, and save programs to disk to trade with other people. The Nu64 will feature an 80 column text screen, several different graphic resolutions, and the ability to communicate with hardware and other computers through a virtual modem. 
 
-The Nu64 will also feature the famous "PETSCII" text graphics, with some modern changes. Missing ASCII symbols will be introduced, and the Foenix will speak the text language of both the IBM PC and hte original Commodore PET and 64. 
+The Nu64 will also feature the famous "PETSCII" text graphics, with some modern changes. Missing ASCII symbols will be introduced, and the Foenix will speak the text language of both the IBM PC and the original Commodore PET and 64. 
 
 Nu64 is owned by Tom Wilson. 
 
