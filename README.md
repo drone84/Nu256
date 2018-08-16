@@ -13,7 +13,9 @@ Nu64 is owned by Tom Wilson.
 
 # C256 Foenix
 
-This is designed to be a partner project to the C256 Foenix Computer (https://www.c256foenix.com/). While it doesn't seek to perfectly reproduce the Foenix, it will replicate the proramming environment for the purposes of software development. 
+This is designed to be a partner project to the [C256 Foenix Computer](https://www.c256foenix.com/) While it doesn't seek to perfectly reproduce the Foenix, it will replicate the proramming environment for the purposes of software development. 
+
+The C256 system software is being developed on the [C256 Kernel](https://github.com/tomxp411/C256-kernel) git. 
 
 The C256 Foenix and its associated materials are owned by Stefany Allaire. 
 
