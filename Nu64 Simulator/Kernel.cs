@@ -64,8 +64,8 @@ namespace Nu64
             this.ReadyHandler = Monitor;
             HexFile h = new HexFile(Memory, @"ROMs\kernel.hex");
             CPUTest test= new CPUTest(this);
-            //test.BeginTest(0xf01000);
-            test.BeginTestFast(0xf01000);
+            test.BeginTest(0xf81000);
+            //test.BeginTestFast(0xf81000);
 
             this.TickTimer.Interval = 1000 / 60;
             this.TickTimer.Elapsed += TickTimer_Elapsed;

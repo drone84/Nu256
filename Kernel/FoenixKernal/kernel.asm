@@ -6,7 +6,7 @@
 ; C256 Foenix / Nu64 Kernel
 ; Loads to $F0:0000
 
-* = $F00000
+* = $F80000
 
 BOOT        JML IBOOT
 RESET       JML IRESET
@@ -42,7 +42,7 @@ RESET       JML IRESET
 ;PRINTH4       JML IPRINTH4
 ;TYPE          JML ITYPE
 
-* = $F01000
+* = $F81000
 IRESET          JMP IBOOT
 
 IBOOT           ; boot the system
@@ -66,18 +66,22 @@ IBOOT           ; boot the system
                 STA CURSORPOS+2
                 
                 ; display boot message
-greet           LDA #$F0        ;Set data bank to $F0
+greet           LDA #$F8        ;Set data bank to $F0
                 PHA             ;
                 PLB             ;
-                .databank $F0
+                .databank $F8
                 LDX #<>greet_msg
-                LDY #40
+                ; LDY #40
                 JSR IPUTS       ; print the string
 
                 setas
                 LDA #$01        ;set data bank to 1 (Kernel Variables)
                 PHA
                 PLB
+
+waitloop	NOP
+		JMP waitloop
+
                 STP
                 
 greet_done      BRK             ;halt the CPU

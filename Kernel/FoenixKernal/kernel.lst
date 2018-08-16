@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.53.1515 listing file
 ; 64tass --long-address --intel-hex -o kernel.hex --list kernel.lst kernel.asm
-; Wed Aug 15 16:53:35 2018
+; Wed Aug 15 22:51:56 2018
 
 ;Offset	;Hex		;Monitor	;Source
 
@@ -84,80 +84,82 @@
 
 ;******  Return to file: kernel.asm
 
-.f00000	5c 03 10 f0	jmp $f01003	BOOT        JML IBOOT
-.f00004	5c 00 10 f0	jmp $f01000	RESET       JML IRESET
-.f01000	4c 03 10	jmp $f01003	IRESET          JMP IBOOT
-.f01003					IBOOT
-.f01003	18		clc		                CLC           ; clear the carry flag
-.f01004	fb		xce		                XCE           ; move carry to emulation flag.
-.f01005	c2 10		rep #$10	                REP #$10
-.f01007	c2 20		rep #$20	                REP #$20
-.f01009	a9 00 00	lda #$0000	                LDA #$0000      ; init direct page
-.f0100c	5b		tcd		                TCD
-.f0100d	c2 20		rep #$20	                REP #$20
-.f0100f	a9 00 10	lda #$1000	                LDA #$1000      ; store the initial screen buffer location
-.f01012	8d 0c 01	sta $010c	                STA SCREENBEGIN
-.f01015	e2 20		sep #$20	                SEP #$20
-.f01017	a9 00		lda #$00	                LDA #$00
-.f01019	8d 0e 01	sta $010e	                STA SCREENBEGIN+2
-.f0101c	c2 20		rep #$20	                REP #$20
-.f0101e	a9 00 10	lda #$1000	                LDA #$1000      ; store the initial cursor position
-.f01021	8d 0f 01	sta $010f	                STA CURSORPOS
-.f01024	e2 20		sep #$20	                SEP #$20
-.f01026	a9 00		lda #$00	                LDA #$00
-.f01028	8d 11 01	sta $0111	                STA CURSORPOS+2
-.f0102b	a9 f0		lda #$f0	greet           LDA #$F0        ;Set data bank to $F0
-.f0102d	48		pha		                PHA             ;
-.f0102e	ab		plb		                PLB             ;
-.f0102f	a2 6f 10	ldx #$106f	                LDX #<>greet_msg
-.f01032	a0 28 00	ldy #$0028	                LDY #40
-.f01035	20 59 10	jsr $f01059	                JSR IPUTS       ; print the string
-.f01038	e2 20		sep #$20	                SEP #$20
-.f0103a	a9 01		lda #$01	                LDA #$01        ;set data bank to 1 (Kernel Variables)
-.f0103c	48		pha		                PHA
-.f0103d	ab		plb		                PLB
-.f0103e	db		stp		                STP
-.f0103f	00		brk #		greet_done      BRK             ;halt the CPU
-.f01040	00		brk #		IKEYDOWN        BRK             ; Keyboard key pressed
-.f01041	00		brk #		IRETURN         BRK
-.f01042					IPUTC
-.f01042	08		php		                PHP             ; stash the flags (we'll be changing M)
-.f01043	0b		phd		                PHD
-.f01044	e2 20		sep #$20	                SEP #$20
-.f01046	48		pha		                PHA
-.f01047	c2 20		rep #$20	                REP #$20
-.f01049	a9 00 01	lda #$0100	                LDA #$100       ; set DP to page 0
-.f0104c	5b		tcd		                TCD             ; and get character back
-.f0104d	e2 20		sep #$20	                SEP #$20
-.f0104f	68		pla		                PLA
-.f01050	87 0f		sta [$010f]	                STA [CURSORPOS] ; Save the character on the screen
-.f01052	e6 0f		inc $010f	                INC CURSORPOS   ; Move the cursor to the next position
-.f01054	e6 12		inc $0112	                INC CURSORX     ;
-.f01056	2b		pld		                PLD
-.f01057	28		plp		                PLP
-.f01058	60		rts		                RTS
-.f01059					IPUTS
-.f01059	48		pha		                PHA
-.f0105a	08		php		                PHP
-.f0105b	e2 20		sep #$20	                SEP #$20
-.f0105d	bd 00 00	lda $f00000,x	iputs1          LDA $0,b,x ; read from the string
-.f01060	f0 0a		beq $f0106c	                BEQ iputs_done
-.f01062	20 42 10	jsr $f01042	                JSR IPUTC
-.f01065	e8		inx		                INX
-.f01066	88		dey		                DEY
-.f01067	f0 03		beq $f0106c	                BEQ iputs_done
-.f01069	4c 5d 10	jmp $f0105d	                jmp iputs1
-.f0106c	28		plp		iputs_done      PLP
-.f0106d	68		pla		                PLA
-.f0106e	60		rts		                RTS
->f0106f	2a 2a 2f 2f 2f 2f 2f 20		greet_msg       .text "**///// NU64 DEVELOPMENT SYSTEM",$0d,$00
->f01077	4e 55 36 34 20 44 45 56 45 4c 4f 50 4d 45 4e 54
->f01087	20 53 59 53 54 45 4d 0d 00
->f01090	2a 2f 2f 2f 2f 2f 2a 20		greet_msg1      .text "*/////* NU64 BASIC (Not Implemented)",$0d,$00
->f01098	4e 55 36 34 20 42 41 53 49 43 20 28 4e 6f 74 20
->f010a8	49 6d 70 6c 65 6d 65 6e 74 65 64 29 0d 00
->f010b6	2f 2f 2f 2f 2f 2a 2a 20		greet_msg2      .text "/////** Machine Monitor v0.1 (dev)",$0d,$00
->f010be	4d 61 63 68 69 6e 65 20 4d 6f 6e 69 74 6f 72 20
->f010ce	76 30 2e 31 20 28 64 65 76 29 0d 00
+.f80000	5c 03 10 f8	jmp $f81003	BOOT        JML IBOOT
+.f80004	5c 00 10 f8	jmp $f81000	RESET       JML IRESET
+.f81000	4c 03 10	jmp $f81003	IRESET          JMP IBOOT
+.f81003					IBOOT
+.f81003	18		clc		                CLC           ; clear the carry flag
+.f81004	fb		xce		                XCE           ; move carry to emulation flag.
+.f81005	c2 10		rep #$10	                REP #$10
+.f81007	c2 20		rep #$20	                REP #$20
+.f81009	a9 00 00	lda #$0000	                LDA #$0000      ; init direct page
+.f8100c	5b		tcd		                TCD
+.f8100d	c2 20		rep #$20	                REP #$20
+.f8100f	a9 00 10	lda #$1000	                LDA #$1000      ; store the initial screen buffer location
+.f81012	8d 0c 01	sta $010c	                STA SCREENBEGIN
+.f81015	e2 20		sep #$20	                SEP #$20
+.f81017	a9 00		lda #$00	                LDA #$00
+.f81019	8d 0e 01	sta $010e	                STA SCREENBEGIN+2
+.f8101c	c2 20		rep #$20	                REP #$20
+.f8101e	a9 00 10	lda #$1000	                LDA #$1000      ; store the initial cursor position
+.f81021	8d 0f 01	sta $010f	                STA CURSORPOS
+.f81024	e2 20		sep #$20	                SEP #$20
+.f81026	a9 00		lda #$00	                LDA #$00
+.f81028	8d 11 01	sta $0111	                STA CURSORPOS+2
+.f8102b	a9 f8		lda #$f8	greet           LDA #$F8        ;Set data bank to $F0
+.f8102d	48		pha		                PHA             ;
+.f8102e	ab		plb		                PLB             ;
+.f8102f	a2 73 10	ldx #$1073	                LDX #<>greet_msg
+.f81032	a0 28 00	ldy #$0028	                LDY #40
+.f81035	20 5d 10	jsr $f8105d	                JSR IPUTS       ; print the string
+.f81038	e2 20		sep #$20	                SEP #$20
+.f8103a	a9 01		lda #$01	                LDA #$01        ;set data bank to 1 (Kernel Variables)
+.f8103c	48		pha		                PHA
+.f8103d	ab		plb		                PLB
+.f8103e	ea		nop		waitloop	NOP
+.f8103f	4c 3e 10	jmp $f8103e			JMP waitloop
+.f81042	db		stp		                STP
+.f81043	00		brk #		greet_done      BRK             ;halt the CPU
+.f81044	00		brk #		IKEYDOWN        BRK             ; Keyboard key pressed
+.f81045	00		brk #		IRETURN         BRK
+.f81046					IPUTC
+.f81046	08		php		                PHP             ; stash the flags (we'll be changing M)
+.f81047	0b		phd		                PHD
+.f81048	e2 20		sep #$20	                SEP #$20
+.f8104a	48		pha		                PHA
+.f8104b	c2 20		rep #$20	                REP #$20
+.f8104d	a9 00 01	lda #$0100	                LDA #$100       ; set DP to page 0
+.f81050	5b		tcd		                TCD             ; and get character back
+.f81051	e2 20		sep #$20	                SEP #$20
+.f81053	68		pla		                PLA
+.f81054	87 0f		sta [$010f]	                STA [CURSORPOS] ; Save the character on the screen
+.f81056	e6 0f		inc $010f	                INC CURSORPOS   ; Move the cursor to the next position
+.f81058	e6 12		inc $0112	                INC CURSORX     ;
+.f8105a	2b		pld		                PLD
+.f8105b	28		plp		                PLP
+.f8105c	60		rts		                RTS
+.f8105d					IPUTS
+.f8105d	48		pha		                PHA
+.f8105e	08		php		                PHP
+.f8105f	e2 20		sep #$20	                SEP #$20
+.f81061	bd 00 00	lda $f80000,x	iputs1          LDA $0,b,x ; read from the string
+.f81064	f0 0a		beq $f81070	                BEQ iputs_done
+.f81066	20 46 10	jsr $f81046	                JSR IPUTC
+.f81069	e8		inx		                INX
+.f8106a	88		dey		                DEY
+.f8106b	f0 03		beq $f81070	                BEQ iputs_done
+.f8106d	4c 61 10	jmp $f81061	                jmp iputs1
+.f81070	28		plp		iputs_done      PLP
+.f81071	68		pla		                PLA
+.f81072	60		rts		                RTS
+>f81073	2a 2a 2f 2f 2f 2f 2f 20		greet_msg       .text "**///// NU64 DEVELOPMENT SYSTEM",$0d,$00
+>f8107b	4e 55 36 34 20 44 45 56 45 4c 4f 50 4d 45 4e 54
+>f8108b	20 53 59 53 54 45 4d 0d 00
+>f81094	2a 2f 2f 2f 2f 2f 2a 20		greet_msg1      .text "*/////* NU64 BASIC (Not Implemented)",$0d,$00
+>f8109c	4e 55 36 34 20 42 41 53 49 43 20 28 4e 6f 74 20
+>f810ac	49 6d 70 6c 65 6d 65 6e 74 65 64 29 0d 00
+>f810ba	2f 2f 2f 2f 2f 2a 2a 20		greet_msg2      .text "/////** Machine Monitor v0.1 (dev)",$0d,$00
+>f810c2	4d 61 63 68 69 6e 65 20 4d 6f 6e 69 74 6f 72 20
+>f810d2	76 30 2e 31 20 28 64 65 76 29 0d 00
 
 ;******  End of listing
