@@ -21,7 +21,7 @@ namespace Nu64.Display
         public MemoryRAM VRAM = null;
 
         // Video page 0 is 0x1000. Each page is 2000 bytes long.
-        private int characterMatrixStart = MemoryMap_DirectPage.GPU_PAGE_0;
+        private int characterMatrixStart = MemoryMap_DirectPage.SCREEN_PAGE0;
         //private int colorMatrixStart = 6096;
         //private int attributeStart = 8096;
         // character bitmaps are stored in the reserved video memory space.
@@ -105,7 +105,7 @@ namespace Nu64.Display
 
             this.SetScreenSize(25, 80);
             //this.SetBufferSize(25, 40);
-            this.Paint += new PaintEventHandler(FrameBufferControl_Paint);
+            this.Paint += new PaintEventHandler(Gpu_Paint);
             timer.Tick += new EventHandler(timer_Tick);
             timer.Interval = 1000 / 60;
             this.VisibleChanged += new EventHandler(FrameBufferControl_VisibleChanged);
@@ -279,9 +279,11 @@ namespace Nu64.Display
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        void FrameBufferControl_Paint(object sender, PaintEventArgs e)
+        void Gpu_Paint(object sender, PaintEventArgs e)
         {
             //DrawVectorText(e.Graphics);
+            this._cursorCol = VRAM.ReadByte(MemoryMap_DirectPage.CURSORX);
+            this._cursorRow = VRAM.ReadByte(MemoryMap_DirectPage.CURSORY);
             DrawBitmapText(e.Graphics);
         }
 

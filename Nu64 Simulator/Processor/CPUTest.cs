@@ -8,8 +8,6 @@ namespace Nu64.Processor
 {
     class CPUTest : ReadyHandler
     {
-        private const int REGISTER_COLUMN = 22;
-        private const int MNEMONIC_COLUMN = 10;
         Kernel kernel = null;
         Processor.CPU CPU = null;
 
@@ -54,14 +52,20 @@ namespace Nu64.Processor
         {
             kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_RESET, 0xc000);
             kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_BRK, 0xc000);
-            kernel.CPU.Stack.Value = MemoryMap_DirectPage.END_OF_STACK;
+            kernel.CPU.Stack.Value = MemoryMap_DirectPage.STACK_END;
             kernel.CPU.SetPC(Address);
 
-            kernel.OutputDevice = DeviceEnum.DebugWindow;
+            // Wind up the CPU and get it ready. The user will advance the PC
+            // using the debug window. 
+            CPU.Halted = false;
+            CPU.DebugPause = true;
+
+            //kernel.OutputDevice = DeviceEnum.DebugWindow;
+            /*
             kernel.PrintTab(REGISTER_COLUMN);
             kernel.Monitor.PrintRegisterHeader();
             kernel.PrintTab(REGISTER_COLUMN);
-            kernel.Monitor.PrintRegisters(false);
+            kernel.Monitor
             while (!CPU.Halted)
             {
 
@@ -85,19 +89,18 @@ namespace Nu64.Processor
             kernel.OutputDevice = DeviceEnum.Screen;
             kernel.ReadyHandler = kernel.Monitor;
             kernel.READY();
+            */
         }
 
         internal void BeginTestFast(int Address)
         {
             kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_RESET, 0xc000);
             kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_BRK, 0xc000);
-            kernel.CPU.Stack.Value = MemoryMap_DirectPage.END_OF_STACK;
+            kernel.CPU.Stack.Value = MemoryMap_DirectPage.STACK_END;
             kernel.CPU.SetPC(Address);
 
-            while (!CPU.Halted)
-            {
-                CPU.ExecuteNext();
-            }
+            CPU.DebugPause = false;
+            CPU.Start(Address, 0x00);
 
             kernel.ReadyHandler = kernel.Monitor;
             kernel.READY();

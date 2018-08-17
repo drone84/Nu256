@@ -24,36 +24,48 @@ namespace Nu64.Monitor
             PrintRegisters();
         }
 
+        public string GetRegisterText()
+        {
+            StringBuilder s = new StringBuilder();
+            s.Append(';');
+            s.Append(kernel.CPU.GetLongPC().ToString("X6"));
+            s.Append(' ');
+            s.Append(kernel.CPU.A.Value.ToString("X4"));
+            s.Append(' ');
+            s.Append(kernel.CPU.X.Value.ToString("X4"));
+            s.Append(' ');
+            s.Append(kernel.CPU.Y.Value.ToString("X4"));
+            s.Append(' ');
+            s.Append(kernel.CPU.Stack.Value.ToString("X4"));
+            s.Append(' ');
+            s.Append(kernel.CPU.DataBank.Value.ToString("X2"));
+            s.Append(' ');
+            s.Append(' ');
+            s.Append(kernel.CPU.DirectPage.Value.ToString("X4"));
+            s.Append(' ');
+            s.Append(kernel.CPU.Flags.ToString());
+            s.AppendLine();
+
+            return s.ToString();
+        }
+
         public void PrintRegisters(bool printHeader = true)
         {
             //  PC     A    X    Y    SP   DBR DP   NVMXDIZC
             // ;000000 0000 0000 0000 0000 00  0000 11111111
-
             if (printHeader)
                 PrintRegisterHeader();
-            kernel.PrintChar(';');
-            kernel.Print(kernel.CPU.GetLongPC().ToString("X6"));
-            kernel.PrintChar(' ');
-            kernel.Print(kernel.CPU.A.Value.ToString("X4"));
-            kernel.PrintChar(' ');
-            kernel.Print(kernel.CPU.X.Value.ToString("X4"));
-            kernel.PrintChar(' ');
-            kernel.Print(kernel.CPU.Y.Value.ToString("X4"));
-            kernel.PrintChar(' ');
-            kernel.Print(kernel.CPU.Stack.Value.ToString("X4"));
-            kernel.PrintChar(' ');
-            kernel.Print(kernel.CPU.DataBank.Value.ToString("X2"));
-            kernel.PrintChar(' ');
-            kernel.PrintChar(' ');
-            kernel.Print(kernel.CPU.DirectPage.Value.ToString("X4"));
-            kernel.PrintChar(' ');
-            kernel.Print(kernel.CPU.Flags.ToString());
-            kernel.PrintLine();
+            kernel.PrintLine(GetRegisterText());
+        }
+
+        public string GetRegisterHeader()
+        {
+            return " PC     A    X    Y    SP   DBR DP   NVMXDIZC";
         }
 
         public void PrintRegisterHeader()
         {
-            kernel.PrintLine(" PC     A    X    Y    SP   DBR DP   NVMXDIZC");
+            kernel.PrintLine(GetRegisterHeader());
         }
 
         public void PrintStoredRegisters()
@@ -62,22 +74,22 @@ namespace Nu64.Monitor
             // ;000000 0000 0000 0000 0000 00  0000 11111111
             PrintRegisterHeader();
             kernel.PrintChar(';');
-            kernel.PrintMemHex(3, MemoryMap_DirectPage.SYSPC);
+            kernel.PrintMemHex(3, MemoryMap_DirectPage.CPUPC);
             kernel.PrintChar(' ');
-            kernel.PrintMemHex(2, MemoryMap_DirectPage.SYSA);
+            kernel.PrintMemHex(2, MemoryMap_DirectPage.CPUA);
             kernel.PrintChar(' ');
-            kernel.PrintMemHex(2, MemoryMap_DirectPage.SYSX);
+            kernel.PrintMemHex(2, MemoryMap_DirectPage.CPUX);
             kernel.PrintChar(' ');
-            kernel.PrintMemHex(2, MemoryMap_DirectPage.SYSY);
+            kernel.PrintMemHex(2, MemoryMap_DirectPage.CPUY);
             kernel.PrintChar(' ');
-            kernel.PrintMemHex(2, MemoryMap_DirectPage.SYSSP);
+            kernel.PrintMemHex(2, MemoryMap_DirectPage.CPUSTACK);
             kernel.PrintChar(' ');
-            kernel.PrintMemHex(1, MemoryMap_DirectPage.SYSDBR);
+            kernel.PrintMemHex(1, MemoryMap_DirectPage.CPUDBR);
             kernel.PrintChar(' ');
             kernel.PrintChar(' ');
-            kernel.PrintMemHex(2, MemoryMap_DirectPage.SYSDP);
+            kernel.PrintMemHex(2, MemoryMap_DirectPage.CPUDP);
             kernel.PrintChar(' ');
-            kernel.PrintMemBinary(1, MemoryMap_DirectPage.SYSP);
+            kernel.PrintMemBinary(1, MemoryMap_DirectPage.CPUFLAGS);
             kernel.PrintChar(' ');
             kernel.PrintLine();
         }

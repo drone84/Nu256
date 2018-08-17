@@ -40,7 +40,7 @@ namespace Nu64
             this.gpu = gpu;
             gpu.LoadCharacterData(Memory.RAM);
 
-            for(int i=MemoryMap_DirectPage.GPU_PAGE_0; i< MemoryMap_DirectPage.GPU_PAGE_1; i++)
+            for(int i=MemoryMap_DirectPage.SCREEN_PAGE0; i< MemoryMap_DirectPage.SCREEN_PAGE1; i++)
             {
                 this.Memory[i] = 0x40;
             }
@@ -96,7 +96,7 @@ namespace Nu64
 
             if (OutputDevice == DeviceEnum.DebugWindow)
             {
-                UI.RegisterWindow.PrintChar(c);
+                UI.DebugWindow.PrintChar(c);
             }
         }
 
@@ -144,7 +144,7 @@ namespace Nu64
                     gpu.CurrentColor = gpu.CurrentColor & (int.MaxValue - ColorCodes.Reverse);
                     break;
                 default:
-                    Memory[MemoryMap_DirectPage.GPU_PAGE_0 + gpu.CursorPos] = (byte)c;
+                    Memory[MemoryMap_DirectPage.SCREEN_PAGE0 + gpu.CursorPos] = (byte)c;
                     //gpu.ColorData[gpu.CursorPos] = CurrentColor;
                     AdvanceCursor();
                     break;
@@ -164,7 +164,7 @@ namespace Nu64
             }
             else if (OutputDevice == DeviceEnum.DebugWindow)
             {
-                UI.RegisterWindow.PrintTab(Col);
+                UI.DebugWindow.PrintTab(Col);
             }
         }
 
@@ -208,7 +208,7 @@ namespace Nu64
 
         public void Scroll1()
         {
-            int addr = MemoryMap_DirectPage.GPU_PAGE_0;
+            int addr = MemoryMap_DirectPage.SCREEN_PAGE0;
             for (int c = 0; c < gpu.BufferSize - gpu.Columns; c++)
             {
                 for (int col = 0; col < gpu.Columns; col++)
@@ -322,7 +322,7 @@ namespace Nu64
         {
             for (int i = 0; i < gpu.BufferSize; i++)
             {
-                Memory[MemoryMap_DirectPage.GPU_PAGE_0 + i] = c;
+                Memory[MemoryMap_DirectPage.SCREEN_PAGE0 + i] = c;
                 //gpu.ColorData[i] = _currentForeground;
             }
         }

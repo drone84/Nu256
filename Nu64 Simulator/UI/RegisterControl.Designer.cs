@@ -44,11 +44,12 @@
             // 
             // textBox1
             // 
+            this.textBox1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.textBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.textBox1.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBox1.Location = new System.Drawing.Point(0, 17);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(150, 20);
+            this.textBox1.Size = new System.Drawing.Size(150, 13);
             this.textBox1.TabIndex = 1;
             // 
             // panel1
@@ -67,7 +68,7 @@
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.label1);
             this.Name = "RegisterControl";
-            this.Size = new System.Drawing.Size(150, 39);
+            this.Size = new System.Drawing.Size(150, 31);
             this.ResumeLayout(false);
             this.PerformLayout();
 

@@ -30,7 +30,7 @@ namespace Nu64
         /// </summary>
         private void InitializeComponent()
         {
-            this.gpu = new Nu64.Display.Gpu();
+            this.components = new System.ComponentModel.Container();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.ModeText = new System.Windows.Forms.ToolStripStatusLabel();
             this.lastKeyPressed = new System.Windows.Forms.ToolStripStatusLabel();
@@ -40,26 +40,20 @@ namespace Nu64
             this.windowsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cPUToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.memoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.executeTimer = new System.Windows.Forms.Timer(this.components);
+            this.timerStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            this.gpu = new Nu64.Display.Gpu();
+            this.performanceTimer = new System.Windows.Forms.Timer(this.components);
             this.statusStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // gpu
-            // 
-            this.gpu.CursorPos = 0;
-            this.gpu.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gpu.Location = new System.Drawing.Point(0, 24);
-            this.gpu.Name = "gpu";
-            this.gpu.Size = new System.Drawing.Size(807, 463);
-            this.gpu.TabIndex = 0;
-            this.gpu.X = 0;
-            this.gpu.Y = 0;
             // 
             // statusStrip1
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.ModeText,
-            this.lastKeyPressed});
+            this.lastKeyPressed,
+            this.timerStatus});
             this.statusStrip1.Location = new System.Drawing.Point(0, 487);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(807, 22);
@@ -100,7 +94,7 @@ namespace Nu64
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(92, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -116,14 +110,43 @@ namespace Nu64
             // cPUToolStripMenuItem
             // 
             this.cPUToolStripMenuItem.Name = "cPUToolStripMenuItem";
-            this.cPUToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.cPUToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
             this.cPUToolStripMenuItem.Text = "CPU";
             // 
             // memoryToolStripMenuItem
             // 
             this.memoryToolStripMenuItem.Name = "memoryToolStripMenuItem";
-            this.memoryToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.memoryToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
             this.memoryToolStripMenuItem.Text = "Memory";
+            // 
+            // executeTimer
+            // 
+            this.executeTimer.Enabled = true;
+            this.executeTimer.Interval = 10;
+            this.executeTimer.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
+            // timerStatus
+            // 
+            this.timerStatus.Name = "timerStatus";
+            this.timerStatus.Size = new System.Drawing.Size(34, 17);
+            this.timerStatus.Text = "0 cps";
+            // 
+            // gpu
+            // 
+            this.gpu.CursorPos = 0;
+            this.gpu.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.gpu.Location = new System.Drawing.Point(0, 24);
+            this.gpu.Name = "gpu";
+            this.gpu.Size = new System.Drawing.Size(807, 463);
+            this.gpu.TabIndex = 0;
+            this.gpu.X = 0;
+            this.gpu.Y = 0;
+            // 
+            // performanceTimer
+            // 
+            this.performanceTimer.Enabled = true;
+            this.performanceTimer.Interval = 1000;
+            this.performanceTimer.Tick += new System.EventHandler(this.performanceTimer_Tick);
             // 
             // MainWindow
             // 
@@ -162,6 +185,9 @@ namespace Nu64
         private System.Windows.Forms.ToolStripMenuItem windowsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cPUToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem memoryToolStripMenuItem;
+        private System.Windows.Forms.Timer executeTimer;
+        private System.Windows.Forms.ToolStripStatusLabel timerStatus;
+        private System.Windows.Forms.Timer performanceTimer;
     }
 }
 

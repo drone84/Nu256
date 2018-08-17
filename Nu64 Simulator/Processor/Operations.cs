@@ -47,7 +47,7 @@ namespace Nu64.Processor
             cpu.OpcodeCycles = 1;
             SystemLog.WriteLine(SystemLog.SeverityCodes.Recoverable, "Invalid Instruction (Not implemented.) Abort processed."
                 + "\r\nPC: " + cpu.ProgramBank.GetLongAddress(cpu.PC)
-                + "\r\ninstruction: " + cpu.OC.ToString());
+                + "\r\ninstruction: " + cpu.Opcode.ToString());
 
             cpu.Halted = true;
         }
@@ -454,6 +454,18 @@ namespace Nu64.Processor
                 case OpcodeList.PLA_StackImplied:
                     cpu.PullInto(cpu.A);
                     break;
+                case OpcodeList.PHX_StackImplied:
+                    cpu.Push(cpu.X);
+                    break;
+                case OpcodeList.PLX_StackImplied:
+                    cpu.PullInto(cpu.X);
+                    break;
+                case OpcodeList.PHY_StackImplied:
+                    cpu.Push(cpu.A);
+                    break;
+                case OpcodeList.PLY_StackImplied:
+                    cpu.PullInto(cpu.Y);
+                    break;
                 case OpcodeList.PHB_StackImplied:
                     cpu.Push(cpu.DataBank);
                     break;
@@ -782,7 +794,8 @@ namespace Nu64.Processor
                     cpu.JumpShort(cpu.Pull(2));
                     return;
                 case OpcodeList.RTL_StackImplied:
-                    cpu.JumpLong(cpu.Pull(3));
+                    addr = cpu.Pull(3);
+                    cpu.JumpLong(addr);
                     return;
                 default:
                     throw new NotImplementedException("ExecuteJumpReturn() opcode not implemented: " + instruction.ToString("X2"));

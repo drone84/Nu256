@@ -9,7 +9,6 @@
 * = $F80000
 
 BOOT        JML IBOOT
-RESET       JML IRESET
 ;RESTORE       JML IRESTORE
 ;READY         JML IREADY
 ;SCINIT        JML ISCINIT
@@ -64,15 +63,22 @@ IBOOT           ; boot the system
                 setas
                 LDA #$00
                 STA CURSORPOS+2
+                setas
+                LDA #80         ; Set screen dimensions
+                STA SCRWIDTH
+                LDA #25
+                STA SCRHEIGHT
                 
                 ; display boot message
-greet           LDA #$F8        ;Set data bank to $F0
-                PHA             ;
-                PLB             ;
-                .databank $F8
+greet           setdb $F8       ;Set data bank to ROM
+                
                 LDX #<>greet_msg
+                JSL IPUTS       ; print the string
+                LDX #<>greet_msg1
+                JSL IPUTS       ; print the string
+                LDX #<>greet_msg2
+                JSL IPUTS       ; print the string
                 ; LDY #40
-                JSR IPUTS       ; print the string
 
                 setas
                 LDA #$01        ;set data bank to 1 (Kernel Variables)
@@ -94,40 +100,81 @@ IPUTC           ; Print  character
                 ; A: character to print
                 PHP             ; stash the flags (we'll be changing M)
                 PHD
+                setdp 0
                 setas
-                PHA
-                setal
-                LDA #$100       ; set DP to page 0
-                TCD             ; and get character back
-                .dpage $100
-                setas
-                PLA
                 STA [CURSORPOS] ; Save the character on the screen                
-                INC CURSORPOS   ; Move the cursor to the next position
-                INC CURSORX     ; 
+                JSL ICSRRIGHT
                 PLD
                 PLP
-                RTS
+                RTL
+
+ICSRRIGHT	; move the cursor right one space
+                PHB
+                setal 
+                setxl
+                PHX
+                setdp $0
+                INC CURSORPOS
+                LDX CURSORX
+                INX 
+                CPX SCRWIDTH
+                BCC icsr_nowrap  ; wrap if the cursor is at or past column 80
+                LDX #0
+                INC CURSORY
+                JSL ILOCATE
+icsr_nowrap     STX CURSORX
+                PLX
+                PLB
+                RTL
+                          
+ISRLEFT		RTL
+ICSRUP		RTL
+ICSRDOWN	RTL
+
+ILOCATE         ;Sets the cursor X and Y positions to the X and Y registers
+                PHB 
+                setal
+                setxl 
+                PHA
+                PHY
+                LDA SCREENBEGIN
+                STY CURSORY
+                STX CURSORX
+                
+ilocate_down    CPY SCRWIDTH            ; move the cursor down Y rows
+                BCC ilocate_right
+                CLC
+                ADC SCRWIDTH
+                DEY 
+                JMP ilocate_down
+ilocate_right   ADC CURSORX             ; move the cursor right X columns
+                STA CURSORPOS
+                
+ilocate_done    PLY
+                PLA
+                PLB
+                RTL
                 
 IPUTS           ; Print a null terminated string
                 ; DBR: bank containing string
                 ; X: address of the string in data bank
                 ; Y: maximum number of characters to write
                 ; Modifies: X,Y
-                PHA
                 PHP
+                PHA
                 setas
+                setxl 
 iputs1          LDA $0,b,x ; read from the string
                 BEQ iputs_done
-                JSR IPUTC
+                JSL IPUTC
                 INX
                 DEY
                 BEQ iputs_done
                 jmp iputs1
 
-iputs_done      PLP
-                PLA
-                RTS
+iputs_done      PLA
+                PLP
+                RTL
                 
 greet_msg       .text "**///// NU64 DEVELOPMENT SYSTEM",$0d,$00
 greet_msg1      .text "*/////* NU64 BASIC (Not Implemented)",$0d,$00

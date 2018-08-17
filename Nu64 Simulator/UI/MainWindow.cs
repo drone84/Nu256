@@ -13,8 +13,9 @@ namespace Nu64
     public partial class MainWindow : Form
     {
         public Kernel kernel;
-        public UI.RegisterWindow RegisterWindow;
+        public UI.DebugWindow DebugWindow;
         public Timer BootTimer = new Timer();
+        public int CyclesPerTick = 35000;
 
         public MainWindow()
         {
@@ -31,9 +32,11 @@ namespace Nu64
         {
             kernel = new Kernel(this.gpu);
 
-            RegisterWindow = new UI.RegisterWindow();
-            RegisterWindow.registerDisplay1.CPU = kernel.CPU;
-            RegisterWindow.Show();
+            DebugWindow = new UI.DebugWindow();
+            DebugWindow.CPU = kernel.CPU;
+            kernel.CPU.DebugPause = true;
+            DebugWindow.Kernel = kernel;
+            DebugWindow.Show();
 
             BootTimer.Interval = 1000;
             BootTimer.Tick += BootTimer_Tick;
@@ -88,6 +91,22 @@ namespace Nu64
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.Close();
+        }
+
+        double cps;
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            kernel.CPU.ExecuteCycles(CyclesPerTick);
+
+            TimeSpan s = kernel.CPU.CycleTime;
+            int c = kernel.CPU.CycleCounter;
+
+            cps = c / s.TotalSeconds;
+        }
+
+        private void performanceTimer_Tick(object sender, EventArgs e)
+        {
+            timerStatus.Text = cps.ToString("N0") + " CPS";
         }
     }
 }

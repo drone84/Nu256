@@ -75,6 +75,14 @@ namespace Nu64.Processor
             get { return this.Stack; }
         }
 
+        public TimeSpan CycleTime
+        {
+            get
+            {
+                return DateTime.Now - checkStartTime;
+            }
+        }
+
         public void SetPC(int address)
         {
             ProgramBank.Value = (address & 0xff0000) >> 16;

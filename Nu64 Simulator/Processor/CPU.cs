@@ -22,8 +22,8 @@ namespace Nu64.Processor
         /// <summary>
         /// Currently executing opcode 
         /// </summary>
-        public byte Instruction = 0;
-        public OpCode OC = null;
+        public byte opcodeByte = 0;
+        public OpCode Opcode = null;
         public int SignatureBytes = 0;
 
         /// <summary>
@@ -47,10 +47,15 @@ namespace Nu64.Processor
         /// the number of cycles to pause at until the next performance checkpoint
         /// </summary>
         private long nextCycleCheck = long.MaxValue;
+        /// <summary>
+        /// The last time the performance was checked. 
+        /// </summary>
+        private DateTime checkStartTime = DateTime.Now;
 
         public SystemBus Memory = null;
 
-        public bool Halted = false;
+        public bool Halted = true;
+        public bool DebugPause = false;
 
         public int ClockSpeed
         {
@@ -82,29 +87,60 @@ namespace Nu64.Processor
             Halted = false;
         }
 
+        /// <summary>
+        /// Execute for n cycles, then return. This gives the host a chance to do other things in the meantime.
+        /// </summary>
+        /// <param name="Cycles"></param>
+        public void ExecuteCycles(int Cycles)
+        {
+            ResetCounter(Cycles);
+            while(clockCyles < nextCycleCheck && !Halted && !DebugPause)
+            {
+                ExecuteNext();
+            }
+        }
+
+        /// <summary>
+        /// Execute a single instruction
+        /// </summary>
         public void ExecuteNext()
         {
-            Instruction = GetNextInstruction();
-            Decode(Instruction);
+            opcodeByte = GetNextInstruction();
+            this.Opcode = Decode(opcodeByte);
             PC.Value += OpcodeLength;
-            OC.Execute(SignatureBytes);
+            Opcode.Execute(SignatureBytes);
             clockCyles += OpcodeCycles;
         }
 
-        public void Decode(byte instruction)
+        /// <summary>
+        /// Fetch and decode the next instruction for debugging purposes
+        /// </summary>
+        public OpCode PreFetch()
         {
-            OC = opcodes[Instruction];
-            OpcodeLength = OC.Length;
-            OpcodeCycles = 3;
+            opcodeByte = GetNextInstruction();
+            return opcodes[opcodeByte];
+        }
 
+        public OpCode Decode(byte instruction)
+        {
+            OpCode oc = opcodes[opcodeByte];
+            OpcodeLength = oc.Length;
+            OpcodeCycles = 4;
+            SignatureBytes = ReadSignature(oc);
+            return oc;
+        }
+
+        public  int ReadSignature(OpCode oc)
+        {
             int s = 0;
-            if (OC.Length == 2)
+            if (oc.Length == 2)
                 s = GetNextByte(0);
-            else if (OC.Length == 3)
+            else if (oc.Length == 3)
                 s = GetNextWord(0);
-            else if (OC.Length == 4)
+            else if (oc.Length == 4)
                 s = GetNextLong(0);
-            SignatureBytes = s;
+
+            return s;
         }
 
         private byte GetNextInstruction()
@@ -489,6 +525,9 @@ namespace Nu64.Processor
 
         public void Interrupt(InteruptTypes T)
         {
+            //debug
+            DebugPause = true;
+
             if (!Flags.Emulation)
                 Push(ProgramBank);
             Push(PC, 2);
@@ -524,6 +563,13 @@ namespace Nu64.Processor
                 JumpVector(eaddr);
             else
                 JumpVector(addr);
+        }
+
+        public void ResetCounter(int maxCycles)
+        {
+            clockCyles = 0;
+            nextCycleCheck = maxCycles;
+            checkStartTime = DateTime.Now;
         }
     }
 }

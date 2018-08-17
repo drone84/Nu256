@@ -89,11 +89,11 @@
     <Compile Include="Display\Gpu.Designer.cs">
       <DependentUpon>Gpu.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\RegisterWindow.cs">
+    <Compile Include="UI\DebugWindow.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\RegisterWindow.Designer.cs">
-      <DependentUpon>RegisterWindow.cs</DependentUpon>
+    <Compile Include="UI\DebugWindow.Designer.cs">
+      <DependentUpon>DebugWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\MainWindow.cs">
       <SubType>Form</SubType>
@@ -137,8 +137,8 @@
     <EmbeddedResource Include="Display\Gpu.resx">
       <DependentUpon>Gpu.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\RegisterWindow.resx">
-      <DependentUpon>RegisterWindow.cs</DependentUpon>
+    <EmbeddedResource Include="UI\DebugWindow.resx">
+      <DependentUpon>DebugWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>

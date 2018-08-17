@@ -153,7 +153,7 @@ namespace Nu64
             if (Length >= 2)
                 ret += device.ReadByte(addr + 1) << 8;
             if (Length >= 3)
-                ret += device.ReadByte(addr + 1) << 16;
+                ret += device.ReadByte(addr + 2) << 16;
             return ret;
         }
 
