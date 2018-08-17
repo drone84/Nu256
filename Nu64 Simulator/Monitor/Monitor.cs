@@ -44,8 +44,6 @@ namespace Nu64.Monitor
             s.Append(kernel.CPU.DirectPage.Value.ToString("X4"));
             s.Append(' ');
             s.Append(kernel.CPU.Flags.ToString());
-            s.AppendLine();
-
             return s.ToString();
         }
 

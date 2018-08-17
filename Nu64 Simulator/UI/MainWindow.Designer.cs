@@ -34,6 +34,7 @@ namespace Nu64
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.ModeText = new System.Windows.Forms.ToolStripStatusLabel();
             this.lastKeyPressed = new System.Windows.Forms.ToolStripStatusLabel();
+            this.timerStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -41,7 +42,6 @@ namespace Nu64
             this.cPUToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.memoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.executeTimer = new System.Windows.Forms.Timer(this.components);
-            this.timerStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.gpu = new Nu64.Display.Gpu();
             this.performanceTimer = new System.Windows.Forms.Timer(this.components);
             this.statusStrip1.SuspendLayout();
@@ -71,6 +71,12 @@ namespace Nu64
             this.lastKeyPressed.Name = "lastKeyPressed";
             this.lastKeyPressed.Size = new System.Drawing.Size(25, 17);
             this.lastKeyPressed.Text = "$00";
+            // 
+            // timerStatus
+            // 
+            this.timerStatus.Name = "timerStatus";
+            this.timerStatus.Size = new System.Drawing.Size(34, 17);
+            this.timerStatus.Text = "0 cps";
             // 
             // menuStrip1
             // 
@@ -121,15 +127,8 @@ namespace Nu64
             // 
             // executeTimer
             // 
-            this.executeTimer.Enabled = true;
             this.executeTimer.Interval = 10;
             this.executeTimer.Tick += new System.EventHandler(this.timer1_Tick);
-            // 
-            // timerStatus
-            // 
-            this.timerStatus.Name = "timerStatus";
-            this.timerStatus.Size = new System.Drawing.Size(34, 17);
-            this.timerStatus.Text = "0 cps";
             // 
             // gpu
             // 
@@ -141,6 +140,7 @@ namespace Nu64
             this.gpu.TabIndex = 0;
             this.gpu.X = 0;
             this.gpu.Y = 0;
+            this.gpu.VisibleChanged += new System.EventHandler(this.gpu_VisibleChanged);
             // 
             // performanceTimer
             // 

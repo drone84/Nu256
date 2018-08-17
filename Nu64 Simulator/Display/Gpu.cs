@@ -11,7 +11,7 @@ using System.Drawing.Imaging;
 
 namespace Nu64.Display
 {
-    public partial class Gpu : UserControl, IMappable
+    public partial class Gpu : UserControl, Nu64.Common.IMappable
     {
         public event KeyPressEventHandler KeyPressed;
         
@@ -282,8 +282,6 @@ namespace Nu64.Display
         void Gpu_Paint(object sender, PaintEventArgs e)
         {
             //DrawVectorText(e.Graphics);
-            this._cursorCol = VRAM.ReadByte(MemoryMap_DirectPage.CURSORX);
-            this._cursorRow = VRAM.ReadByte(MemoryMap_DirectPage.CURSORY);
             DrawBitmapText(e.Graphics);
         }
 
@@ -399,6 +397,9 @@ namespace Nu64.Display
                 controlGraphics.DrawString("Character ROM not initialized", this.Font, TextBrush, 0, 0);
                 return;
             }
+
+            this._cursorCol = VRAM.ReadByte(MemoryMap_DirectPage.CURSORX);
+            this._cursorRow = VRAM.ReadByte(MemoryMap_DirectPage.CURSORY);
 
             int col = 0, row = 0;
             for (int i = 0; i < BufferSize; i++)

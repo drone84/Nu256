@@ -13,8 +13,9 @@ namespace Nu64.UI
 {
     public partial class DebugWindow : Form
     {
-        private const int REGISTER_COLUMN = 26;
-        private const int MNEMONIC_COLUMN = 14;
+        private const int MNEMONIC_COLUMN = 22;
+        private const int REGISTER_COLUMN = 34;
+        private int StepCounter = 0;
 
         public DebugWindow()
         {
@@ -26,6 +27,7 @@ namespace Nu64.UI
         private Processor.CPU _cpu = null;
         private Kernel _kernel = null;
 
+        List<string> PrintQueue = new List<string>();
         static StringBuilder lineBuffer = new StringBuilder();
 
         public CPU CPU
@@ -82,15 +84,48 @@ namespace Nu64.UI
         private void PauseButton_Click(object sender, EventArgs e)
         {
             CPU.DebugPause = true;
+            RefreshStatus();
         }
 
         private void StepButton_Click(object sender, EventArgs e)
         {
-            int pc1 = CPU.GetLongPC();
-            CPU.ExecuteNext();
-            int pc2 = pc1 + CPU.Opcode.Length;
-            PrintStatus(pc1, pc2);
+            CPU.DebugPause = true;
 
+            int steps = 1;
+            int.TryParse(stepsInput.Text, out steps);
+            Kernel.CPU.DebugPause = false;
+            while (!Kernel.CPU.DebugPause && steps-- > 0)
+            {
+                ExecuteStep();
+                Application.DoEvents();
+            }
+            RefreshStatus();
+            Kernel.CPU.DebugPause = true;
+        }
+
+        private void RefreshStatus()
+        {
+            UpdateStackDisplay();
+
+            if (PrintQueue.Count > 5)
+            {
+                string[] lines = new string[messageText.Lines.Length + PrintQueue.Count];
+                if (messageText.Lines.Length > 0)
+                    Array.Copy(messageText.Lines, lines, messageText.Lines.Length);
+                PrintQueue.CopyTo(lines, messageText.Lines.Length);
+                messageText.Lines = lines;
+
+                messageText.AppendText(" ");
+            }
+            else
+            {
+                for (int i = 0; i < PrintQueue.Count; i++)
+                {
+                    messageText.AppendText("\r\n");
+                    messageText.AppendText(PrintQueue[i]);
+                }
+            }
+            PrintQueue.Clear();
             PrintNextInstruction();
         }
 
@@ -98,6 +133,8 @@ namespace Nu64.UI
         {
             OpCode oc = CPU.PreFetch();
             int start = CPU.GetLongPC();
+            PrintPC(start);
+
             int end = start + oc.Length;
             for (int i = start; i < end; i++)
             {
@@ -110,32 +147,39 @@ namespace Nu64.UI
             Print(oc.ToString(s));
             //PrintTab(REGISTER_COLUMN);
             //Print(Kernel.Monitor.GetRegisterText());
+            instance.lastLine.Text = lineBuffer.ToString();
+            lineBuffer.Clear();
         }
 
         string GetHeaderText()
         {
             StringBuilder s = new StringBuilder();
-            s.Append(new string(' ', REGISTER_COLUMN));
+            s.Append("PC    INSTRUCTION");
+            s.Append(new string(' ', REGISTER_COLUMN - s.Length));
             s.Append(Kernel.Monitor.GetRegisterHeader());
             return s.ToString();
         }
 
         const int MAX_LINES = 25;
         const int TRIM_LINES = 1;
+        private void PrintPC(int pc1)
+        {
+            Print("." + pc1.ToString("X6") + "  ");
+        }
+
         public void PrintStatus(int lastPC, int newPC)
         {
-            if (messageText.Lines.Length == 0)
-                PrintLine(GetHeaderText());
-            else if (messageText.Lines.Length > MAX_LINES)
-            {
-                string[] tmp = new string[MAX_LINES - TRIM_LINES + 1];
-                tmp[0] = GetHeaderText();
-                Array.Copy(messageText.Lines, messageText.Lines.Length - MAX_LINES + TRIM_LINES, tmp, 1, tmp.Length - 1);
-                messageText.Lines = tmp;
-            }
+            //if (messageText.Lines.Length == 0)
+            //    PrintLine(GetHeaderText());
+            //else if (messageText.Lines.Length > MAX_LINES)
+            //{
+            //    string[] tmp = new string[MAX_LINES - TRIM_LINES + 1];
+            //    tmp[0] = GetHeaderText();
+            //    Array.Copy(messageText.Lines, messageText.Lines.Length - MAX_LINES + TRIM_LINES, tmp, 1, tmp.Length - 1);
+            //    messageText.Lines = tmp;
+            //}
 
-
-            PrintClear();
+            //PrintClear();
             for (int i = lastPC; i < newPC; i++)
             {
                 Print(CPU.Memory[i].ToString("X2"));
@@ -146,18 +190,16 @@ namespace Nu64.UI
             PrintTab(REGISTER_COLUMN);
             Print(Kernel.Monitor.GetRegisterText());
             PrintLine();
-            UpdateStackDisplay();
         }
 
         public static void Print(string message)
         {
             lineBuffer.Append(message);
-            instance.lastLine.Text = lineBuffer.ToString();
         }
 
         public static void PrintLine(string message)
         {
-            lineBuffer.AppendLine(message);
+            lineBuffer.Append(message);
             PrintLine();
         }
 
@@ -168,8 +210,8 @@ namespace Nu64.UI
 
         public static void PrintLine()
         {
-            instance.messageText.AppendText(lineBuffer.ToString());
-            lineBuffer.Clear();
+            //instance.messageText.AppendText(lineBuffer.ToString());
+            instance.PrintQueue.Add(lineBuffer.ToString());
             PrintClear();
         }
 
@@ -191,15 +233,67 @@ namespace Nu64.UI
 
         }
 
+        const int COUNTER_STEPS=1000;
         private void RunButton_Click(object sender, EventArgs e)
         {
+            int counter = COUNTER_STEPS;
             CPU.DebugPause = false;
-            while(! CPU.DebugPause && !CPU.Halted)
+            while (!CPU.DebugPause && !CPU.Halted)
             {
-                StepButton_Click(sender, e);
-                Kernel.gpu.Refresh();
-                System.Windows.Forms.Application.DoEvents();
+                if(counter-- <= 0)
+                {
+                    Kernel.gpu.Refresh();
+                    Application.DoEvents();
+                    counter = COUNTER_STEPS;
+                    RefreshStatus();
+                }
+                ExecuteStep();
             }
+            RefreshStatus();
+        }
+
+        private void locationInput_TextChanged(object sender, EventArgs e)
+        {
+        }
+
+        private void stepsInput_Enter(object sender, EventArgs e)
+        {
+            TextBox tb = sender as TextBox;
+            if (tb == null)
+                return;
+
+            tb.SelectAll();
+        }
+
+        public void ExecuteStep()
+        {
+            StepCounter++;
+            this.Text = "Debug: " + StepCounter.ToString();
+
+            PrintClear();
+
+            int pc1 = CPU.GetLongPC();
+            PrintPC(pc1);
+            CPU.ExecuteNext();
+            int pc2 = pc1 + CPU.Opcode.Length;
+            PrintStatus(pc1, pc2);
+
+            //PrintNextInstruction();
+        }
+
+        private void DebugWindow_Load(object sender, EventArgs e)
+        {
+            //if (messageText.Lines.Length == 0)
+            //    PrintLine(GetHeaderText());
+            PrintTab(REGISTER_COLUMN);
+            HeaderTextbox.Text = GetHeaderText();
+            PrintLine(Kernel.Monitor.GetRegisterText());
+            RefreshStatus();
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+
         }
     }
 }

@@ -38,9 +38,8 @@ namespace Nu64
             DebugWindow.Kernel = kernel;
             DebugWindow.Show();
 
-            BootTimer.Interval = 1000;
+            BootTimer.Interval = 100;
             BootTimer.Tick += BootTimer_Tick;
-            BootTimer.Enabled = true;
             //kernel.READY();
         }
 
@@ -107,6 +106,12 @@ namespace Nu64
         private void performanceTimer_Tick(object sender, EventArgs e)
         {
             timerStatus.Text = cps.ToString("N0") + " CPS";
+        }
+
+        private void gpu_VisibleChanged(object sender, EventArgs e)
+        {
+            if(gpu.Visible)
+                BootTimer.Enabled = true;
         }
     }
 }

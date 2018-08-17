@@ -21,7 +21,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -30,7 +30,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -56,7 +56,6 @@
     <Compile Include="Basic\Immediate.cs" />
     <Compile Include="Basic\Parser.cs" />
     <Compile Include="DeviceEnum.cs" />
-    <Compile Include="HexFile.cs" />
     <Compile Include="Processor\InteruptTypes.cs" />
     <Compile Include="Processor\RegisterAccumulator.cs" />
     <Compile Include="Processor\AddressingModeEnum.cs" />
@@ -103,7 +102,6 @@
     </Compile>
     <Compile Include="MemoryLocations\IODevice.cs" />
     <Compile Include="Kernel.cs" />
-    <Compile Include="MemoryLocations\IMappable.cs" />
     <Compile Include="MemoryLocations\MemoryRAM.cs" />
     <Compile Include="MemoryLocations\MemoryMap_DirectPage.cs" />
     <Compile Include="MemoryLocations\AddressDataBus.cs" />
@@ -185,5 +183,16 @@
     </Content>
     <Content Include="Resources\PET-ASCII.png" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Nu64.Common\Nu64.Common.csproj">
+      <Project>{ec7b8dcd-41a5-458c-a0c9-23a8fdfe948b}</Project>
+      <Name>Nu64.Common</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>echo Copying latest kernel.hex
+copy "$(ProjectDir)..\kernel\kernel.hex" "$(ProjectDir)ROMs"
+</PreBuildEvent>
+  </PropertyGroup>
 </Project>

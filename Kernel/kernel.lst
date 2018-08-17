@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.53.1515 listing file
 ; 64tass --long-address --intel-hex -o kernel.hex --list kernel.lst kernel.asm
-; Thu Aug 16 17:52:19 2018
+; Fri Aug 17 12:32:25 2018
 
 ;Offset	;Hex		;Monitor	;Source
 
@@ -121,12 +121,12 @@
 .f81039	ab		plb		                PLB
 .f8103a	68		pla		                PLA
 .f8103b	28		plp		                PLP
-.f8103c	a2 d5 10	ldx #$10d5	                LDX #<>greet_msg
-.f8103f	22 bc 10 f8	jsl $f810bc	                JSL IPUTS       ; print the string
-.f81043	a2 f6 10	ldx #$10f6	                LDX #<>greet_msg1
-.f81046	22 bc 10 f8	jsl $f810bc	                JSL IPUTS       ; print the string
-.f8104a	a2 1c 11	ldx #$111c	                LDX #<>greet_msg2
-.f8104d	22 bc 10 f8	jsl $f810bc	                JSL IPUTS       ; print the string
+.f8103c	a2 d8 10	ldx #$10d8	                LDX #<>greet_msg
+.f8103f	22 bf 10 f8	jsl $f810bf	                JSL IPUTS       ; print the string
+.f81043	a2 f9 10	ldx #$10f9	                LDX #<>greet_msg1
+.f81046	22 bf 10 f8	jsl $f810bf	                JSL IPUTS       ; print the string
+.f8104a	a2 1f 11	ldx #$111f	                LDX #<>greet_msg2
+.f8104d	22 bf 10 f8	jsl $f810bf	                JSL IPUTS       ; print the string
 .f81051	e2 20		sep #$20	                SEP #$20
 .f81053	a9 01		lda #$01	                LDA #$01        ;set data bank to 1 (Kernel Variables)
 .f81055	48		pha		                PHA
@@ -165,61 +165,64 @@
 .f81084	a6 1a		ldx $1a		                LDX CURSORX
 .f81086	e8		inx		                INX
 .f81087	e4 13		cpx $13		                CPX SCRWIDTH
-.f81089	90 09		bcc $f81094	                BCC icsr_nowrap  ; wrap if the cursor is at or past column 80
+.f81089	90 0c		bcc $f81097	                BCC icsr_nowrap  ; wrap if the cursor is at or past column 80
 .f8108b	a2 00 00	ldx #$0000	                LDX #0
-.f8108e	e6 1c		inc $1c		                INC CURSORY
-.f81090	22 9c 10 f8	jsl $f8109c	                JSL ILOCATE
-.f81094	86 1a		stx $1a		icsr_nowrap     STX CURSORX
-.f81096	fa		plx		                PLX
-.f81097	ab		plb		                PLB
-.f81098	6b		rtl		                RTL
-.f81099	6b		rtl		ISRLEFT		RTL
-.f8109a	6b		rtl		ICSRUP		RTL
-.f8109b	6b		rtl		ICSRDOWN	RTL
-.f8109c					ILOCATE
-.f8109c	8b		phb		                PHB
-.f8109d	c2 20		rep #$20	                REP #$20
-.f8109f	c2 10		rep #$10	                REP #$10
-.f810a1	48		pha		                PHA
-.f810a2	5a		phy		                PHY
-.f810a3	a5 10		lda $10		                LDA SCREENBEGIN
-.f810a5	84 1c		sty $1c		                STY CURSORY
-.f810a7	86 1a		stx $1a		                STX CURSORX
-.f810a9	c4 13		cpy $13		ilocate_down    CPY SCRWIDTH            ; move the cursor down Y rows
-.f810ab	90 07		bcc $f810b4	                BCC ilocate_right
-.f810ad	18		clc		                CLC
-.f810ae	65 13		adc $13		                ADC SCRWIDTH
-.f810b0	88		dey		                DEY
-.f810b1	4c a9 10	jmp $f810a9	                JMP ilocate_down
-.f810b4	65 1a		adc $1a		ilocate_right   ADC CURSORX             ; move the cursor right X columns
-.f810b6	85 17		sta $17		                STA CURSORPOS
-.f810b8	7a		ply		ilocate_done    PLY
-.f810b9	68		pla		                PLA
-.f810ba	ab		plb		                PLB
-.f810bb	6b		rtl		                RTL
-.f810bc					IPUTS
-.f810bc	08		php		                PHP
-.f810bd	48		pha		                PHA
-.f810be	e2 20		sep #$20	                SEP #$20
-.f810c0	c2 10		rep #$10	                REP #$10
-.f810c2	bd 00 00	lda $f80000,x	iputs1          LDA $0,b,x ; read from the string
-.f810c5	f0 0b		beq $f810d2	                BEQ iputs_done
-.f810c7	22 5f 10 f8	jsl $f8105f	                JSL IPUTC
-.f810cb	e8		inx		                INX
-.f810cc	88		dey		                DEY
-.f810cd	f0 03		beq $f810d2	                BEQ iputs_done
-.f810cf	4c c2 10	jmp $f810c2	                jmp iputs1
-.f810d2	68		pla		iputs_done      PLA
-.f810d3	28		plp		                PLP
-.f810d4	6b		rtl		                RTL
->f810d5	2a 2a 2f 2f 2f 2f 2f 20		greet_msg       .text "**///// NU64 DEVELOPMENT SYSTEM",$0d,$00
->f810dd	4e 55 36 34 20 44 45 56 45 4c 4f 50 4d 45 4e 54
->f810ed	20 53 59 53 54 45 4d 0d 00
->f810f6	2a 2f 2f 2f 2f 2f 2a 20		greet_msg1      .text "*/////* NU64 BASIC (Not Implemented)",$0d,$00
->f810fe	4e 55 36 34 20 42 41 53 49 43 20 28 4e 6f 74 20
->f8110e	49 6d 70 6c 65 6d 65 6e 74 65 64 29 0d 00
->f8111c	2f 2f 2f 2f 2f 2a 2a 20		greet_msg2      .text "/////** Machine Monitor v0.1 (dev)",$0d,$00
->f81124	4d 61 63 68 69 6e 65 20 4d 6f 6e 69 74 6f 72 20
->f81134	76 30 2e 31 20 28 64 65 76 29 0d 00
+.f8108e	5a		phy		                PHY
+.f8108f	a4 1c		ldy $1c		                LDY CURSORY
+.f81091	c8		iny		                INY
+.f81092	22 9f 10 f8	jsl $f8109f	                JSL ILOCATE
+.f81096	7a		ply		                PLY
+.f81097	86 1a		stx $1a		icsr_nowrap     STX CURSORX
+.f81099	fa		plx		                PLX
+.f8109a	ab		plb		                PLB
+.f8109b	6b		rtl		                RTL
+.f8109c	6b		rtl		ISRLEFT		RTL
+.f8109d	6b		rtl		ICSRUP		RTL
+.f8109e	6b		rtl		ICSRDOWN	RTL
+.f8109f					ILOCATE
+.f8109f	8b		phb		                PHB
+.f810a0	c2 20		rep #$20	                REP #$20
+.f810a2	c2 10		rep #$10	                REP #$10
+.f810a4	48		pha		                PHA
+.f810a5	5a		phy		                PHY
+.f810a6	a5 10		lda $10		                LDA SCREENBEGIN
+.f810a8	84 1c		sty $1c		                STY CURSORY
+.f810aa	86 1a		stx $1a		                STX CURSORX
+.f810ac	c4 13		cpy $13		ilocate_down    CPY SCRWIDTH            ; move the cursor down Y rows
+.f810ae	90 07		bcc $f810b7	                BCC ilocate_right
+.f810b0	18		clc		                CLC
+.f810b1	65 13		adc $13		                ADC SCRWIDTH
+.f810b3	88		dey		                DEY
+.f810b4	4c ac 10	jmp $f810ac	                JMP ilocate_down
+.f810b7	65 1a		adc $1a		ilocate_right   ADC CURSORX             ; move the cursor right X columns
+.f810b9	85 17		sta $17		                STA CURSORPOS
+.f810bb	7a		ply		ilocate_done    PLY
+.f810bc	68		pla		                PLA
+.f810bd	ab		plb		                PLB
+.f810be	6b		rtl		                RTL
+.f810bf					IPUTS
+.f810bf	08		php		                PHP
+.f810c0	48		pha		                PHA
+.f810c1	e2 20		sep #$20	                SEP #$20
+.f810c3	c2 10		rep #$10	                REP #$10
+.f810c5	bd 00 00	lda $f80000,x	iputs1          LDA $0,b,x ; read from the string
+.f810c8	f0 0b		beq $f810d5	                BEQ iputs_done
+.f810ca	22 5f 10 f8	jsl $f8105f	                JSL IPUTC
+.f810ce	e8		inx		                INX
+.f810cf	88		dey		                DEY
+.f810d0	f0 03		beq $f810d5	                BEQ iputs_done
+.f810d2	4c c5 10	jmp $f810c5	                jmp iputs1
+.f810d5	68		pla		iputs_done      PLA
+.f810d6	28		plp		                PLP
+.f810d7	6b		rtl		                RTL
+>f810d8	2a 2a 2f 2f 2f 2f 2f 20		greet_msg       .text "**///// NU64 DEVELOPMENT SYSTEM",$0d,$00
+>f810e0	4e 55 36 34 20 44 45 56 45 4c 4f 50 4d 45 4e 54
+>f810f0	20 53 59 53 54 45 4d 0d 00
+>f810f9	2a 2f 2f 2f 2f 2f 2a 20		greet_msg1      .text "*/////* NU64 BASIC (Not Implemented)",$0d,$00
+>f81101	4e 55 36 34 20 42 41 53 49 43 20 28 4e 6f 74 20
+>f81111	49 6d 70 6c 65 6d 65 6e 74 65 64 29 0d 00
+>f8111f	2f 2f 2f 2f 2f 2a 2a 20		greet_msg2      .text "/////** Machine Monitor v0.1 (dev)",$0d,$00
+>f81127	4d 61 63 68 69 6e 65 20 4d 6f 6e 69 74 6f 72 20
+>f81137	76 30 2e 31 20 28 64 65 76 29 0d 00
 
 ;******  End of listing

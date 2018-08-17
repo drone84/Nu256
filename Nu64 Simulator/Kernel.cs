@@ -7,6 +7,7 @@ using Nu64.Basic;
 using Nu64.Processor;
 using Nu64.Monitor;
 using Nu64.Display;
+using Nu64.Common;
 
 namespace Nu64
 {

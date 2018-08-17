@@ -120,8 +120,11 @@ ICSRRIGHT	; move the cursor right one space
                 CPX SCRWIDTH
                 BCC icsr_nowrap  ; wrap if the cursor is at or past column 80
                 LDX #0
-                INC CURSORY
+                PHY
+                LDY CURSORY
+                INY
                 JSL ILOCATE
+                PLY
 icsr_nowrap     STX CURSORX
                 PLX
                 PLB
