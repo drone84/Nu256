@@ -84,12 +84,14 @@ namespace Nu64.UI
         private void PauseButton_Click(object sender, EventArgs e)
         {
             CPU.DebugPause = true;
+            timer1.Enabled = false;
             RefreshStatus();
         }
 
         private void StepButton_Click(object sender, EventArgs e)
         {
             CPU.DebugPause = true;
+            timer1.Enabled = false;
 
             int steps = 1;
             int.TryParse(stepsInput.Text, out steps);
@@ -105,7 +107,9 @@ namespace Nu64.UI
 
         private void RefreshStatus()
         {
+            this.Text = "Debug: " + StepCounter.ToString();
             UpdateStackDisplay();
+            Kernel.gpu.Refresh();
 
             if (PrintQueue.Count > 5)
             {
@@ -233,23 +237,13 @@ namespace Nu64.UI
 
         }
 
-        const int COUNTER_STEPS=1000;
+        const int COUNTER_STEPS = 1000;
         private void RunButton_Click(object sender, EventArgs e)
         {
+            RefreshStatus();
             int counter = COUNTER_STEPS;
             CPU.DebugPause = false;
-            while (!CPU.DebugPause && !CPU.Halted)
-            {
-                if(counter-- <= 0)
-                {
-                    Kernel.gpu.Refresh();
-                    Application.DoEvents();
-                    counter = COUNTER_STEPS;
-                    RefreshStatus();
-                }
-                ExecuteStep();
-            }
-            RefreshStatus();
+            timer1.Enabled = true;
         }
 
         private void locationInput_TextChanged(object sender, EventArgs e)
@@ -268,7 +262,6 @@ namespace Nu64.UI
         public void ExecuteStep()
         {
             StepCounter++;
-            this.Text = "Debug: " + StepCounter.ToString();
 
             PrintClear();
 
@@ -278,7 +271,12 @@ namespace Nu64.UI
             int pc2 = pc1 + CPU.Opcode.Length;
             PrintStatus(pc1, pc2);
 
-            //PrintNextInstruction();
+            if (Breakpoints.Items.Contains(Kernel.CPU.GetLongPC()))
+            {
+                CPU.DebugPause = true;
+                timer1.Enabled = false;
+                Breakpoints.Text = Kernel.CPU.PC.Value.ToString("X6");
+            }
         }
 
         private void DebugWindow_Load(object sender, EventArgs e)
@@ -293,7 +291,42 @@ namespace Nu64.UI
 
         private void timer1_Tick(object sender, EventArgs e)
         {
+            for (int i = 0; i < 100; i++)
+            {
+                if (CPU.DebugPause || CPU.Halted)
+                    break;
+                ExecuteStep();
+            }
+            RefreshStatus();
+        }
 
+        int getbp()
+        {
+            int bp = 0;
+            try
+            {
+                bp = Convert.ToInt32(Breakpoints.Text, 16);
+                Breakpoints.Text = bp.ToString("X6");
+            }
+            catch (System.FormatException ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+            }
+            return bp;
+        }
+
+        private void AddBPButton_Click(object sender, EventArgs e)
+        {
+            int bp = getbp();
+            if (bp > 0)
+                Breakpoints.Items.Add(bp);
+        }
+
+        private void DeleteBPButton_Click(object sender, EventArgs e)
+        {
+            int bp = getbp();
+            Breakpoints.Items.Remove(bp);
+            Breakpoints.Text = Breakpoints.Items.Count.ToString();
         }
     }
 }

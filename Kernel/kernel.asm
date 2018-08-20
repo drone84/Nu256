@@ -70,13 +70,16 @@ IBOOT           ; boot the system
                 STA SCRHEIGHT
                 
                 ; display boot message
-greet           setdb $F8       ;Set data bank to ROM
+greet           setdbr $F8       ;Set data bank to ROM
                 
                 LDX #<>greet_msg
+		LDY #80
                 JSL IPUTS       ; print the string
                 LDX #<>greet_msg1
+		LDY #80
                 JSL IPUTS       ; print the string
                 LDX #<>greet_msg2
+		LDY #80
                 JSL IPUTS       ; print the string
                 ; LDY #40
 
@@ -85,34 +88,81 @@ greet           setdb $F8       ;Set data bank to ROM
                 PHA
                 PLB
 
-waitloop	NOP
-		JMP waitloop
-
-                STP
-                
-greet_done      BRK             ;halt the CPU
+greet_done      STP             ;halt the CPU
+; waitloop	NOP
+;		 JMP waitloop
 
 IKEYDOWN        BRK             ; Keyboard key pressed
-
 IRETURN         BRK
 
-IPUTC           ; Print  character
-                ; A: character to print
-                PHP             ; stash the flags (we'll be changing M)
-                PHD
-                setdp 0
+; IPUTS                
+; Print a null terminated string
+; DBR: bank containing string
+; X: address of the string in data bank
+; Y: maximum number of characters to write
+; Modifies: X,Y
+IPUTS           PHA
+                PHP
                 setas
-                STA [CURSORPOS] ; Save the character on the screen                
-                JSL ICSRRIGHT
-                PLD
-                PLP
+                setxl 
+iputs1          LDA $0,b,x ; read from the string
+                BEQ iputs_done
+		CMP #$0D   ; handle CR
+		BNE iputs2
+		JSL IPRINTCR
+		BRA iputs3
+iputs2          JSL IPUTC
+iputs3          INX
+                DEY
+                BEQ iputs_done
+                jmp iputs1
+iputs_done      PLP
+                PLA
                 RTL
 
+;
+;IPUTC
+; Print a single character
+; Handles terminal sequences, based on the selected text mode
+; Modifies: none
+;
+IPUTC           PHD
+		PHP             ; stash the flags (we'll be changing M)
+                setdp 0
+		setas
+                STA [CURSORPOS] ; Save the character on the screen                
+                JSL ICSRRIGHT
+                PLP
+                PLD
+                RTL
+
+;
+; IPRINTCR
+; Prints a carriage return.
+; This moves the cursor to the beginning of the next line of text on the screen
+; Modifies: Flags		
+IPRINTCR	PHX
+		PHY
+		PHP
+		LDX #0
+		LDY CURSORY
+		INY
+		JSL ILOCATE
+		PLP
+		PLY
+		PLX
+		RTL				
+                
+;
+;ICSRRIGHT	
+; Move the cursor right one space
+; Modifies: none
+;		
 ICSRRIGHT	; move the cursor right one space
+                PHX
                 PHB
                 setal 
                 setxl
-                PHX
                 setdp $0
                 INC CURSORPOS
                 LDX CURSORX
@@ -126,60 +176,39 @@ ICSRRIGHT	; move the cursor right one space
                 JSL ILOCATE
                 PLY
 icsr_nowrap     STX CURSORX
-                PLX
                 PLB
+                PLX
                 RTL
                           
 ISRLEFT		RTL
 ICSRUP		RTL
 ICSRDOWN	RTL
 
-ILOCATE         ;Sets the cursor X and Y positions to the X and Y registers
-                PHB 
+;ILOCATE
+;Sets the cursor X and Y positions to the X and Y registers
+;Direct Page must be set to 0
+;Modifies: none
+ILOCATE         PHA
+                PHP 
                 setal
                 setxl 
-                PHA
-                PHY
+		STX CURSORX
+		STY CURSORY 
                 LDA SCREENBEGIN
-                STY CURSORY
-                STX CURSORX
                 
-ilocate_down    CPY SCRWIDTH            ; move the cursor down Y rows
-                BCC ilocate_right
-                CLC
+ilocate_down    CLC
                 ADC SCRWIDTH
                 DEY 
+		BEQ ilocate_right
                 JMP ilocate_down
 ilocate_right   ADC CURSORX             ; move the cursor right X columns
                 STA CURSORPOS
-                
-ilocate_done    PLY
+		LDY CURSORY
+ilocate_done    PLP
                 PLA
-                PLB
                 RTL
-                
-IPUTS           ; Print a null terminated string
-                ; DBR: bank containing string
-                ; X: address of the string in data bank
-                ; Y: maximum number of characters to write
-                ; Modifies: X,Y
-                PHP
-                PHA
-                setas
-                setxl 
-iputs1          LDA $0,b,x ; read from the string
-                BEQ iputs_done
-                JSL IPUTC
-                INX
-                DEY
-                BEQ iputs_done
-                jmp iputs1
 
-iputs_done      PLA
-                PLP
-                RTL
-                
-greet_msg       .text "**///// NU64 DEVELOPMENT SYSTEM",$0d,$00
-greet_msg1      .text "*/////* NU64 BASIC (Not Implemented)",$0d,$00
-greet_msg2      .text "/////** Machine Monitor v0.1 (dev)",$0d,$00
+greet_msg       .text "  ///// NU64 DEVELOPMENT SYSTEM",$0d,$00
+greet_msg1      .text " /////  NU64 BASIC (Not Implemented)",$0d,$00
+greet_msg2      .text "/////   Machine Monitor v0.1 (dev)",$0d,$00
 

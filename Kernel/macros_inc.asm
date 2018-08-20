@@ -24,23 +24,25 @@ setxl           .macro
 ; Set the direct page. 
 ; Note: This uses the accumulator and leaves A set to 16 bits. 
 setdp           .macro                
-                setal
                 PHA
+		PHP
+                setal
                 LDA #\1         ; set DP to page 0
                 TCD             ; and get character back
                 .dpage \1
+		PLP
                 PLA
                 .endm 
 
-setdb           .macro          ; Set the B (Data bank) register 
-                PHP
-                setal
+setdbr          .macro          ; Set the B (Data bank) register 
                 PHA
-                LDA #\1         
+                PHP
+                setas
+		LDA #\1         
                 PHA
                 PLB
                 .databank \1
-                PLA
                 PLP
+                PLA
                 .endm 
                                 

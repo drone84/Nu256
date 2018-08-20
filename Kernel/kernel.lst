@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.53.1515 listing file
 ; 64tass --long-address --intel-hex -o kernel.hex --list kernel.lst kernel.asm
-; Fri Aug 17 12:32:25 2018
+; Sun Aug 19 00:16:31 2018
 
 ;Offset	;Hex		;Monitor	;Source
 
@@ -113,116 +113,130 @@
 .f8102d	a9 19		lda #$19	                LDA #25
 .f8102f	85 15		sta $15		                STA SCRHEIGHT
 .f81031					greet
-.f81031	08		php		                PHP
-.f81032	c2 20		rep #$20	                REP #$20
-.f81034	48		pha		                PHA
-.f81035	a9 f8 00	lda #$00f8	                LDA #$F8
-.f81038	48		pha		                PHA
-.f81039	ab		plb		                PLB
+.f81031	48		pha		                PHA
+.f81032	08		php		                PHP
+.f81033	e2 20		sep #$20	                SEP #$20
+.f81035	a9 f8		lda #$f8			LDA #$F8
+.f81037	48		pha		                PHA
+.f81038	ab		plb		                PLB
+.f81039	28		plp		                PLP
 .f8103a	68		pla		                PLA
-.f8103b	28		plp		                PLP
-.f8103c	a2 d8 10	ldx #$10d8	                LDX #<>greet_msg
-.f8103f	22 bf 10 f8	jsl $f810bf	                JSL IPUTS       ; print the string
-.f81043	a2 f9 10	ldx #$10f9	                LDX #<>greet_msg1
-.f81046	22 bf 10 f8	jsl $f810bf	                JSL IPUTS       ; print the string
-.f8104a	a2 1f 11	ldx #$111f	                LDX #<>greet_msg2
-.f8104d	22 bf 10 f8	jsl $f810bf	                JSL IPUTS       ; print the string
-.f81051	e2 20		sep #$20	                SEP #$20
-.f81053	a9 01		lda #$01	                LDA #$01        ;set data bank to 1 (Kernel Variables)
-.f81055	48		pha		                PHA
-.f81056	ab		plb		                PLB
-.f81057	ea		nop		waitloop	NOP
-.f81058	4c 57 10	jmp $f81057			JMP waitloop
-.f8105b	db		stp		                STP
-.f8105c	00		brk #		greet_done      BRK             ;halt the CPU
-.f8105d	00		brk #		IKEYDOWN        BRK             ; Keyboard key pressed
-.f8105e	00		brk #		IRETURN         BRK
-.f8105f					IPUTC
-.f8105f	08		php		                PHP             ; stash the flags (we'll be changing M)
-.f81060	0b		phd		                PHD
-.f81061	c2 20		rep #$20	                REP #$20
-.f81063	48		pha		                PHA
-.f81064	a9 00 00	lda #$0000	                LDA #0         ; set DP to page 0
-.f81067	5b		tcd		                TCD             ; and get character back
-.f81068	68		pla		                PLA
-.f81069	e2 20		sep #$20	                SEP #$20
-.f8106b	87 17		sta [$17]	                STA [CURSORPOS] ; Save the character on the screen
-.f8106d	22 74 10 f8	jsl $f81074	                JSL ICSRRIGHT
-.f81071	2b		pld		                PLD
-.f81072	28		plp		                PLP
-.f81073	6b		rtl		                RTL
-.f81074					ICSRRIGHT
-.f81074	8b		phb		                PHB
-.f81075	c2 20		rep #$20	                REP #$20
-.f81077	c2 10		rep #$10	                REP #$10
-.f81079	da		phx		                PHX
-.f8107a	c2 20		rep #$20	                REP #$20
-.f8107c	48		pha		                PHA
-.f8107d	a9 00 00	lda #$0000	                LDA #$0         ; set DP to page 0
-.f81080	5b		tcd		                TCD             ; and get character back
-.f81081	68		pla		                PLA
-.f81082	e6 17		inc $17		                INC CURSORPOS
-.f81084	a6 1a		ldx $1a		                LDX CURSORX
-.f81086	e8		inx		                INX
-.f81087	e4 13		cpx $13		                CPX SCRWIDTH
-.f81089	90 0c		bcc $f81097	                BCC icsr_nowrap  ; wrap if the cursor is at or past column 80
-.f8108b	a2 00 00	ldx #$0000	                LDX #0
-.f8108e	5a		phy		                PHY
-.f8108f	a4 1c		ldy $1c		                LDY CURSORY
-.f81091	c8		iny		                INY
-.f81092	22 9f 10 f8	jsl $f8109f	                JSL ILOCATE
-.f81096	7a		ply		                PLY
-.f81097	86 1a		stx $1a		icsr_nowrap     STX CURSORX
-.f81099	fa		plx		                PLX
-.f8109a	ab		plb		                PLB
+.f8103b	a2 f8 10	ldx #$10f8	                LDX #<>greet_msg
+.f8103e	a0 50 00	ldy #$0050			LDY #80
+.f81041	22 62 10 f8	jsl $f81062	                JSL IPUTS       ; print the string
+.f81045	a2 19 11	ldx #$1119	                LDX #<>greet_msg1
+.f81048	a0 50 00	ldy #$0050			LDY #80
+.f8104b	22 62 10 f8	jsl $f81062	                JSL IPUTS       ; print the string
+.f8104f	a2 3f 11	ldx #$113f	                LDX #<>greet_msg2
+.f81052	a0 50 00	ldy #$0050			LDY #80
+.f81055	22 62 10 f8	jsl $f81062	                JSL IPUTS       ; print the string
+.f81059	e2 20		sep #$20	                SEP #$20
+.f8105b	a9 01		lda #$01	                LDA #$01        ;set data bank to 1 (Kernel Variables)
+.f8105d	48		pha		                PHA
+.f8105e	ab		plb		                PLB
+.f8105f	db		stp		greet_done      STP             ;halt the CPU
+.f81060	00		brk #		IKEYDOWN        BRK             ; Keyboard key pressed
+.f81061	00		brk #		IRETURN         BRK
+.f81062	48		pha		IPUTS           PHA
+.f81063	08		php		                PHP
+.f81064	e2 20		sep #$20	                SEP #$20
+.f81066	c2 10		rep #$10	                REP #$10
+.f81068	bd 00 00	lda $f80000,x	iputs1          LDA $0,b,x ; read from the string
+.f8106b	f0 15		beq $f81082	                BEQ iputs_done
+.f8106d	c9 0d		cmp #$0d			CMP #$0D   ; handle CR
+.f8106f	d0 06		bne $f81077			BNE iputs2
+.f81071	22 9c 10 f8	jsl $f8109c			JSL IPRINTCR
+.f81075	80 04		bra $f8107b			BRA iputs3
+.f81077	22 85 10 f8	jsl $f81085	iputs2          JSL IPUTC
+.f8107b	e8		inx		iputs3          INX
+.f8107c	88		dey		                DEY
+.f8107d	f0 03		beq $f81082	                BEQ iputs_done
+.f8107f	4c 68 10	jmp $f81068	                jmp iputs1
+.f81082	28		plp		iputs_done      PLP
+.f81083	68		pla		                PLA
+.f81084	6b		rtl		                RTL
+.f81085	0b		phd		IPUTC           PHD
+.f81086	08		php				PHP             ; stash the flags (we'll be changing M)
+.f81087	48		pha		                PHA
+.f81088	08		php				PHP
+.f81089	c2 20		rep #$20	                REP #$20
+.f8108b	a9 00 00	lda #$0000	                LDA #0         ; set DP to page 0
+.f8108e	5b		tcd		                TCD             ; and get character back
+.f8108f	28		plp				PLP
+.f81090	68		pla		                PLA
+.f81091	e2 20		sep #$20	                SEP #$20
+.f81093	87 17		sta [$17]	                STA [CURSORPOS] ; Save the character on the screen
+.f81095	22 ad 10 f8	jsl $f810ad	                JSL ICSRRIGHT
+.f81099	28		plp		                PLP
+.f8109a	2b		pld		                PLD
 .f8109b	6b		rtl		                RTL
-.f8109c	6b		rtl		ISRLEFT		RTL
-.f8109d	6b		rtl		ICSRUP		RTL
-.f8109e	6b		rtl		ICSRDOWN	RTL
-.f8109f					ILOCATE
-.f8109f	8b		phb		                PHB
-.f810a0	c2 20		rep #$20	                REP #$20
-.f810a2	c2 10		rep #$10	                REP #$10
-.f810a4	48		pha		                PHA
-.f810a5	5a		phy		                PHY
-.f810a6	a5 10		lda $10		                LDA SCREENBEGIN
-.f810a8	84 1c		sty $1c		                STY CURSORY
-.f810aa	86 1a		stx $1a		                STX CURSORX
-.f810ac	c4 13		cpy $13		ilocate_down    CPY SCRWIDTH            ; move the cursor down Y rows
-.f810ae	90 07		bcc $f810b7	                BCC ilocate_right
-.f810b0	18		clc		                CLC
-.f810b1	65 13		adc $13		                ADC SCRWIDTH
-.f810b3	88		dey		                DEY
-.f810b4	4c ac 10	jmp $f810ac	                JMP ilocate_down
-.f810b7	65 1a		adc $1a		ilocate_right   ADC CURSORX             ; move the cursor right X columns
-.f810b9	85 17		sta $17		                STA CURSORPOS
-.f810bb	7a		ply		ilocate_done    PLY
+.f8109c	da		phx		IPRINTCR	PHX
+.f8109d	5a		phy				PHY
+.f8109e	08		php				PHP
+.f8109f	a2 00 00	ldx #$0000			LDX #0
+.f810a2	a4 1c		ldy $1c				LDY CURSORY
+.f810a4	c8		iny				INY
+.f810a5	22 da 10 f8	jsl $f810da			JSL ILOCATE
+.f810a9	28		plp				PLP
+.f810aa	7a		ply				PLY
+.f810ab	fa		plx				PLX
+.f810ac	6b		rtl				RTL
+.f810ad					ICSRRIGHT
+.f810ad	da		phx		                PHX
+.f810ae	8b		phb		                PHB
+.f810af	c2 20		rep #$20	                REP #$20
+.f810b1	c2 10		rep #$10	                REP #$10
+.f810b3	48		pha		                PHA
+.f810b4	08		php				PHP
+.f810b5	c2 20		rep #$20	                REP #$20
+.f810b7	a9 00 00	lda #$0000	                LDA #$0         ; set DP to page 0
+.f810ba	5b		tcd		                TCD             ; and get character back
+.f810bb	28		plp				PLP
 .f810bc	68		pla		                PLA
-.f810bd	ab		plb		                PLB
-.f810be	6b		rtl		                RTL
-.f810bf					IPUTS
-.f810bf	08		php		                PHP
-.f810c0	48		pha		                PHA
-.f810c1	e2 20		sep #$20	                SEP #$20
-.f810c3	c2 10		rep #$10	                REP #$10
-.f810c5	bd 00 00	lda $f80000,x	iputs1          LDA $0,b,x ; read from the string
-.f810c8	f0 0b		beq $f810d5	                BEQ iputs_done
-.f810ca	22 5f 10 f8	jsl $f8105f	                JSL IPUTC
-.f810ce	e8		inx		                INX
-.f810cf	88		dey		                DEY
-.f810d0	f0 03		beq $f810d5	                BEQ iputs_done
-.f810d2	4c c5 10	jmp $f810c5	                jmp iputs1
-.f810d5	68		pla		iputs_done      PLA
-.f810d6	28		plp		                PLP
-.f810d7	6b		rtl		                RTL
->f810d8	2a 2a 2f 2f 2f 2f 2f 20		greet_msg       .text "**///// NU64 DEVELOPMENT SYSTEM",$0d,$00
->f810e0	4e 55 36 34 20 44 45 56 45 4c 4f 50 4d 45 4e 54
->f810f0	20 53 59 53 54 45 4d 0d 00
->f810f9	2a 2f 2f 2f 2f 2f 2a 20		greet_msg1      .text "*/////* NU64 BASIC (Not Implemented)",$0d,$00
->f81101	4e 55 36 34 20 42 41 53 49 43 20 28 4e 6f 74 20
->f81111	49 6d 70 6c 65 6d 65 6e 74 65 64 29 0d 00
->f8111f	2f 2f 2f 2f 2f 2a 2a 20		greet_msg2      .text "/////** Machine Monitor v0.1 (dev)",$0d,$00
->f81127	4d 61 63 68 69 6e 65 20 4d 6f 6e 69 74 6f 72 20
->f81137	76 30 2e 31 20 28 64 65 76 29 0d 00
+.f810bd	e6 17		inc $17		                INC CURSORPOS
+.f810bf	a6 1a		ldx $1a		                LDX CURSORX
+.f810c1	e8		inx		                INX
+.f810c2	e4 13		cpx $13		                CPX SCRWIDTH
+.f810c4	90 0c		bcc $f810d2	                BCC icsr_nowrap  ; wrap if the cursor is at or past column 80
+.f810c6	a2 00 00	ldx #$0000	                LDX #0
+.f810c9	5a		phy		                PHY
+.f810ca	a4 1c		ldy $1c		                LDY CURSORY
+.f810cc	c8		iny		                INY
+.f810cd	22 da 10 f8	jsl $f810da	                JSL ILOCATE
+.f810d1	7a		ply		                PLY
+.f810d2	86 1a		stx $1a		icsr_nowrap     STX CURSORX
+.f810d4	ab		plb		                PLB
+.f810d5	fa		plx		                PLX
+.f810d6	6b		rtl		                RTL
+.f810d7	6b		rtl		ISRLEFT		RTL
+.f810d8	6b		rtl		ICSRUP		RTL
+.f810d9	6b		rtl		ICSRDOWN	RTL
+.f810da	48		pha		ILOCATE         PHA
+.f810db	08		php		                PHP
+.f810dc	c2 20		rep #$20	                REP #$20
+.f810de	c2 10		rep #$10	                REP #$10
+.f810e0	86 1a		stx $1a				STX CURSORX
+.f810e2	84 1c		sty $1c				STY CURSORY
+.f810e4	a5 10		lda $10		                LDA SCREENBEGIN
+.f810e6	18		clc		ilocate_down    CLC
+.f810e7	65 13		adc $13		                ADC SCRWIDTH
+.f810e9	88		dey		                DEY
+.f810ea	f0 03		beq $f810ef			BEQ ilocate_right
+.f810ec	4c e6 10	jmp $f810e6	                JMP ilocate_down
+.f810ef	65 1a		adc $1a		ilocate_right   ADC CURSORX             ; move the cursor right X columns
+.f810f1	85 17		sta $17		                STA CURSORPOS
+.f810f3	a4 1c		ldy $1c				LDY CURSORY
+.f810f5	28		plp		ilocate_done    PLP
+.f810f6	68		pla		                PLA
+.f810f7	6b		rtl		                RTL
+>f810f8	20 20 2f 2f 2f 2f 2f 20		greet_msg       .text "  ///// NU64 DEVELOPMENT SYSTEM",$0d,$00
+>f81100	4e 55 36 34 20 44 45 56 45 4c 4f 50 4d 45 4e 54
+>f81110	20 53 59 53 54 45 4d 0d 00
+>f81119	20 2f 2f 2f 2f 2f 20 20		greet_msg1      .text " /////  NU64 BASIC (Not Implemented)",$0d,$00
+>f81121	4e 55 36 34 20 42 41 53 49 43 20 28 4e 6f 74 20
+>f81131	49 6d 70 6c 65 6d 65 6e 74 65 64 29 0d 00
+>f8113f	2f 2f 2f 2f 2f 20 20 20		greet_msg2      .text "/////   Machine Monitor v0.1 (dev)",$0d,$00
+>f81147	4d 61 63 68 69 6e 65 20 4d 6f 6e 69 74 6f 72 20
+>f81157	76 30 2e 31 20 28 64 65 76 29 0d 00
 
 ;******  End of listing

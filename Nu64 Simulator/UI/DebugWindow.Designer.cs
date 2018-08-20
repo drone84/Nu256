@@ -31,6 +31,10 @@
             this.components = new System.ComponentModel.Container();
             this.messageText = new System.Windows.Forms.TextBox();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.bpLabel = new System.Windows.Forms.Label();
+            this.Breakpoints = new System.Windows.Forms.ComboBox();
+            this.AddBPButton = new System.Windows.Forms.Button();
+            this.DeleteBPButton = new System.Windows.Forms.Button();
             this.stepsLabel = new System.Windows.Forms.Label();
             this.stepsInput = new System.Windows.Forms.TextBox();
             this.StepButton = new System.Windows.Forms.Button();
@@ -43,8 +47,8 @@
             this.lastLine = new System.Windows.Forms.TextBox();
             this.stackText = new System.Windows.Forms.TextBox();
             this.HeaderTextbox = new System.Windows.Forms.TextBox();
-            this.registerDisplay1 = new Nu64.RegisterDisplay();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.registerDisplay1 = new Nu64.RegisterDisplay();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -57,10 +61,14 @@
             this.messageText.Name = "messageText";
             this.messageText.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.messageText.Size = new System.Drawing.Size(851, 433);
-            this.messageText.TabIndex = 1;
+            this.messageText.TabIndex = 2;
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.bpLabel);
+            this.panel1.Controls.Add(this.Breakpoints);
+            this.panel1.Controls.Add(this.AddBPButton);
+            this.panel1.Controls.Add(this.DeleteBPButton);
             this.panel1.Controls.Add(this.stepsLabel);
             this.panel1.Controls.Add(this.stepsInput);
             this.panel1.Controls.Add(this.StepButton);
@@ -76,6 +84,48 @@
             this.panel1.Size = new System.Drawing.Size(851, 24);
             this.panel1.TabIndex = 2;
             // 
+            // bpLabel
+            // 
+            this.bpLabel.AutoSize = true;
+            this.bpLabel.Dock = System.Windows.Forms.DockStyle.Right;
+            this.bpLabel.Location = new System.Drawing.Point(388, 0);
+            this.bpLabel.Name = "bpLabel";
+            this.bpLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
+            this.bpLabel.Size = new System.Drawing.Size(58, 17);
+            this.bpLabel.TabIndex = 5;
+            this.bpLabel.Text = "Breakpoint";
+            // 
+            // Breakpoints
+            // 
+            this.Breakpoints.Dock = System.Windows.Forms.DockStyle.Right;
+            this.Breakpoints.FormattingEnabled = true;
+            this.Breakpoints.Location = new System.Drawing.Point(446, 0);
+            this.Breakpoints.Name = "Breakpoints";
+            this.Breakpoints.Size = new System.Drawing.Size(121, 21);
+            this.Breakpoints.TabIndex = 6;
+            // 
+            // AddBPButton
+            // 
+            this.AddBPButton.Dock = System.Windows.Forms.DockStyle.Right;
+            this.AddBPButton.Location = new System.Drawing.Point(567, 0);
+            this.AddBPButton.Name = "AddBPButton";
+            this.AddBPButton.Size = new System.Drawing.Size(24, 24);
+            this.AddBPButton.TabIndex = 7;
+            this.AddBPButton.Text = "+";
+            this.AddBPButton.UseVisualStyleBackColor = true;
+            this.AddBPButton.Click += new System.EventHandler(this.AddBPButton_Click);
+            // 
+            // DeleteBPButton
+            // 
+            this.DeleteBPButton.Dock = System.Windows.Forms.DockStyle.Right;
+            this.DeleteBPButton.Location = new System.Drawing.Point(591, 0);
+            this.DeleteBPButton.Name = "DeleteBPButton";
+            this.DeleteBPButton.Size = new System.Drawing.Size(24, 24);
+            this.DeleteBPButton.TabIndex = 8;
+            this.DeleteBPButton.Text = "-";
+            this.DeleteBPButton.UseVisualStyleBackColor = true;
+            this.DeleteBPButton.Click += new System.EventHandler(this.DeleteBPButton_Click);
+            // 
             // stepsLabel
             // 
             this.stepsLabel.AutoSize = true;
@@ -84,7 +134,7 @@
             this.stepsLabel.Name = "stepsLabel";
             this.stepsLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
             this.stepsLabel.Size = new System.Drawing.Size(61, 17);
-            this.stepsLabel.TabIndex = 8;
+            this.stepsLabel.TabIndex = 4;
             this.stepsLabel.Text = "Steps (dec)";
             // 
             // stepsInput
@@ -94,7 +144,7 @@
             this.stepsInput.Location = new System.Drawing.Point(186, 0);
             this.stepsInput.Name = "stepsInput";
             this.stepsInput.Size = new System.Drawing.Size(55, 23);
-            this.stepsInput.TabIndex = 7;
+            this.stepsInput.TabIndex = 3;
             this.stepsInput.Text = "1";
             this.stepsInput.Enter += new System.EventHandler(this.stepsInput_Enter);
             // 
@@ -105,7 +155,7 @@
             this.StepButton.Location = new System.Drawing.Point(124, 0);
             this.StepButton.Name = "StepButton";
             this.StepButton.Size = new System.Drawing.Size(62, 24);
-            this.StepButton.TabIndex = 1;
+            this.StepButton.TabIndex = 2;
             this.StepButton.Text = "Step";
             this.StepButton.UseVisualStyleBackColor = true;
             this.StepButton.Click += new System.EventHandler(this.StepButton_Click);
@@ -118,7 +168,7 @@
             this.locationLabel.Name = "locationLabel";
             this.locationLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
             this.locationLabel.Size = new System.Drawing.Size(57, 17);
-            this.locationLabel.TabIndex = 6;
+            this.locationLabel.TabIndex = 9;
             this.locationLabel.Text = "Location $";
             // 
             // locationInput
@@ -128,7 +178,7 @@
             this.locationInput.Location = new System.Drawing.Point(672, 0);
             this.locationInput.Name = "locationInput";
             this.locationInput.Size = new System.Drawing.Size(55, 23);
-            this.locationInput.TabIndex = 5;
+            this.locationInput.TabIndex = 10;
             this.locationInput.Text = "000000";
             this.locationInput.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.locationInput.TextChanged += new System.EventHandler(this.locationInput_TextChanged);
@@ -140,7 +190,7 @@
             this.JumpButton.Location = new System.Drawing.Point(727, 0);
             this.JumpButton.Name = "JumpButton";
             this.JumpButton.Size = new System.Drawing.Size(62, 24);
-            this.JumpButton.TabIndex = 3;
+            this.JumpButton.TabIndex = 11;
             this.JumpButton.Text = "Jump";
             this.JumpButton.UseVisualStyleBackColor = true;
             // 
@@ -151,7 +201,7 @@
             this.MemoryButton.Location = new System.Drawing.Point(789, 0);
             this.MemoryButton.Name = "MemoryButton";
             this.MemoryButton.Size = new System.Drawing.Size(62, 24);
-            this.MemoryButton.TabIndex = 4;
+            this.MemoryButton.TabIndex = 12;
             this.MemoryButton.Text = "Memory";
             this.MemoryButton.UseVisualStyleBackColor = true;
             // 
@@ -162,7 +212,7 @@
             this.RunButton.Location = new System.Drawing.Point(62, 0);
             this.RunButton.Name = "RunButton";
             this.RunButton.Size = new System.Drawing.Size(62, 24);
-            this.RunButton.TabIndex = 2;
+            this.RunButton.TabIndex = 1;
             this.RunButton.Text = "Run";
             this.RunButton.UseVisualStyleBackColor = true;
             this.RunButton.Click += new System.EventHandler(this.RunButton_Click);
@@ -186,7 +236,7 @@
             this.lastLine.Location = new System.Drawing.Point(0, 530);
             this.lastLine.Name = "lastLine";
             this.lastLine.Size = new System.Drawing.Size(851, 23);
-            this.lastLine.TabIndex = 3;
+            this.lastLine.TabIndex = 4;
             this.lastLine.Text = "Click [Step] to execute an instruction";
             // 
             // stackText
@@ -197,7 +247,7 @@
             this.stackText.Multiline = true;
             this.stackText.Name = "stackText";
             this.stackText.Size = new System.Drawing.Size(150, 553);
-            this.stackText.TabIndex = 4;
+            this.stackText.TabIndex = 3;
             // 
             // HeaderTextbox
             // 
@@ -207,7 +257,12 @@
             this.HeaderTextbox.Multiline = true;
             this.HeaderTextbox.Name = "HeaderTextbox";
             this.HeaderTextbox.Size = new System.Drawing.Size(851, 20);
-            this.HeaderTextbox.TabIndex = 5;
+            this.HeaderTextbox.TabIndex = 1;
+            // 
+            // timer1
+            // 
+            this.timer1.Interval = 30;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // registerDisplay1
             // 
@@ -217,11 +272,6 @@
             this.registerDisplay1.Name = "registerDisplay1";
             this.registerDisplay1.Size = new System.Drawing.Size(851, 53);
             this.registerDisplay1.TabIndex = 0;
-            // 
-            // timer1
-            // 
-            this.timer1.Interval = 30;
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // DebugWindow
             // 
@@ -265,5 +315,9 @@
         private System.Windows.Forms.TextBox stepsInput;
         private System.Windows.Forms.TextBox HeaderTextbox;
         private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.Label bpLabel;
+        private System.Windows.Forms.ComboBox Breakpoints;
+        private System.Windows.Forms.Button AddBPButton;
+        private System.Windows.Forms.Button DeleteBPButton;
     }
 }

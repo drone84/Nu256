@@ -461,7 +461,7 @@ namespace Nu64.Processor
                     cpu.PullInto(cpu.X);
                     break;
                 case OpcodeList.PHY_StackImplied:
-                    cpu.Push(cpu.A);
+                    cpu.Push(cpu.Y);
                     break;
                 case OpcodeList.PLY_StackImplied:
                     cpu.PullInto(cpu.Y);
@@ -469,8 +469,14 @@ namespace Nu64.Processor
                 case OpcodeList.PHB_StackImplied:
                     cpu.Push(cpu.DataBank);
                     break;
+                case OpcodeList.PLB_StackImplied:
+                    cpu.PullInto(cpu.DataBank);
+                    break;
                 case OpcodeList.PHD_StackImplied:
                     cpu.Push(cpu.DirectPage);
+                    break;
+                case OpcodeList.PLD_StackImplied:
+                    cpu.PullInto(cpu.DirectPage);
                     break;
                 case OpcodeList.PHK_StackImplied:
                     cpu.Push(cpu.ProgramBank);
@@ -478,14 +484,9 @@ namespace Nu64.Processor
                 case OpcodeList.PHP_StackImplied:
                     cpu.Push(cpu.Flags);
                     break;
-                case OpcodeList.PLB_StackImplied:
-                    cpu.PullInto(cpu.DataBank);
-                    break;
-                case OpcodeList.PLD_StackImplied:
-                    cpu.PullInto(cpu.DirectPage);
-                    break;
                 case OpcodeList.PLP_StackImplied:
                     cpu.PullInto(cpu.Flags);
+                    cpu.SyncFlags();
                     break;
                 default:
                     throw new NotImplementedException("ExecuteStack() opcode not implemented: " + instruction.ToString("X2"));
@@ -616,13 +617,13 @@ namespace Nu64.Processor
                     cpu.X.Value -= 1;
                     cpu.Flags.SetNZ(cpu.X);
                     break;
-                case OpcodeList.DEY_Implied:
-                    cpu.Y.Value -= 1;
-                    cpu.Flags.SetNZ(cpu.X);
-                    break;
                 case OpcodeList.INX_Implied:
                     cpu.X.Value += 1;
                     cpu.Flags.SetNZ(cpu.X);
+                    break;
+                case OpcodeList.DEY_Implied:
+                    cpu.Y.Value -= 1;
+                    cpu.Flags.SetNZ(cpu.Y);
                     break;
                 case OpcodeList.INY_Implied:
                     cpu.Y.Value += 1;
@@ -923,6 +924,8 @@ namespace Nu64.Processor
         public void ExecuteLDA(byte instruction, AddressModes addressMode, int signature)
         {
             int val = GetValue(addressMode, signature);
+            if (addressMode == AddressModes.AbsoluteIndexedWithX && (val & 0xff) == 0 )
+                System.Diagnostics.Debug.WriteLine("break");
             cpu.A.Value = val;
             cpu.Flags.SetNZ(cpu.A);
         }
