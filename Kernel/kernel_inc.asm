@@ -1,0 +1,5 @@
+.cpu "65816"
+
+KERNEL		= $F00000
+BOOT		= $F00000
+RESET 		= $F00004
