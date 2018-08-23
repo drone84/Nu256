@@ -34,5 +34,21 @@ namespace Nu64
                 this.data[DestStart + i] = SourceData[SrcStart + i];
             }
         }
+
+        /// <summary>
+        /// Reads a 16-bit word from memory
+        /// </summary>
+        /// <param name="Address"></param>
+        /// <returns></returns>
+        public int ReadWord(int Address)
+        {
+            return ReadByte(Address) + (ReadByte(Address) << 8);
+        }
+
+        public void WriteWord(int Address, int Value)
+        {
+            WriteByte(Address, (byte)(Value & 0xff));
+            WriteByte(Address + 1, (byte)(Value >> 8 & 0xff));
+        }
     }
 }

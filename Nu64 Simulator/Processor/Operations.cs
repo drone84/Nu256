@@ -867,18 +867,18 @@ namespace Nu64.Processor
             int destBank = (signature << 8) & 0xff0000;
 
             int sourceAddr = sourceBank + cpu.X.Value;
-            int destAddr = sourceBank + cpu.Y.Value;
-            int bytesToMove = cpu.A.Value;
+            int destAddr = destBank + cpu.Y.Value;
+            int bytesToMove = cpu.A.Value + 1;
 
             int dir = (instruction == OpcodeList.MVP_BlockMove) ? 1 : -1;
 
-            while (cpu.A.Value >= 0)
+            for (int i = 0; i < bytesToMove; i++)
             {
-                cpu.Memory[destAddr] = cpu.Memory[sourceAddr];
+                cpu.Memory[destAddr+i] = cpu.Memory[sourceAddr+i];
                 cpu.X.Value += dir;
                 cpu.Y.Value += dir;
-                cpu.A.Value--;
             }
+            cpu.A.Value = 0xffff;
         }
 
         public void ExecuteADC(byte instruction, AddressModes addressMode, int signature)
@@ -924,7 +924,7 @@ namespace Nu64.Processor
         public void ExecuteLDA(byte instruction, AddressModes addressMode, int signature)
         {
             int val = GetValue(addressMode, signature);
-            if (addressMode == AddressModes.AbsoluteIndexedWithX && (val & 0xff) == 0 )
+            if (addressMode == AddressModes.AbsoluteIndexedWithX && (val & 0xff) == 0)
                 System.Diagnostics.Debug.WriteLine("break");
             cpu.A.Value = val;
             cpu.Flags.SetNZ(cpu.A);

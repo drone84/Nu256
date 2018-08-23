@@ -8,6 +8,7 @@ using Nu64.Processor;
 using Nu64.Monitor;
 using Nu64.Display;
 using Nu64.Common;
+using System.Threading;
 
 namespace Nu64
 {
@@ -30,6 +31,8 @@ namespace Nu64
 
         public DeviceEnum InputDevice = DeviceEnum.Keyboard;
         public DeviceEnum OutputDevice = DeviceEnum.Screen;
+
+        public Thread CPUThread = null;
 
         public Kernel(Gpu gpu)
         {
@@ -55,47 +58,28 @@ namespace Nu64
             Cls();
             gpu.Refresh();
 
-            //PrintGreeting();
-            //Basic.PrintGreeting();
-            //Monitor.PrintGreeting();
-            //PrintCopyright();
-            //ShowFlag();
-            // Y = 4;
-            //this.PrintLine();
-
             this.ReadyHandler = Monitor;
             HexFile h = new HexFile(Memory, @"ROMs\kernel.hex");
-            CPUTest test= new CPUTest(this);
-            test.BeginTest(0xf81000);
-            //test.BeginTestFast(0xf81000);
 
-            //Locate(0, 0);
-            //for (int i = 1; i < 25; i++)
-            //{
-            //    PrintLine(i.ToString().PadLeft(6) + '\xdd');
-            //}
+            CopyVectors();
 
-            //Print("        F1Load F2Save F3Find F4Mark F5Run");
-            //string[] lines = new string[] {
-            //"FUNCTION HELLO() AS STRING",
-            //"    RETURN \"Hello\"",
-            //"END FUNCTION",
-            //"",
-            //"SUB MAIN()",
-            //"    PRINT HELLO()",
-            //"END SUB"};
-            //for(int i=0; i<lines.Length; i++)
-            //{
-            //    Locate(i, 8);
-            //    Print(lines[i]);
-            //}
+            CPU.Reset();
+            CPU.Halted = false; 
 
-            //Memory[MemoryMap_DirectPage.CURSORX] = 8;
-            //Memory[MemoryMap_DirectPage.CURSORY] = (byte) lines.Length;
+            //CPUTest test= new CPUTest(this);
+            //test.BeginTest(0xf81000);
 
             this.TickTimer.Interval = 1000 / 60;
             this.TickTimer.Elapsed += TickTimer_Elapsed;
             this.TickTimer.Enabled = true;
+        }
+
+        private void CopyVectors()
+        {
+            for(int i=0xff00; i<=0xffff; i++)
+            {
+                Memory[i] = Memory[0xff0000 + i];
+            }
         }
 
         private void PrintCopyright()
@@ -176,6 +160,11 @@ namespace Nu64
                     break;
             }
             gpu.ResetDrawTimer();
+        }
+
+        internal void Run()
+        {
+            CPU.Run();
         }
 
         /// <summary>

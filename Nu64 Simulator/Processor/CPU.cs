@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Nu64;
 
@@ -26,7 +27,7 @@ namespace Nu64.Processor
         public OpCode Opcode = null;
         public int SignatureBytes = 0;
 
-        public CPUPins Bus = new CPUPins();
+        public CPUPins Pins = new CPUPins();
 
         // Simulator State management 
         /// <summary>
@@ -67,6 +68,7 @@ namespace Nu64.Processor
         private DateTime checkStartTime = DateTime.Now;
 
         public AddressDataBus Memory = null;
+        public Thread CPUThread = null;
 
         public int ClockSpeed
         {
@@ -91,7 +93,7 @@ namespace Nu64.Processor
             this.Flags.Emulation = true;
         }
 
-        public void Start(int Address, int newDataBank)
+        public void JumpTo(int Address, int newDataBank)
         {
             this.DataBank.Value = newDataBank;
             SetPC(Address);
@@ -105,7 +107,7 @@ namespace Nu64.Processor
         public void ExecuteCycles(int Cycles)
         {
             ResetCounter(Cycles);
-            while(clockCyles < nextCycleCheck && !Halted && !DebugPause)
+            while (clockCyles < nextCycleCheck && !Halted && !DebugPause)
             {
                 ExecuteNext();
             }
@@ -121,6 +123,49 @@ namespace Nu64.Processor
             PC.Value += OpcodeLength;
             Opcode.Execute(SignatureBytes);
             clockCyles += OpcodeCycles;
+        }
+
+        /// <summary>
+        /// Executes instructions until a STP or reset
+        /// </summary>
+        public void Run()
+        {
+            if (CPUThread == null)
+                CPUThread = new Thread(new ThreadStart(this.RunLoop));
+            Reset();
+            Halted = false;
+            CPUThread.Start();
+        }
+
+        public void RunLoop()
+        {
+            while (!DebugPause && !Halted)
+            {
+                if (Pins.Reset)
+                    Reset();
+                ExecuteNext();
+            }
+            if (Halted)
+            {
+                Thread tmp = CPUThread;
+                CPUThread = null;
+                tmp.Abort();
+            }
+        }
+
+        public void Reset()
+        {
+            SetEmulationMode();
+            Flags.Value = 0;
+            A.Value = 0;
+            X.Value = 0;
+            Y.Value = 0;
+            DataBank.Value = 0;
+            ProgramBank.Value = 0;
+            DirectPage.Value = 0;
+            Pins.VectorPull = true;
+            PC.Value = Memory.ReadWord(MemoryMap_DirectPage.VECTOR_ERESET);
+            Pins.VectorPull = false;
         }
 
         /// <summary>
@@ -141,7 +186,7 @@ namespace Nu64.Processor
             return oc;
         }
 
-        public  int ReadSignature(OpCode oc)
+        public int ReadSignature(OpCode oc)
         {
             int s = 0;
             if (oc.Length == 2)
@@ -537,7 +582,7 @@ namespace Nu64.Processor
         public void Interrupt(InteruptTypes T)
         {
             //debug
-            DebugPause = true;
+            //DebugPause = true;
 
             if (!Flags.Emulation)
                 Push(ProgramBank);

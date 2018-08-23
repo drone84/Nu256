@@ -9,9 +9,10 @@
 
 * = $F80000
 
-BOOT        JML IBOOT
+BOOT            JML IBOOT
 ;RESTORE       JML IRESTORE
-READY         JML IREADY
+BREAK           JML IBREAK
+READY           JML IREADY
 ;SCINIT        JML ISCINIT
 ;IOINIT        JML IIOINIT
 ;PUTC          JML IPUTC
@@ -48,11 +49,12 @@ IRESET          JMP IBOOT
 IBOOT           ; boot the system
                 CLC           ; clear the carry flag
                 XCE           ; move carry to emulation flag.
-                setxl
-                setal
-                LDA #$0000      ; init direct page
-                TCD
-                setal           
+                REP #$30        ; set long A and X
+                .al 
+                .xl 
+                LDA #STACK_END   ; initialize stack pointer 
+                TAS 
+                setdp 0
                 LDA #$1000      ; store the initial screen buffer location
                 STA SCREENBEGIN
                 setas
@@ -69,6 +71,13 @@ IBOOT           ; boot the system
                 STA SCRWIDTH
                 LDA #25
                 STA SCRHEIGHT
+
+                ; Copy vectors from ROM to Direct Page
+                setaxl 
+                LDA #$FF
+                LDX #$FF00
+                LDY #$FF00
+                MVP $00, $FF 
                 
                 ; display boot message 
 greet           setdbr `greet_msg       ;Set data bank to ROM
@@ -76,15 +85,41 @@ greet           setdbr `greet_msg       ;Set data bank to ROM
                 JSL IPRINT       ; print the first line
 ;                JSL IPRINT       ; print the second line
 ;                JSL IPRINT       ; print the third line
-                JSL IPRINTCR     ; print a blank line. Just because
+;                JSL IPRINTCR     ; print a blank line. Just because
                 setas
                 setdbr $01      ;set data bank to 1 (Kernel Variables) 
-greet_done      NOP             ;halt the CPU
+greet_done      BRK             ;Terminate boot routine and go to Ready handler.
 
+;
+; IBREAK 
+; ROM Break handler. This pulls the registers out of the stack
+; and saves them in the "CPU" direct page locations 
+IBREAK          setdp 0
+                PLA             ; Y
+                STA CPUY
+                PLA 
+                STA CPUX
+                PLA 
+                STA CPUA
+                PLD
+                STA CPUDP
+                setas 
+                PLA 
+                STA CPUDBR
+                setal 
+                PLA 
+                STA CPUPC 
+                setas 
+                PLA 
+                STA CPUPBR
+                TSA
+                STA CPUSTACK
+                LDA STACK_END   ; initialize stack pointer 
+                TAS 
+                
 IREADY          setdbr `ready_msg
+                setas 
                 LDX #<>ready_msg
-                JSL IPRINT
-                LDX #<>hello_ml
                 JSL IPRINT
                 STP 
                 
@@ -114,12 +149,12 @@ IPUTS           PHA
                 PHP
                 setas
                 setxl 
-iputs1          LDA $0,b,x ; read from the string
+iputs1          LDA $0,b,x      ; read from the string
                 BEQ iputs_done
-		CMP #$0D   ; handle CR
-		BNE iputs2
-		JSL IPRINTCR
-		BRA iputs3
+                CMP #$0D   ; handle CR
+                BNE iputs2
+                JSL IPRINTCR
+                BRA iputs3
 iputs2          JSL IPUTC
 iputs3          INX
                 JMP iputs1
@@ -200,8 +235,8 @@ ILOCATE         PHA
                 PHP 
                 setal
                 setxl 
-		STX CURSORX
-		STY CURSORY 
+                STX CURSORX
+                STY CURSORY 
                 LDA SCREENBEGIN
                 
 ilocate_down    CLC
@@ -223,8 +258,8 @@ ilocate_done    PLP
 greet_msg       .text "  ///// FOENIX 256 DEVELOPMENT SYSTEM",$0D
 greet_msg1      .text " /////  FOENIX BASIC (c) 2018 C256 FOENIX TEAM",$0D
 greet_msg2      .text "/////   8MB SYSTEM 6016KB FREE",$00
-;ready_msg       .text "READY.",$00
-ready_msg       .text " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
+ready_msg       .text $0D,"READY.",$00
+;ready_msg       .text " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
                 .text ";F81000 0000 0000 0000 D6FF F8  0000 ------Z-",$00
 hello_basic     .text "10 PRINT ""Hello World""",$0D
                 .text "RUN",$0D

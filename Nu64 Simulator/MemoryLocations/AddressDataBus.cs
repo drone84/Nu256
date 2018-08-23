@@ -130,14 +130,14 @@ namespace Nu64
             device.WriteByte(Address - offset, Value);
         }
 
-        internal void WriteWord(int Address, int Value)
+        public void WriteWord(int Address, int Value)
         {
             GetDeviceAt(Address, out Nu64.Common.IMappable device, out int offset);
             device.WriteByte(Address, (byte)(Value & 0xff));
             device.WriteByte(Address + 1, (byte)(Value >> 8 & 0xff));
         }
 
-        internal void WriteLong(int Address, int Value)
+        public void WriteLong(int Address, int Value)
         {
             GetDeviceAt(Address, out Nu64.Common.IMappable device, out int offset);
             device.WriteByte(Address - offset, (byte)(Value & 0xff));

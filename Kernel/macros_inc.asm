@@ -1,4 +1,18 @@
 ; Set 8-bit accumulator
+setaxs          .macro
+                SEP #$30
+                .as
+                .xs 
+                .endm
+                
+; Set 16-bit accumulator
+setaxl          .macro
+                REP #$30
+                .al
+                .xl
+                .endm
+
+; Set 8-bit accumulator
 setas           .macro
                 SEP #$20
                 .as
@@ -9,6 +23,7 @@ setal           .macro
                 REP #$20
                 .al
                 .endm
+
 ; Set 8 bit index registers               
 setxs           .macro
                 SEP #$10

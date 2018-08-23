@@ -94,14 +94,14 @@ namespace Nu64.Processor
 
         internal void BeginTestFast(int Address)
         {
-            kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_RESET, 0xc000);
-            kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_BRK, 0xc000);
-            kernel.CPU.Stack.Value = MemoryMap_DirectPage.STACK_END;
-            kernel.CPU.SetPC(Address);
+            //kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_RESET, 0xc000);
+            //kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_BRK, 0xc000);
+            //kernel.CPU.Stack.Value = MemoryMap_DirectPage.STACK_END;
+            //kernel.CPU.SetPC(Address);
 
-            CPU.Start(Address, 0);
-            while (!CPU.Halted)
-                CPU.ExecuteNext();
+            //CPU.JumpTo(Address, 0);
+            //while (!CPU.Halted)
+            //    CPU.ExecuteNext();
         }
 
         public void BeginTest()

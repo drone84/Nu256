@@ -41,13 +41,16 @@ namespace Nu64.UI
             this.windowsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cPUToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.memoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.resetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.resetToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.debugToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.executeTimer = new System.Windows.Forms.Timer(this.components);
-            this.gpu = new Nu64.Display.Gpu();
             this.performanceTimer = new System.Windows.Forms.Timer(this.components);
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
             this.panel3 = new System.Windows.Forms.Panel();
             this.panel4 = new System.Windows.Forms.Panel();
+            this.gpu = new Nu64.Display.Gpu();
             this.statusStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -86,7 +89,8 @@ namespace Nu64.UI
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.windowsToolStripMenuItem});
+            this.windowsToolStripMenuItem,
+            this.resetToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(672, 24);
@@ -131,22 +135,33 @@ namespace Nu64.UI
             this.memoryToolStripMenuItem.Text = "Memory";
             this.memoryToolStripMenuItem.Click += new System.EventHandler(this.memoryToolStripMenuItem_Click);
             // 
+            // resetToolStripMenuItem
+            // 
+            this.resetToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.resetToolStripMenuItem1,
+            this.debugToolStripMenuItem});
+            this.resetToolStripMenuItem.Name = "resetToolStripMenuItem";
+            this.resetToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
+            this.resetToolStripMenuItem.Text = "Reset";
+            // 
+            // resetToolStripMenuItem1
+            // 
+            this.resetToolStripMenuItem1.Name = "resetToolStripMenuItem1";
+            this.resetToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+            this.resetToolStripMenuItem1.Text = "Start/Restart";
+            this.resetToolStripMenuItem1.Click += new System.EventHandler(this.resetToolStripMenuItem1_Click);
+            // 
+            // debugToolStripMenuItem
+            // 
+            this.debugToolStripMenuItem.Name = "debugToolStripMenuItem";
+            this.debugToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.debugToolStripMenuItem.Text = "Start/Debug";
+            this.debugToolStripMenuItem.Click += new System.EventHandler(this.debugToolStripMenuItem_Click);
+            // 
             // executeTimer
             // 
             this.executeTimer.Interval = 10;
             this.executeTimer.Tick += new System.EventHandler(this.timer1_Tick);
-            // 
-            // gpu
-            // 
-            this.gpu.CursorPos = 0;
-            this.gpu.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gpu.Location = new System.Drawing.Point(16, 40);
-            this.gpu.Name = "gpu";
-            this.gpu.Size = new System.Drawing.Size(640, 480);
-            this.gpu.TabIndex = 0;
-            this.gpu.X = 0;
-            this.gpu.Y = 0;
-            this.gpu.VisibleChanged += new System.EventHandler(this.gpu_VisibleChanged);
             // 
             // performanceTimer
             // 
@@ -189,6 +204,18 @@ namespace Nu64.UI
             this.panel4.Name = "panel4";
             this.panel4.Size = new System.Drawing.Size(672, 16);
             this.panel4.TabIndex = 6;
+            // 
+            // gpu
+            // 
+            this.gpu.CursorPos = 0;
+            this.gpu.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.gpu.Location = new System.Drawing.Point(16, 40);
+            this.gpu.Name = "gpu";
+            this.gpu.Size = new System.Drawing.Size(640, 480);
+            this.gpu.TabIndex = 0;
+            this.gpu.X = 0;
+            this.gpu.Y = 0;
+            this.gpu.VisibleChanged += new System.EventHandler(this.gpu_VisibleChanged);
             // 
             // MainWindow
             // 
@@ -238,6 +265,9 @@ namespace Nu64.UI
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Panel panel3;
         private System.Windows.Forms.Panel panel4;
+        private System.Windows.Forms.ToolStripMenuItem resetToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem resetToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem debugToolStripMenuItem;
     }
 }
 

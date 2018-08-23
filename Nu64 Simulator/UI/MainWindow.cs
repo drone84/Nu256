@@ -138,5 +138,18 @@ namespace Nu64.UI
         {
             ShowMemoryWindow();
         }
+
+        private void resetToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            kernel.CPU.DebugPause = false;
+            kernel.Reset();
+            kernel.Run();
+        }
+
+        private void debugToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            kernel.CPU.DebugPause = true;
+            kernel.Reset();
+        }
     }
 }
