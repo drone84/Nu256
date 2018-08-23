@@ -2,6 +2,7 @@
 .include "macros_inc.asm"
 .include "directpage_inc.asm"
 .include "monitor_inc.asm"
+.include "kernel_vectors.asm"
 
 ; C256 Foenix / Nu64 Kernel
 ; Loads to $F0:0000
@@ -10,7 +11,7 @@
 
 BOOT        JML IBOOT
 ;RESTORE       JML IRESTORE
-;READY         JML IREADY
+READY         JML IREADY
 ;SCINIT        JML ISCINIT
 ;IOINIT        JML IIOINIT
 ;PUTC          JML IPUTC
@@ -69,38 +70,44 @@ IBOOT           ; boot the system
                 LDA #25
                 STA SCRHEIGHT
                 
-                ; display boot message
-greet           setdbr $F8       ;Set data bank to ROM
-                
+                ; display boot message 
+greet           setdbr `greet_msg       ;Set data bank to ROM
                 LDX #<>greet_msg
-		LDY #80
-                JSL IPUTS       ; print the string
-                LDX #<>greet_msg1
-		LDY #80
-                JSL IPUTS       ; print the string
-                LDX #<>greet_msg2
-		LDY #80
-                JSL IPUTS       ; print the string
-                ; LDY #40
-
+                JSL IPRINT       ; print the first line
+                JSL IPRINT       ; print the second line
+                JSL IPRINT       ; print the third line
+                JSL IPRINTCR     ; print a blank line. Just because
                 setas
-                LDA #$01        ;set data bank to 1 (Kernel Variables)
-                PHA
-                PLB
+                setdbr $01      ;set data bank to 1 (Kernel Variables) 
+greet_done      NOP             ;halt the CPU
 
-greet_done      STP             ;halt the CPU
-; waitloop	NOP
-;		 JMP waitloop
+IREADY          setdbr `ready_msg
+                LDX #<>ready_msg
+                JSL IPRINT
+                STP 
+                
+IKEYDOWN        STP             ; Keyboard key pressed
+IRETURN         STP
 
-IKEYDOWN        BRK             ; Keyboard key pressed
-IRETURN         BRK
+;
+; IPRINT
+; Print a string, followed by a carriage return
+; DBR: bank containing string
+; X: address of the string in data bank
+; Modifies: X
+; 
+IPRINT          JSL IPUTS       
+                JSL IPRINTCR
+                RTL
 
 ; IPUTS                
 ; Print a null terminated string
 ; DBR: bank containing string
 ; X: address of the string in data bank
-; Y: maximum number of characters to write
-; Modifies: X,Y
+; Modifies: X. 
+;  X will be set to the location of the byte following the string
+;  So you can print multiple, contiguous strings by simply calling 
+;  IPUTS multiple times.
 IPUTS           PHA
                 PHP
                 setas
@@ -113,10 +120,9 @@ iputs1          LDA $0,b,x ; read from the string
 		BRA iputs3
 iputs2          JSL IPUTC
 iputs3          INX
-                DEY
-                BEQ iputs_done
-                jmp iputs1
-iputs_done      PLP
+                JMP iputs1
+iputs_done      INX
+                PLP
                 PLA
                 RTL
 
@@ -142,16 +148,16 @@ IPUTC           PHD
 ; This moves the cursor to the beginning of the next line of text on the screen
 ; Modifies: Flags		
 IPRINTCR	PHX
-		PHY
-		PHP
-		LDX #0
-		LDY CURSORY
-		INY
-		JSL ILOCATE
-		PLP
-		PLY
-		PLX
-		RTL				
+                PHY
+                PHP
+                LDX #0
+                LDY CURSORY
+                INY
+                JSL ILOCATE
+                PLP
+                PLY
+                PLX
+                RTL				
                 
 ;
 ;ICSRRIGHT	
@@ -208,7 +214,12 @@ ilocate_done    PLP
                 PLA
                 RTL
 
-greet_msg       .text "  ///// NU64 DEVELOPMENT SYSTEM",$0d,$00
-greet_msg1      .text " /////  NU64 BASIC (Not Implemented)",$0d,$00
-greet_msg2      .text "/////   Machine Monitor v0.1 (dev)",$0d,$00
-
+;
+; Greeting message and other kernel boot data
+;
+* = $F8F000                
+greet_msg       .text "  ///// NU64 DEVELOPMENT SYSTEM",$00
+greet_msg1      .text " /////  NU64 BASIC (Not Implemented)",$00
+greet_msg2      .text "/////   Machine Monitor v0.1 (dev)",$00
+ready_msg       .text "READY.",$00
+error_01        .text "ABORT ERROR",$00

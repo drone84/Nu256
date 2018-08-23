@@ -45,4 +45,28 @@ setdbr          .macro          ; Set the B (Data bank) register
                 PLP
                 PLA
                 .endm 
-                                
+
+pushap          .macro
+                PHA
+                PHP
+                .endm
+pullap          .macro
+                PLP
+                PLA
+                .endm
+
+pushreg         .macro
+                PHA
+                PHX
+                PHY
+                PHP
+                .endm
+pullreg         .macro
+                PLP
+                PLY
+                PLX
+                PLA
+                .endm
+
+                        
+                

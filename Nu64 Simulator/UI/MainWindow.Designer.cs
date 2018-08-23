@@ -1,6 +1,6 @@
 ﻿using Nu64.Display;
 
-namespace Nu64
+namespace Nu64.UI
 {
     partial class MainWindow
     {
@@ -116,14 +116,16 @@ namespace Nu64
             // cPUToolStripMenuItem
             // 
             this.cPUToolStripMenuItem.Name = "cPUToolStripMenuItem";
-            this.cPUToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
+            this.cPUToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.cPUToolStripMenuItem.Text = "CPU";
+            this.cPUToolStripMenuItem.Click += new System.EventHandler(this.cPUToolStripMenuItem_Click);
             // 
             // memoryToolStripMenuItem
             // 
             this.memoryToolStripMenuItem.Name = "memoryToolStripMenuItem";
-            this.memoryToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
+            this.memoryToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.memoryToolStripMenuItem.Text = "Memory";
+            this.memoryToolStripMenuItem.Click += new System.EventHandler(this.memoryToolStripMenuItem_Click);
             // 
             // executeTimer
             // 

@@ -14,7 +14,7 @@ namespace Nu64
     public class Kernel
     {
         private const int TAB_WIDTH = 4;
-        public SystemBus Memory = null;
+        public AddressDataBus Memory = null;
         public Processor.CPU CPU = null;
         public Gpu gpu = null;
         public RingBuffer<Char> KeyboardBuffer = new RingBuffer<char>(256);
@@ -33,7 +33,7 @@ namespace Nu64
 
         public Kernel(Gpu gpu)
         {
-            Memory = new SystemBus();
+            Memory = new AddressDataBus();
             Memory.RAM = new MemoryRAM(0x800000); // 8MB RAM
             Memory.GPU = gpu;
             Memory.ROM = new MemoryRAM(0x100000); // 1MB ROM
@@ -60,8 +60,9 @@ namespace Nu64
             //Monitor.PrintGreeting();
             //PrintCopyright();
             //ShowFlag();
-            Y = 4;
+            // Y = 4;
             //this.PrintLine();
+
             this.ReadyHandler = Monitor;
             HexFile h = new HexFile(Memory, @"ROMs\kernel.hex");
             CPUTest test= new CPUTest(this);
@@ -97,7 +98,7 @@ namespace Nu64
 
             if (OutputDevice == DeviceEnum.DebugWindow)
             {
-                UI.DebugWindow.PrintChar(c);
+                UI.CPUWindow.PrintChar(c);
             }
         }
 
@@ -165,7 +166,7 @@ namespace Nu64
             }
             else if (OutputDevice == DeviceEnum.DebugWindow)
             {
-                UI.DebugWindow.PrintTab(Col);
+                UI.CPUWindow.PrintTab(Col);
             }
         }
 

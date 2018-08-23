@@ -26,6 +26,20 @@ namespace Nu64.Processor
         public OpCode Opcode = null;
         public int SignatureBytes = 0;
 
+        public CPUPins Bus = new CPUPins();
+
+        // Simulator State management 
+        /// <summary>
+        /// Pause the CPU execution due to a STP instruction. The CPU may only be restarted
+        /// by the Reset pin. In the simulator, this will close the CPU execution thread.
+        /// </summary>
+        public bool Halted = true;
+        /// <summary>
+        /// When true, the CPU will not execute the next instruction. Used by the debugger
+        /// to allow the user to analyze memory and the execution trace. 
+        /// </summary>
+        public bool DebugPause = false;
+
         /// <summary>
         /// Length of the currently executing opcode
         /// </summary>
@@ -52,10 +66,7 @@ namespace Nu64.Processor
         /// </summary>
         private DateTime checkStartTime = DateTime.Now;
 
-        public SystemBus Memory = null;
-
-        public bool Halted = true;
-        public bool DebugPause = false;
+        public AddressDataBus Memory = null;
 
         public int ClockSpeed
         {
@@ -70,7 +81,7 @@ namespace Nu64.Processor
             }
         }
 
-        public CPU(SystemBus newMemory)
+        public CPU(AddressDataBus newMemory)
         {
             this.Memory = newMemory;
             this.clockSpeed = 14000000;

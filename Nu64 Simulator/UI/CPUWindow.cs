@@ -11,19 +11,19 @@ using Nu64.Processor;
 
 namespace Nu64.UI
 {
-    public partial class DebugWindow : Form
+    public partial class CPUWindow : Form
     {
         private const int MNEMONIC_COLUMN = 22;
         private const int REGISTER_COLUMN = 34;
         private int StepCounter = 0;
 
-        public DebugWindow()
+        public CPUWindow()
         {
             InitializeComponent();
-            instance = this;
+            Instance = this;
         }
 
-        public static DebugWindow instance = null;
+        public static CPUWindow Instance = null;
         private Processor.CPU _cpu = null;
         private Kernel _kernel = null;
 
@@ -151,7 +151,7 @@ namespace Nu64.UI
             Print(oc.ToString(s));
             //PrintTab(REGISTER_COLUMN);
             //Print(Kernel.Monitor.GetRegisterText());
-            instance.lastLine.Text = lineBuffer.ToString();
+            Instance.lastLine.Text = lineBuffer.ToString();
             lineBuffer.Clear();
         }
 
@@ -173,17 +173,6 @@ namespace Nu64.UI
 
         public void PrintStatus(int lastPC, int newPC)
         {
-            //if (messageText.Lines.Length == 0)
-            //    PrintLine(GetHeaderText());
-            //else if (messageText.Lines.Length > MAX_LINES)
-            //{
-            //    string[] tmp = new string[MAX_LINES - TRIM_LINES + 1];
-            //    tmp[0] = GetHeaderText();
-            //    Array.Copy(messageText.Lines, messageText.Lines.Length - MAX_LINES + TRIM_LINES, tmp, 1, tmp.Length - 1);
-            //    messageText.Lines = tmp;
-            //}
-
-            //PrintClear();
             for (int i = lastPC; i < newPC; i++)
             {
                 Print(CPU.Memory[i].ToString("X2"));
@@ -214,8 +203,7 @@ namespace Nu64.UI
 
         public static void PrintLine()
         {
-            //instance.messageText.AppendText(lineBuffer.ToString());
-            instance.PrintQueue.Add(lineBuffer.ToString());
+            Instance.PrintQueue.Add(lineBuffer.ToString());
             PrintClear();
         }
 
@@ -327,6 +315,16 @@ namespace Nu64.UI
             int bp = getbp();
             Breakpoints.Items.Remove(bp);
             Breakpoints.Text = Breakpoints.Items.Count.ToString();
+        }
+
+        private void MemoryButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void JumpButton_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

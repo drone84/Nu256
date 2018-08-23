@@ -8,14 +8,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Nu64
+namespace Nu64.UI
 {
     public partial class MainWindow : Form
     {
         public Kernel kernel;
-        public UI.DebugWindow DebugWindow;
+        public UI.CPUWindow DebugWindow;
         public Timer BootTimer = new Timer();
         public int CyclesPerTick = 35000;
+        public MemoryWindow MemoryWindow;
+
 
         public MainWindow()
         {
@@ -32,15 +34,28 @@ namespace Nu64
         {
             kernel = new Kernel(this.gpu);
 
-            DebugWindow = new UI.DebugWindow();
-            DebugWindow.CPU = kernel.CPU;
-            kernel.CPU.DebugPause = true;
-            DebugWindow.Kernel = kernel;
-            DebugWindow.Show();
+            ShowDebugWindow();
+            ShowMemoryWindow();
 
             BootTimer.Interval = 100;
             BootTimer.Tick += BootTimer_Tick;
             //kernel.READY();
+        }
+
+        private void ShowDebugWindow()
+        {
+            DebugWindow = new UI.CPUWindow();
+            DebugWindow.CPU = kernel.CPU;
+            kernel.CPU.DebugPause = true;
+            DebugWindow.Kernel = kernel;
+            DebugWindow.Show();
+        }
+
+        void ShowMemoryWindow()
+        {
+            MemoryWindow = new MemoryWindow();
+            MemoryWindow.Memory = kernel.CPU.Memory;
+            MemoryWindow.Show();
         }
 
         private void BootTimer_Tick(object sender, EventArgs e)
@@ -112,6 +127,16 @@ namespace Nu64
         {
             if(gpu.Visible)
                 BootTimer.Enabled = true;
+        }
+
+        private void cPUToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowDebugWindow();
+        }
+
+        private void memoryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowMemoryWindow();
         }
     }
 }

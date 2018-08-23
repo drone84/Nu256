@@ -13,7 +13,7 @@ namespace Nu64
     /// Maps an address on the bus to a device or memory. GPU, RAM, and ROM are hard coded. Other I/O devices will be added 
     /// later.
     /// </summary>
-    public class SystemBus : Nu64.Common.IMappable
+    public class AddressDataBus : Nu64.Common.IMappable
     {
         public const int MinAddress = 0x000000;
         public const int MaxAddress = 0xffffff;
