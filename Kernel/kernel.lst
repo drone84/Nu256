@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.53.1515 listing file
 ; 64tass --long-address --intel-hex -o kernel.hex --list kernel.lst kernel.asm
-; Wed Aug 22 18:55:02 2018
+; Thu Aug 23 00:43:58 2018
 
 ;Offset	;Hex		;Monitor	;Source
 
@@ -140,7 +140,7 @@
 ;******  Return to file: kernel.asm
 
 .f80000	5c 03 10 f8	jmp $f81003	BOOT        JML IBOOT
-.f80004	5c 5b 10 f8	jmp $f8105b	READY         JML IREADY
+.f80004	5c 53 10 f8	jmp $f81053	READY         JML IREADY
 .f81000	4c 03 10	jmp $f81003	IRESET          JMP IBOOT
 .f81003					IBOOT
 .f81003	18		clc		                CLC           ; clear the carry flag
@@ -176,139 +176,166 @@
 .f81039	28		plp		                PLP
 .f8103a	68		pla		                PLA
 .f8103b	a2 00 f0	ldx #$f000	                LDX #<>greet_msg
-.f8103e	22 6f 10 f8	jsl $f8106f	                JSL IPRINT       ; print the first line
-.f81042	22 6f 10 f8	jsl $f8106f	                JSL IPRINT       ; print the second line
-.f81046	22 6f 10 f8	jsl $f8106f	                JSL IPRINT       ; print the third line
-.f8104a	22 b0 10 f8	jsl $f810b0	                JSL IPRINTCR     ; print a blank line. Just because
-.f8104e	e2 20		sep #$20	                SEP #$20
-.f81050	48		pha		                PHA
-.f81051	08		php		                PHP
-.f81052	e2 20		sep #$20	                SEP #$20
-.f81054	a9 01		lda #$01			LDA #$01
-.f81056	48		pha		                PHA
-.f81057	ab		plb		                PLB
-.f81058	28		plp		                PLP
-.f81059	68		pla		                PLA
-.f8105a	ea		nop		greet_done      NOP             ;halt the CPU
-.f8105b					IREADY
-.f8105b	48		pha		                PHA
-.f8105c	08		php		                PHP
-.f8105d	e2 20		sep #$20	                SEP #$20
-.f8105f	a9 f8		lda #$f8			LDA #`ready_msg
-.f81061	48		pha		                PHA
-.f81062	ab		plb		                PLB
-.f81063	28		plp		                PLP
-.f81064	68		pla		                PLA
-.f81065	a2 68 f0	ldx #$f068	                LDX #<>ready_msg
-.f81068	22 6f 10 f8	jsl $f8106f	                JSL IPRINT
-.f8106c	db		stp		                STP
-.f8106d	db		stp		IKEYDOWN        STP             ; Keyboard key pressed
-.f8106e	db		stp		IRETURN         STP
-.f8106f	22 78 10 f8	jsl $f81078	IPRINT          JSL IPUTS
-.f81073	22 b0 10 f8	jsl $f810b0	                JSL IPRINTCR
-.f81077	6b		rtl		                RTL
-.f81078	48		pha		IPUTS           PHA
-.f81079	08		php		                PHP
-.f8107a	e2 20		sep #$20	                SEP #$20
-.f8107c	c2 10		rep #$10	                REP #$10
-.f8107e	bd 00 00	lda $f80000,x	iputs1          LDA $0,b,x ; read from the string
-.f81081	f0 12		beq $f81095	                BEQ iputs_done
-.f81083	c9 0d		cmp #$0d			CMP #$0D   ; handle CR
-.f81085	d0 06		bne $f8108d			BNE iputs2
-.f81087	22 b0 10 f8	jsl $f810b0			JSL IPRINTCR
-.f8108b	80 04		bra $f81091			BRA iputs3
-.f8108d	22 99 10 f8	jsl $f81099	iputs2          JSL IPUTC
-.f81091	e8		inx		iputs3          INX
-.f81092	4c 7e 10	jmp $f8107e	                JMP iputs1
-.f81095	e8		inx		iputs_done      INX
-.f81096	28		plp		                PLP
-.f81097	68		pla		                PLA
-.f81098	6b		rtl		                RTL
-.f81099	0b		phd		IPUTC           PHD
-.f8109a	08		php				PHP             ; stash the flags (we'll be changing M)
-.f8109b	48		pha		                PHA
-.f8109c	08		php				PHP
-.f8109d	c2 20		rep #$20	                REP #$20
-.f8109f	a9 00 00	lda #$0000	                LDA #0         ; set DP to page 0
-.f810a2	5b		tcd		                TCD             ; and get character back
-.f810a3	28		plp				PLP
-.f810a4	68		pla		                PLA
-.f810a5	e2 20		sep #$20	                SEP #$20
-.f810a7	87 17		sta [$17]	                STA [CURSORPOS] ; Save the character on the screen
-.f810a9	22 c1 10 f8	jsl $f810c1	                JSL ICSRRIGHT
-.f810ad	28		plp		                PLP
-.f810ae	2b		pld		                PLD
-.f810af	6b		rtl		                RTL
-.f810b0	da		phx		IPRINTCR	PHX
-.f810b1	5a		phy		                PHY
-.f810b2	08		php		                PHP
-.f810b3	a2 00 00	ldx #$0000	                LDX #0
-.f810b6	a4 1c		ldy $1c		                LDY CURSORY
-.f810b8	c8		iny		                INY
-.f810b9	22 ee 10 f8	jsl $f810ee	                JSL ILOCATE
-.f810bd	28		plp		                PLP
-.f810be	7a		ply		                PLY
-.f810bf	fa		plx		                PLX
-.f810c0	6b		rtl		                RTL
-.f810c1					ICSRRIGHT
-.f810c1	da		phx		                PHX
-.f810c2	8b		phb		                PHB
-.f810c3	c2 20		rep #$20	                REP #$20
-.f810c5	c2 10		rep #$10	                REP #$10
-.f810c7	48		pha		                PHA
-.f810c8	08		php				PHP
-.f810c9	c2 20		rep #$20	                REP #$20
-.f810cb	a9 00 00	lda #$0000	                LDA #$0         ; set DP to page 0
-.f810ce	5b		tcd		                TCD             ; and get character back
-.f810cf	28		plp				PLP
-.f810d0	68		pla		                PLA
-.f810d1	e6 17		inc $17		                INC CURSORPOS
-.f810d3	a6 1a		ldx $1a		                LDX CURSORX
-.f810d5	e8		inx		                INX
-.f810d6	e4 13		cpx $13		                CPX SCRWIDTH
-.f810d8	90 0c		bcc $f810e6	                BCC icsr_nowrap  ; wrap if the cursor is at or past column 80
-.f810da	a2 00 00	ldx #$0000	                LDX #0
-.f810dd	5a		phy		                PHY
-.f810de	a4 1c		ldy $1c		                LDY CURSORY
-.f810e0	c8		iny		                INY
-.f810e1	22 ee 10 f8	jsl $f810ee	                JSL ILOCATE
-.f810e5	7a		ply		                PLY
-.f810e6	86 1a		stx $1a		icsr_nowrap     STX CURSORX
-.f810e8	ab		plb		                PLB
-.f810e9	fa		plx		                PLX
-.f810ea	6b		rtl		                RTL
-.f810eb	6b		rtl		ISRLEFT		RTL
-.f810ec	6b		rtl		ICSRUP		RTL
-.f810ed	6b		rtl		ICSRDOWN	RTL
-.f810ee	48		pha		ILOCATE         PHA
-.f810ef	08		php		                PHP
-.f810f0	c2 20		rep #$20	                REP #$20
-.f810f2	c2 10		rep #$10	                REP #$10
-.f810f4	86 1a		stx $1a				STX CURSORX
-.f810f6	84 1c		sty $1c				STY CURSORY
-.f810f8	a5 10		lda $10		                LDA SCREENBEGIN
-.f810fa	18		clc		ilocate_down    CLC
-.f810fb	65 13		adc $13		                ADC SCRWIDTH
-.f810fd	88		dey		                DEY
-.f810fe	f0 03		beq $f81103			BEQ ilocate_right
-.f81100	4c fa 10	jmp $f810fa	                JMP ilocate_down
-.f81103	65 1a		adc $1a		ilocate_right   ADC CURSORX             ; move the cursor right X columns
-.f81105	85 17		sta $17		                STA CURSORPOS
-.f81107	a4 1c		ldy $1c				LDY CURSORY
-.f81109	28		plp		ilocate_done    PLP
-.f8110a	68		pla		                PLA
-.f8110b	6b		rtl		                RTL
->f8f000	20 20 2f 2f 2f 2f 2f 20		greet_msg       .text "  ///// NU64 DEVELOPMENT SYSTEM",$00
->f8f008	4e 55 36 34 20 44 45 56 45 4c 4f 50 4d 45 4e 54
->f8f018	20 53 59 53 54 45 4d 00
->f8f020	20 2f 2f 2f 2f 2f 20 20		greet_msg1      .text " /////  NU64 BASIC (Not Implemented)",$00
->f8f028	4e 55 36 34 20 42 41 53 49 43 20 28 4e 6f 74 20
->f8f038	49 6d 70 6c 65 6d 65 6e 74 65 64 29 00
->f8f045	2f 2f 2f 2f 2f 20 20 20		greet_msg2      .text "/////   Machine Monitor v0.1 (dev)",$00
->f8f04d	4d 61 63 68 69 6e 65 20 4d 6f 6e 69 74 6f 72 20
->f8f05d	76 30 2e 31 20 28 64 65 76 29 00
->f8f068	52 45 41 44 59 2e 00		ready_msg       .text "READY.",$00
->f8f06f	41 42 4f 52 54 20 45 52		error_01        .text "ABORT ERROR",$00
->f8f077	52 4f 52 00
+.f8103e	22 6e 10 f8	jsl $f8106e	                JSL IPRINT       ; print the first line
+.f81042	22 af 10 f8	jsl $f810af	                JSL IPRINTCR     ; print a blank line. Just because
+.f81046	e2 20		sep #$20	                SEP #$20
+.f81048	48		pha		                PHA
+.f81049	08		php		                PHP
+.f8104a	e2 20		sep #$20	                SEP #$20
+.f8104c	a9 01		lda #$01			LDA #$01
+.f8104e	48		pha		                PHA
+.f8104f	ab		plb		                PLB
+.f81050	28		plp		                PLP
+.f81051	68		pla		                PLA
+.f81052	ea		nop		greet_done      NOP             ;halt the CPU
+.f81053					IREADY
+.f81053	48		pha		                PHA
+.f81054	08		php		                PHP
+.f81055	e2 20		sep #$20	                SEP #$20
+.f81057	a9 f8		lda #$f8			LDA #`ready_msg
+.f81059	48		pha		                PHA
+.f8105a	ab		plb		                PLB
+.f8105b	28		plp		                PLP
+.f8105c	68		pla		                PLA
+.f8105d	a2 74 f0	ldx #$f074	                LDX #<>ready_msg
+.f81060	22 6e 10 f8	jsl $f8106e	                JSL IPRINT
+.f81064	a2 ff f0	ldx #$f0ff	                LDX #<>hello_ml
+.f81067	22 6e 10 f8	jsl $f8106e	                JSL IPRINT
+.f8106b	db		stp		                STP
+.f8106c	db		stp		IKEYDOWN        STP             ; Keyboard key pressed
+.f8106d	db		stp		IRETURN         STP
+.f8106e	22 77 10 f8	jsl $f81077	IPRINT          JSL IPUTS
+.f81072	22 af 10 f8	jsl $f810af	                JSL IPRINTCR
+.f81076	6b		rtl		                RTL
+.f81077	48		pha		IPUTS           PHA
+.f81078	08		php		                PHP
+.f81079	e2 20		sep #$20	                SEP #$20
+.f8107b	c2 10		rep #$10	                REP #$10
+.f8107d	bd 00 00	lda $f80000,x	iputs1          LDA $0,b,x ; read from the string
+.f81080	f0 12		beq $f81094	                BEQ iputs_done
+.f81082	c9 0d		cmp #$0d			CMP #$0D   ; handle CR
+.f81084	d0 06		bne $f8108c			BNE iputs2
+.f81086	22 af 10 f8	jsl $f810af			JSL IPRINTCR
+.f8108a	80 04		bra $f81090			BRA iputs3
+.f8108c	22 98 10 f8	jsl $f81098	iputs2          JSL IPUTC
+.f81090	e8		inx		iputs3          INX
+.f81091	4c 7d 10	jmp $f8107d	                JMP iputs1
+.f81094	e8		inx		iputs_done      INX
+.f81095	28		plp		                PLP
+.f81096	68		pla		                PLA
+.f81097	6b		rtl		                RTL
+.f81098	0b		phd		IPUTC           PHD
+.f81099	08		php				PHP             ; stash the flags (we'll be changing M)
+.f8109a	48		pha		                PHA
+.f8109b	08		php				PHP
+.f8109c	c2 20		rep #$20	                REP #$20
+.f8109e	a9 00 00	lda #$0000	                LDA #0         ; set DP to page 0
+.f810a1	5b		tcd		                TCD             ; and get character back
+.f810a2	28		plp				PLP
+.f810a3	68		pla		                PLA
+.f810a4	e2 20		sep #$20	                SEP #$20
+.f810a6	87 17		sta [$17]	                STA [CURSORPOS] ; Save the character on the screen
+.f810a8	22 c0 10 f8	jsl $f810c0	                JSL ICSRRIGHT
+.f810ac	28		plp		                PLP
+.f810ad	2b		pld		                PLD
+.f810ae	6b		rtl		                RTL
+.f810af	da		phx		IPRINTCR	PHX
+.f810b0	5a		phy		                PHY
+.f810b1	08		php		                PHP
+.f810b2	a2 00 00	ldx #$0000	                LDX #0
+.f810b5	a4 1c		ldy $1c		                LDY CURSORY
+.f810b7	c8		iny		                INY
+.f810b8	22 ed 10 f8	jsl $f810ed	                JSL ILOCATE
+.f810bc	28		plp		                PLP
+.f810bd	7a		ply		                PLY
+.f810be	fa		plx		                PLX
+.f810bf	6b		rtl		                RTL
+.f810c0					ICSRRIGHT
+.f810c0	da		phx		                PHX
+.f810c1	8b		phb		                PHB
+.f810c2	c2 20		rep #$20	                REP #$20
+.f810c4	c2 10		rep #$10	                REP #$10
+.f810c6	48		pha		                PHA
+.f810c7	08		php				PHP
+.f810c8	c2 20		rep #$20	                REP #$20
+.f810ca	a9 00 00	lda #$0000	                LDA #$0         ; set DP to page 0
+.f810cd	5b		tcd		                TCD             ; and get character back
+.f810ce	28		plp				PLP
+.f810cf	68		pla		                PLA
+.f810d0	e6 17		inc $17		                INC CURSORPOS
+.f810d2	a6 1a		ldx $1a		                LDX CURSORX
+.f810d4	e8		inx		                INX
+.f810d5	e4 13		cpx $13		                CPX SCRWIDTH
+.f810d7	90 0c		bcc $f810e5	                BCC icsr_nowrap  ; wrap if the cursor is at or past column 80
+.f810d9	a2 00 00	ldx #$0000	                LDX #0
+.f810dc	5a		phy		                PHY
+.f810dd	a4 1c		ldy $1c		                LDY CURSORY
+.f810df	c8		iny		                INY
+.f810e0	22 ed 10 f8	jsl $f810ed	                JSL ILOCATE
+.f810e4	7a		ply		                PLY
+.f810e5	86 1a		stx $1a		icsr_nowrap     STX CURSORX
+.f810e7	ab		plb		                PLB
+.f810e8	fa		plx		                PLX
+.f810e9	6b		rtl		                RTL
+.f810ea	6b		rtl		ISRLEFT		RTL
+.f810eb	6b		rtl		ICSRUP		RTL
+.f810ec	6b		rtl		ICSRDOWN	RTL
+.f810ed	48		pha		ILOCATE         PHA
+.f810ee	08		php		                PHP
+.f810ef	c2 20		rep #$20	                REP #$20
+.f810f1	c2 10		rep #$10	                REP #$10
+.f810f3	86 1a		stx $1a				STX CURSORX
+.f810f5	84 1c		sty $1c				STY CURSORY
+.f810f7	a5 10		lda $10		                LDA SCREENBEGIN
+.f810f9	18		clc		ilocate_down    CLC
+.f810fa	65 13		adc $13		                ADC SCRWIDTH
+.f810fc	88		dey		                DEY
+.f810fd	f0 03		beq $f81102			BEQ ilocate_right
+.f810ff	4c f9 10	jmp $f810f9	                JMP ilocate_down
+.f81102	65 1a		adc $1a		ilocate_right   ADC CURSORX             ; move the cursor right X columns
+.f81104	85 17		sta $17		                STA CURSORPOS
+.f81106	a4 1c		ldy $1c				LDY CURSORY
+.f81108	28		plp		ilocate_done    PLP
+.f81109	68		pla		                PLA
+.f8110a	6b		rtl		                RTL
+>f8f000	20 20 2f 2f 2f 2f 2f 20		greet_msg       .text "  ///// FOENIX 256 DEVELOPMENT SYSTEM",$0D
+>f8f008	46 4f 45 4e 49 58 20 32 35 36 20 44 45 56 45 4c
+>f8f018	4f 50 4d 45 4e 54 20 53 59 53 54 45 4d 0d
+>f8f026	20 2f 2f 2f 2f 2f 20 20		greet_msg1      .text " /////  FOENIX BASIC (c) 2018 C256 FOENIX TEAM",$0D
+>f8f02e	46 4f 45 4e 49 58 20 42 41 53 49 43 20 28 63 29
+>f8f03e	20 32 30 31 38 20 43 32 35 36 20 46 4f 45 4e 49
+>f8f04e	58 20 54 45 41 4d 0d
+>f8f055	2f 2f 2f 2f 2f 20 20 20		greet_msg2      .text "/////   8MB SYSTEM 6016KB FREE",$00
+>f8f05d	38 4d 42 20 53 59 53 54 45 4d 20 36 30 31 36 4b
+>f8f06d	42 20 46 52 45 45 00
+>f8f074	20 50 43 20 20 20 20 20		ready_msg       .text " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
+>f8f07c	41 20 20 20 20 58 20 20 20 20 59 20 20 20 20 53
+>f8f08c	50 20 20 20 44 42 52 20 44 50 20 20 20 4e 56 4d
+>f8f09c	58 44 49 5a 43 0d
+>f8f0a2	3b 46 38 31 30 30 30 20		                .text ";F81000 0000 0000 0000 D6FF F8  0000 ------Z-",$00
+>f8f0aa	30 30 30 30 20 30 30 30 30 20 30 30 30 30 20 44
+>f8f0ba	36 46 46 20 46 38 20 20 30 30 30 30 20 2d 2d 2d
+>f8f0ca	2d 2d 2d 5a 2d 00
+>f8f0d0	31 30 20 50 52 49 4e 54		hello_basic     .text "10 PRINT ""Hello World""",$0D
+>f8f0d8	20 22 48 65 6c 6c 6f 20 57 6f 72 6c 64 22 0d
+>f8f0e7	52 55 4e 0d			                .text "RUN",$0D
+>f8f0eb	48 65 6c 6c 6f 20 57 6f		                .text "Hello World",$0D
+>f8f0f3	72 6c 64 0d
+>f8f0f7	0d 52 45 41 44 59 2e 00		                .text $0D,"READY.",$00
+>f8f0ff	47 20 30 32 30 30 30 30		hello_ml        .text "G 020000",$0D
+>f8f107	0d
+>f8f108	48 45 4c 4c 4f 20 57 4f		                .text "HELLO WORLD",$0D
+>f8f110	52 4c 44 0d
+>f8f114	0d				                .text $0D
+>f8f115	20 50 43 20 20 20 20 20		                .text " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
+>f8f11d	41 20 20 20 20 58 20 20 20 20 59 20 20 20 20 53
+>f8f12d	50 20 20 20 44 42 52 20 44 50 20 20 20 4e 56 4d
+>f8f13d	58 44 49 5a 43 0d
+>f8f143	3b 30 30 32 31 31 32 20		                .text ";002112 0019 F0AA 0000 D6FF F8  0000 --M-----",$00
+>f8f14b	30 30 31 39 20 46 30 41 41 20 30 30 30 30 20 44
+>f8f15b	36 46 46 20 46 38 20 20 30 30 30 30 20 2d 2d 4d
+>f8f16b	2d 2d 2d 2d 2d 00
+>f8f171	41 42 4f 52 54 20 45 52		error_01        .text "ABORT ERROR",$00
+>f8f179	52 4f 52 00
 
 ;******  End of listing

@@ -44,6 +44,10 @@ namespace Nu64.UI
             this.executeTimer = new System.Windows.Forms.Timer(this.components);
             this.gpu = new Nu64.Display.Gpu();
             this.performanceTimer = new System.Windows.Forms.Timer(this.components);
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.panel3 = new System.Windows.Forms.Panel();
+            this.panel4 = new System.Windows.Forms.Panel();
             this.statusStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -54,9 +58,9 @@ namespace Nu64.UI
             this.ModeText,
             this.lastKeyPressed,
             this.timerStatus});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 487);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 536);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(807, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(672, 22);
             this.statusStrip1.TabIndex = 1;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -85,7 +89,7 @@ namespace Nu64.UI
             this.windowsToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(807, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(672, 24);
             this.menuStrip1.TabIndex = 2;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -116,14 +120,14 @@ namespace Nu64.UI
             // cPUToolStripMenuItem
             // 
             this.cPUToolStripMenuItem.Name = "cPUToolStripMenuItem";
-            this.cPUToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.cPUToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
             this.cPUToolStripMenuItem.Text = "CPU";
             this.cPUToolStripMenuItem.Click += new System.EventHandler(this.cPUToolStripMenuItem_Click);
             // 
             // memoryToolStripMenuItem
             // 
             this.memoryToolStripMenuItem.Name = "memoryToolStripMenuItem";
-            this.memoryToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.memoryToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
             this.memoryToolStripMenuItem.Text = "Memory";
             this.memoryToolStripMenuItem.Click += new System.EventHandler(this.memoryToolStripMenuItem_Click);
             // 
@@ -136,9 +140,9 @@ namespace Nu64.UI
             // 
             this.gpu.CursorPos = 0;
             this.gpu.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gpu.Location = new System.Drawing.Point(0, 24);
+            this.gpu.Location = new System.Drawing.Point(16, 40);
             this.gpu.Name = "gpu";
-            this.gpu.Size = new System.Drawing.Size(807, 463);
+            this.gpu.Size = new System.Drawing.Size(640, 480);
             this.gpu.TabIndex = 0;
             this.gpu.X = 0;
             this.gpu.Y = 0;
@@ -150,14 +154,54 @@ namespace Nu64.UI
             this.performanceTimer.Interval = 1000;
             this.performanceTimer.Tick += new System.EventHandler(this.performanceTimer_Tick);
             // 
+            // panel1
+            // 
+            this.panel1.BackColor = System.Drawing.Color.LightBlue;
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Left;
+            this.panel1.Location = new System.Drawing.Point(0, 40);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(16, 496);
+            this.panel1.TabIndex = 3;
+            // 
+            // panel2
+            // 
+            this.panel2.BackColor = System.Drawing.Color.LightBlue;
+            this.panel2.Dock = System.Windows.Forms.DockStyle.Right;
+            this.panel2.Location = new System.Drawing.Point(656, 40);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(16, 496);
+            this.panel2.TabIndex = 4;
+            // 
+            // panel3
+            // 
+            this.panel3.BackColor = System.Drawing.Color.LightBlue;
+            this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.panel3.Location = new System.Drawing.Point(16, 520);
+            this.panel3.Name = "panel3";
+            this.panel3.Size = new System.Drawing.Size(640, 16);
+            this.panel3.TabIndex = 5;
+            // 
+            // panel4
+            // 
+            this.panel4.BackColor = System.Drawing.Color.LightBlue;
+            this.panel4.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panel4.Location = new System.Drawing.Point(0, 24);
+            this.panel4.Name = "panel4";
+            this.panel4.Size = new System.Drawing.Size(672, 16);
+            this.panel4.TabIndex = 6;
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(807, 509);
+            this.ClientSize = new System.Drawing.Size(672, 558);
             this.Controls.Add(this.gpu);
-            this.Controls.Add(this.statusStrip1);
+            this.Controls.Add(this.panel3);
+            this.Controls.Add(this.panel2);
+            this.Controls.Add(this.panel1);
+            this.Controls.Add(this.panel4);
             this.Controls.Add(this.menuStrip1);
+            this.Controls.Add(this.statusStrip1);
             this.KeyPreview = true;
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainWindow";
@@ -190,6 +234,10 @@ namespace Nu64.UI
         private System.Windows.Forms.Timer executeTimer;
         private System.Windows.Forms.ToolStripStatusLabel timerStatus;
         private System.Windows.Forms.Timer performanceTimer;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Panel panel3;
+        private System.Windows.Forms.Panel panel4;
     }
 }
 

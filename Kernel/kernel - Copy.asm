@@ -74,8 +74,8 @@ IBOOT           ; boot the system
 greet           setdbr `greet_msg       ;Set data bank to ROM
                 LDX #<>greet_msg
                 JSL IPRINT       ; print the first line
-;                JSL IPRINT       ; print the second line
-;                JSL IPRINT       ; print the third line
+                JSL IPRINT       ; print the second line
+                JSL IPRINT       ; print the third line
                 JSL IPRINTCR     ; print a blank line. Just because
                 setas
                 setdbr $01      ;set data bank to 1 (Kernel Variables) 
@@ -83,8 +83,6 @@ greet_done      NOP             ;halt the CPU
 
 IREADY          setdbr `ready_msg
                 LDX #<>ready_msg
-                JSL IPRINT
-                LDX #<>hello_ml
                 JSL IPRINT
                 STP 
                 
@@ -220,19 +218,8 @@ ilocate_done    PLP
 ; Greeting message and other kernel boot data
 ;
 * = $F8F000                
-greet_msg       .text "  ///// FOENIX 256 DEVELOPMENT SYSTEM",$0D
-greet_msg1      .text " /////  FOENIX BASIC (c) 2018 C256 FOENIX TEAM",$0D
-greet_msg2      .text "/////   8MB SYSTEM 6016KB FREE",$00
-;ready_msg       .text "READY.",$00
-ready_msg       .text " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
-                .text ";F81000 0000 0000 0000 D6FF F8  0000 ------Z-",$00
-hello_basic     .text "10 PRINT ""Hello World""",$0D
-                .text "RUN",$0D
-                .text "Hello World",$0D
-                .text $0D,"READY.",$00
-hello_ml        .text "G 020000",$0D
-                .text "HELLO WORLD",$0D
-                .text $0D
-                .text " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
-                .text ";002112 0019 F0AA 0000 D6FF F8  0000 --M-----",$00
+greet_msg       .text "  ///// NU64 DEVELOPMENT SYSTEM",$00
+greet_msg1      .text " /////  NU64 BASIC (Not Implemented)",$00
+greet_msg2      .text "/////   Machine Monitor v0.1 (dev)",$00
+ready_msg       .text "READY.",$00
 error_01        .text "ABORT ERROR",$00

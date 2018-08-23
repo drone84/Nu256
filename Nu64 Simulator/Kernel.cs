@@ -69,6 +69,30 @@ namespace Nu64
             test.BeginTest(0xf81000);
             //test.BeginTestFast(0xf81000);
 
+            //Locate(0, 0);
+            //for (int i = 1; i < 25; i++)
+            //{
+            //    PrintLine(i.ToString().PadLeft(6) + '\xdd');
+            //}
+
+            //Print("        F1Load F2Save F3Find F4Mark F5Run");
+            //string[] lines = new string[] {
+            //"FUNCTION HELLO() AS STRING",
+            //"    RETURN \"Hello\"",
+            //"END FUNCTION",
+            //"",
+            //"SUB MAIN()",
+            //"    PRINT HELLO()",
+            //"END SUB"};
+            //for(int i=0; i<lines.Length; i++)
+            //{
+            //    Locate(i, 8);
+            //    Print(lines[i]);
+            //}
+
+            //Memory[MemoryMap_DirectPage.CURSORX] = 8;
+            //Memory[MemoryMap_DirectPage.CURSORY] = (byte) lines.Length;
+
             this.TickTimer.Interval = 1000 / 60;
             this.TickTimer.Elapsed += TickTimer_Elapsed;
             this.TickTimer.Enabled = true;
@@ -301,9 +325,6 @@ namespace Nu64
         /// <param name="Col">Column, left side of screen is 0</param>
         public virtual void Locate(int Row, int Col)
         {
-            Y = Row;
-            X = Col;
-
             if (Row < 0)
                 Row = 0;
             if (Row >= Rows)
@@ -312,6 +333,9 @@ namespace Nu64
                 Col = 0;
             if (Col >= Columns)
                 Col = Columns - 1;
+
+            Y = Row;
+            X = Col;
         }
 
         public virtual void Cls()

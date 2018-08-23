@@ -99,11 +99,9 @@ namespace Nu64.Processor
             kernel.CPU.Stack.Value = MemoryMap_DirectPage.STACK_END;
             kernel.CPU.SetPC(Address);
 
-            CPU.DebugPause = false;
-            CPU.Start(Address, 0x00);
-
-            kernel.ReadyHandler = kernel.Monitor;
-            kernel.READY();
+            CPU.Start(Address, 0);
+            while (!CPU.Halted)
+                CPU.ExecuteNext();
         }
 
         public void BeginTest()
