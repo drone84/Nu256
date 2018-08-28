@@ -20,6 +20,9 @@ namespace Nu64.Processor
         private OpcodeList opcodes = null;
         private Operations operations = null;
 
+        public DateTime StartTime = DateTime.MinValue;
+        public DateTime StopTime = DateTime.MinValue; 
+
         /// <summary>
         /// Currently executing opcode 
         /// </summary>
@@ -134,6 +137,8 @@ namespace Nu64.Processor
                 CPUThread = new Thread(new ThreadStart(this.RunLoop));
             Reset();
             Halted = false;
+            StartTime = DateTime.Now;
+            clockCyles = 0;
             CPUThread.Start();
         }
 
@@ -147,6 +152,10 @@ namespace Nu64.Processor
             }
             if (Halted)
             {
+                StopTime = DateTime.Now;
+                System.Diagnostics.Debug.WriteLine("Elapsed time: " +
+                    (StopTime - StartTime).TotalMilliseconds.ToString() + "ms" +
+                    ", Cycles: " + CycleCounter.ToString());
                 Thread tmp = CPUThread;
                 CPUThread = null;
                 tmp.Abort();
@@ -181,7 +190,7 @@ namespace Nu64.Processor
         {
             OpCode oc = opcodes[opcodeByte];
             OpcodeLength = oc.Length;
-            OpcodeCycles = 4;
+            OpcodeCycles = 1;
             SignatureBytes = ReadSignature(oc);
             return oc;
         }
