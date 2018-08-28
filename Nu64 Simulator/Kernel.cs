@@ -18,7 +18,7 @@ namespace Nu64
         public AddressDataBus Memory = null;
         public Processor.CPU CPU = null;
         public Gpu gpu = null;
-        public RingBuffer<Char> KeyboardBuffer = new RingBuffer<char>(256);
+        public MemoryBuffer KeyboardBuffer = null;
         public ColorCodes CurrentColor = ColorCodes.Green;
         public bool ConsoleEcho = false;
 
@@ -43,6 +43,12 @@ namespace Nu64
             this.CPU = new CPU(Memory);
             this.gpu = gpu;
             gpu.LoadCharacterData(Memory.RAM);
+            KeyboardBuffer = new MemoryBuffer(
+                Memory.RAM,
+                MemoryMap_DirectPage.KEY_BUFFER, 
+                MemoryMap_DirectPage.KEY_BUFFER_END,
+                MemoryMap_DirectPage.KB_READPOS, 
+                MemoryMap_DirectPage.KB_WRITEPOS);
 
             for(int i=MemoryMap_DirectPage.SCREEN_PAGE0; i< MemoryMap_DirectPage.SCREEN_PAGE1; i++)
             {
@@ -395,15 +401,16 @@ namespace Nu64
             if (KeyboardBuffer.Count == 0)
                 return;
 
-            char c = KeyboardBuffer.Read();
+            int c = KeyboardBuffer.Read(1);
+            int shift = KeyboardBuffer.Read(1);
             int pos = GetStartOfLine();
-            switch (c)
+            switch ((char) c)
             {
                 case '\r':
                     ReturnPressed(pos);
                     break;
                 default:
-                    PrintChar(c);
+                    PrintChar((char) c);
                     break;
             }
         }

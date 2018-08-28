@@ -1,9 +1,11 @@
+;
 ;Direct Page Addresses
+;
 RESET            = $000000 ;4 Bytes Jumps to the beginning of kernel ROM. ($F8:0000). 
 RETURN           = $000004 ;4 Bytes Called when the RETURN key is pressed in the immediate mode screen. This will process a command in MONITOR, execute a BASIC command, or add a BASIC program line.
 KEYDOWN          = $000008 ;4 Bytes Custom keyboard handler. This defaults to the kernel keypress handler, but you can redirect this to your own routines. Make sure to JML to the original address at the end of your custom routine. Use this to make F-Key macros or custom keyboard commands. 
-KEYWP            = $00000C ;2 Bytes Keyboard buffer next write position. 
-KEYRP            = $00000E ;2 Bytes Keyboard buffer next read position. When KEYRP = KEYWP, the buffer is empty. When KEYWP = KEYRP-1, buffer is full.
+KB_READPOS       = $00000C ;2 Bytes Keyboard buffer next write position. 
+KB_WRITEPOS      = $00000E ;2 Bytes Keyboard buffer next read position. When KEYRP = KEYWP, the buffer is empty. When KEYWP = KEYRP-1, buffer is full.
 SCREENBEGIN      = $000010 ;3 Bytes Start of screen in video RAM. This is the upper-left corrner of the current video page being written to. This may not be what's being displayed by VICKY. Update this if you change VICKY's display page. 
 SCRWIDTH         = $000013 ;2 Bytes Width of screen
 SCRHEIGHT        = $000015 ;2 Bytes Height of screen
@@ -14,6 +16,7 @@ CURCOLOR         = $00001E ;2 Bytes Color of next character to be printed to the
 CURATTR          = $000020 ;2 Bytes Attribute of next character to be printed to the screen.
 STACKBOT         = $000022 ;2 Bytes Lowest location the stack should be allowed to write to. If SP falls below this value, the runtime should generate STACK OVERFLOW error and abort.
 STACKTOP         = $000024 ;2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort. 
+TEMP             = $0000E0 ;16 Bytes Temp storage for kernel routines
 CPUPC            = $0000F0 ;2 Bytes CPU Program Counter. Stored by BRK. Stores CPU state after ML routine is finished running. These values are also loaded back into the CPU on a BASIC SYS command or MONITOR GO command.
 CPUPBR           = $0000F2 ;1 Byte  Program Bank
 CPUDP            = $0000F3 ;2 Bytes Direct Page
@@ -40,6 +43,9 @@ BCMDADDR         = $000100 ;3 Bytes Pointer to current BASIC line on screen
 BCMDLEN          = $000103 ;2 Bytes Length of the BASIC command
 BCMDPOS          = $000105 ;3 Bytes Next character being read in the BASIC command
 
+KEY_BUFFER       = $000FC0 ;64 Bytes Keyboard Buffer
+KEY_BUFFER_END   = $000FFF ;64 Bytes End of keyboard buffer
+
 SCREEN_PAGE0     = $001000 ;6400 Bytes First page of display RAM. This is used at boot time to display the welcome screen and the BASIC or MONITOR command screens. 
 SCREEN_PAGE1     = $002900 ;6400 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
 SCREEN_PAGE2     = $004200 ;6400 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
@@ -64,17 +70,18 @@ IRQ_5            = $00FFB0 ;16 Bytes Handle IRQ 5
 IRQ_6            = $00FFC0 ;16 Bytes Handle IRQ 6
 IRQ_7            = $00FFD0 ;16 Bytes Handle IRQ 7
 
-JMP_READY        = $00FFE0 ;4 Bytes 4 bytes. Starts with JML opcode and a 3-byte address
+JMP_READY        = $00FFE0 ;4 Bytes Jumps to ROM READY routine. Modified whenever alternate command interpreter is loaded. 
 VECTOR_COP       = $00FFE4 ;2 Bytes Native interrupt vector
 VECTOR_BRK       = $00FFE6 ;2 Bytes Native interrupt vector
 VECTOR_ABORT     = $00FFE8 ;2 Bytes Native interrupt vector
 VECTOR_NMI       = $00FFEA ;2 Bytes Native interrupt vector
 VECTOR_RESET     = $00FFEC ;2 Bytes Native interrupt vector
 VECTOR_IRQ       = $00FFEE ;2 Bytes Native interrupt vector
-                 
+
 VECTOR_ECOP      = $00FFF4 ;2 Bytes Emulation mode interrupt handler
 VECTOR_EBRK      = $00FFF6 ;2 Bytes Emulation mode interrupt handler
 VECTOR_EABORT    = $00FFF8 ;2 Bytes Emulation mode interrupt handler
 VECTOR_ENMI      = $00FFFA ;2 Bytes Emulation mode interrupt handler
 VECTOR_ERESET    = $00FFFC ;2 Bytes Emulation mode interrupt handler
 VECTOR_EIRQ      = $00FFFE ;2 Bytes Emulation mode interrupt handler
+; End Direct page addresses
