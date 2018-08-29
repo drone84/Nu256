@@ -133,6 +133,7 @@ namespace Nu64.UI
 
         private void resetToolStripMenuItem1_Click(object sender, EventArgs e)
         {
+            DebugWindow.ResetTrace();
             kernel.CPU.DebugPause = false;
             kernel.Reset();
             kernel.Run();
@@ -140,6 +141,7 @@ namespace Nu64.UI
 
         private void debugToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DebugWindow.ResetTrace();
             kernel.CPU.DebugPause = true;
             kernel.Reset();
         }

@@ -79,6 +79,9 @@ IBOOT           ; boot the system
                 setas
                 LDA #$00
                 STA CURSORPOS+2
+                LDX #$0
+                LDY #$0
+                JSL ILOCATE
                 setas
                 LDA #80         ; Set screen dimensions
                 STA SCRWIDTH
@@ -108,27 +111,29 @@ greet_done      BRK             ;Terminate boot routine and go to Ready handler.
 ; ROM Break handler. This pulls the registers out of the stack
 ; and saves them in the "CPU" direct page locations 
 IBREAK          setdp 0
-                PLA             ; Y
+                PLA             ; Pull .Y and stuff it in the CPUY variable 
                 STA CPUY
-                PLA 
-                STA CPUX
-                PLA 
+                PLA             ; Pull .X and stuff it in the CPUY variable 
+                STA CPUX        
+                PLA             ; Pull .A and stuff it in the CPUY variable 
                 STA CPUA
-                PLD
-                STA CPUDP
+                PLA
+                STA CPUDP       ; Pull Direct page 
                 setas 
-                PLA 
+                PLA             ; Pull Data Bank (8 bits)
                 STA CPUDBR
-                setal 
-                PLA 
+                PLA             ; Pull Flags (8 bits)
+                STA CPUFLAGS    
+                setal           
+                PLA             ; Pull Program Counter (16 bits)
                 STA CPUPC 
                 setas 
-                PLA 
+                PLA             ; Pull Program Bank (8 bits)
                 STA CPUPBR
-                TSA
-                STA CPUSTACK
-                LDA STACK_END   ; initialize stack pointer 
-                TAS 
+                TSA             ; Get the stack 
+                STA CPUSTACK    ; Store the stack at immediately before the interrupt was asserted
+                LDA STACK_END   ; initialize stack pointer back to the bootup value 
+                TAS             
                 
 IREADY          setdbr `ready_msg
                 setas 
@@ -174,14 +179,14 @@ IGETCHE         JSL IGETCHW
 IGETCHW         PHP
                 PHD
                 PHX
+                setdp $0F00
                 setal
                 setxs
-                setdp $0
                 ; Read from the keyboard buffer
                 ; If the read position and write position are the same
                 ; no data is waiting. 
-igetchw1        LDX KB_READPOS
-                CPX KB_WRITEPOS
+igetchw1        LDX KEY_BUFFER_RPOS
+                CPX KEY_BUFFER_WPOS
                 ; If data is waiting. return it.
                 ; Otherwise wait for data.
                 BNE igetchw2
@@ -190,16 +195,16 @@ igetchw1        LDX KB_READPOS
                 ; Simulator should wait for input
                 SIM_WAIT
                 JMP igetchw1
-igetchw2        LDA $0,X  ; Read the value in the keyboard buffer
+igetchw2        LDA $0,D,X  ; Read the value in the keyboard buffer
                 PHA
                 ; increment the read position and wrap it when it reaches the end of the buffer
                 TXA 
                 CLC
                 ADC #$02
-                CMP #KEY_BUFFER_END
+                CMP #KEY_BUFFER_LEN
                 BCC igetchw3
-                LDA #KEY_BUFFER
-igetchw3        STA KB_READPOS
+                LDA #$0
+igetchw3        STA KEY_BUFFER_RPOS
                 PLA
                 
 igetchw_done    PLX             ; Restore the saved registers and return
@@ -322,6 +327,9 @@ ICSRDOWN	RTL
 ;ILOCATE
 ;Sets the cursor X and Y positions to the X and Y registers
 ;Direct Page must be set to 0
+;Input:
+; X: column to set cursor
+; Y: row to set cursor 
 ;Modifies: none
 ILOCATE         PHA
                 PHP 
@@ -329,16 +337,18 @@ ILOCATE         PHA
                 setxl 
                 STX CURSORX
                 STY CURSORY 
+                CPY #$0
+                BEQ ilocate_right
                 LDA SCREENBEGIN
-                
 ilocate_down    CLC
                 ADC SCRWIDTH
                 DEY 
-		BEQ ilocate_right
+	BEQ ilocate_right
                 JMP ilocate_down
-ilocate_right   ADC CURSORX             ; move the cursor right X columns
+ilocate_right   CLC
+                ADC CURSORX             ; move the cursor right X columns
                 STA CURSORPOS
-		LDY CURSORY
+	LDY CURSORY
 ilocate_done    PLP
                 PLA
                 RTL

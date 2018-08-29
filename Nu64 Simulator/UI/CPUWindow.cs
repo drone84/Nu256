@@ -249,21 +249,29 @@ namespace Nu64.UI
 
         public void ExecuteStep()
         {
-            StepCounter++;
-
-            PrintClear();
-
-            int pc1 = CPU.GetLongPC();
-            PrintPC(pc1);
-            CPU.ExecuteNext();
-            int pc2 = pc1 + CPU.Opcode.Length;
-            PrintStatus(pc1, pc2);
-
-            if (Breakpoints.Items.Contains(Kernel.CPU.GetLongPC()))
+            try
             {
-                CPU.DebugPause = true;
-                timer1.Enabled = false;
-                Breakpoints.Text = Kernel.CPU.PC.Value.ToString("X6");
+                StepCounter++;
+
+                PrintClear();
+
+                int pc1 = CPU.GetLongPC();
+                PrintPC(pc1);
+                CPU.ExecuteNext();
+                int pc2 = pc1 + CPU.Opcode.Length;
+                PrintStatus(pc1, pc2);
+
+                if (Breakpoints.Items.Contains(Kernel.CPU.GetLongPC()))
+                {
+                    CPU.DebugPause = true;
+                    timer1.Enabled = false;
+                    Breakpoints.Text = Kernel.CPU.PC.Value.ToString("X6");
+                }
+            }
+            catch (Exception ex)
+            {
+                Print(ex.Message);
+                CPU.Halted = true;
             }
         }
 
@@ -325,6 +333,17 @@ namespace Nu64.UI
         private void JumpButton_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void ClearTraceButton_Click(object sender, EventArgs e)
+        {
+            ResetTrace();
+        }
+
+        public void ResetTrace()
+        {
+            StepCounter = 0;
+            messageText.Clear();
         }
     }
 }

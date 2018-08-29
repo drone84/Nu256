@@ -47,8 +47,8 @@ namespace Nu64
                 Memory.RAM,
                 MemoryMap_DirectPage.KEY_BUFFER, 
                 MemoryMap_DirectPage.KEY_BUFFER_END,
-                MemoryMap_DirectPage.KB_READPOS, 
-                MemoryMap_DirectPage.KB_WRITEPOS);
+                MemoryMap_DirectPage.KEY_BUFFER_RPOS, 
+                MemoryMap_DirectPage.KEY_BUFFER_WPOS);
 
             for(int i=MemoryMap_DirectPage.SCREEN_PAGE0; i< MemoryMap_DirectPage.SCREEN_PAGE1; i++)
             {

@@ -48,6 +48,7 @@
             this.HeaderTextbox = new System.Windows.Forms.TextBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.panel2 = new System.Windows.Forms.Panel();
+            this.ClearTraceButton = new System.Windows.Forms.Button();
             this.registerDisplay1 = new Nu64.RegisterDisplay();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -180,7 +181,7 @@
             // locationLabel
             // 
             this.locationLabel.Dock = System.Windows.Forms.DockStyle.Left;
-            this.locationLabel.Location = new System.Drawing.Point(64, 0);
+            this.locationLabel.Location = new System.Drawing.Point(160, 0);
             this.locationLabel.Name = "locationLabel";
             this.locationLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
             this.locationLabel.Size = new System.Drawing.Size(64, 24);
@@ -191,7 +192,7 @@
             // 
             this.locationInput.Dock = System.Windows.Forms.DockStyle.Left;
             this.locationInput.Font = new System.Drawing.Font("Consolas", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.locationInput.Location = new System.Drawing.Point(128, 0);
+            this.locationInput.Location = new System.Drawing.Point(224, 0);
             this.locationInput.Name = "locationInput";
             this.locationInput.Size = new System.Drawing.Size(64, 23);
             this.locationInput.TabIndex = 10;
@@ -201,7 +202,7 @@
             // JumpButton
             // 
             this.JumpButton.Dock = System.Windows.Forms.DockStyle.Left;
-            this.JumpButton.Location = new System.Drawing.Point(0, 0);
+            this.JumpButton.Location = new System.Drawing.Point(96, 0);
             this.JumpButton.Name = "JumpButton";
             this.JumpButton.Size = new System.Drawing.Size(64, 24);
             this.JumpButton.TabIndex = 11;
@@ -249,11 +250,23 @@
             this.panel2.Controls.Add(this.locationInput);
             this.panel2.Controls.Add(this.locationLabel);
             this.panel2.Controls.Add(this.JumpButton);
+            this.panel2.Controls.Add(this.ClearTraceButton);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel2.Location = new System.Drawing.Point(0, 24);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(621, 24);
             this.panel2.TabIndex = 5;
+            // 
+            // ClearTraceButton
+            // 
+            this.ClearTraceButton.Dock = System.Windows.Forms.DockStyle.Left;
+            this.ClearTraceButton.Location = new System.Drawing.Point(0, 0);
+            this.ClearTraceButton.Name = "ClearTraceButton";
+            this.ClearTraceButton.Size = new System.Drawing.Size(96, 24);
+            this.ClearTraceButton.TabIndex = 12;
+            this.ClearTraceButton.Text = "Clear Trace";
+            this.ClearTraceButton.UseVisualStyleBackColor = true;
+            this.ClearTraceButton.Click += new System.EventHandler(this.ClearTraceButton_Click);
             // 
             // registerDisplay1
             // 
@@ -312,5 +325,6 @@
         private System.Windows.Forms.Button AddBPButton;
         private System.Windows.Forms.Button DeleteBPButton;
         private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Button ClearTraceButton;
     }
 }

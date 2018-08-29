@@ -14,47 +14,69 @@ namespace Nu64
         public const int RESET = 0x000000; // 4 Bytes Jumps to the beginning of kernel ROM. ($F8:0000). 
         public const int RETURN = 0x000004; // 4 Bytes Called when the RETURN key is pressed in the immediate mode screen. This will process a command in MONITOR, execute a BASIC command, or add a BASIC program line.
         public const int KEYDOWN = 0x000008; // 4 Bytes Custom keyboard handler. This defaults to the kernel keypress handler, but you can redirect this to your own routines. Make sure to JML to the original address at the end of your custom routine. Use this to make F-Key macros or custom keyboard commands. 
-        public const int KB_READPOS = 0x00000C; // 2 Bytes Keyboard buffer next write position. 
-        public const int KB_WRITEPOS = 0x00000E; // 2 Bytes Keyboard buffer next read position. When KEYRP = KEYWP, the buffer is empty. When KEYWP = KEYRP-1, buffer is full.
-        public const int SCREENBEGIN = 0x000010; // 3 Bytes Start of screen in video RAM. This is the upper-left corrner of the current video page being written to. This may not be what's being displayed by VICKY. Update this if you change VICKY's display page. 
-        public const int SCRWIDTH = 0x000013; // 2 Bytes Width of screen
-        public const int SCRHEIGHT = 0x000015; // 2 Bytes Height of screen
-        public const int CURSORPOS = 0x000017; // 3 Bytes The next character written to the screen will be written in this location. 
-        public const int CURSORX = 0x00001A; // 2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly. 
-        public const int CURSORY = 0x00001C; // 2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly. 
-        public const int CURCOLOR = 0x00001E; // 2 Bytes Color of next character to be printed to the screen. 
-        public const int CURATTR = 0x000020; // 2 Bytes Attribute of next character to be printed to the screen.
-        public const int STACKBOT = 0x000022; // 2 Bytes Lowest location the stack should be allowed to write to. If SP falls below this value, the runtime should generate STACK OVERFLOW error and abort.
-        public const int STACKTOP = 0x000024; // 2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort. 
+        public const int SCREENBEGIN = 0x00000C; // 3 Bytes Start of screen in video RAM. This is the upper-left corrner of the current video page being written to. This may not be what's being displayed by VICKY. Update this if you change VICKY's display page. 
+        public const int SCRWIDTH = 0x00000F; // 2 Bytes Width of screen
+        public const int SCRHEIGHT = 0x000011; // 2 Bytes Height of screen
+        public const int CURSORPOS = 0x000013; // 3 Bytes The next character written to the screen will be written in this location. 
+        public const int CURSORX = 0x000016; // 2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly. 
+        public const int CURSORY = 0x000018; // 2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly. 
+        public const int CURCOLOR = 0x00001A; // 2 Bytes Color of next character to be printed to the screen. 
+        public const int CURATTR = 0x00001C; // 2 Bytes Attribute of next character to be printed to the screen.
+        public const int STACKBOT = 0x00001E; // 2 Bytes Lowest location the stack should be allowed to write to. If SP falls below this value, the runtime should generate STACK OVERFLOW error and abort.
+        public const int STACKTOP = 0x000020; // 2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort. 
         public const int TEMP = 0x0000E0; // 16 Bytes Temp storage for kernel routines
-        public const int CPUPC = 0x0000F0; // 2 Bytes CPU Program Counter. Stored by BRK. Stores CPU state after ML routine is finished running. These values are also loaded back into the CPU on a BASIC SYS command or MONITOR GO command.
-        public const int CPUPBR = 0x0000F2; // 1 Byte Program Bank
-        public const int CPUDP = 0x0000F3; // 2 Bytes Direct Page
-        public const int CPUFLAGS = 0x0000F5; // 1 Byte Flags
-        public const int CPUA = 0x0000F6; // 2 Bytes Accumulator
-        public const int CPUX = 0x0000F8; // 2 Bytes X Index
-        public const int CPUY = 0x0000FA; // 2 Bytes Y Index
-        public const int CPUDBR = 0x0000FC; // 1 Byte Data Bank
-        public const int CPUSTACK = 0x0000FD; // 2 Bytes Stack Pointer
 
-        public const int MCMDADDR = 0x000100; // 3 Bytes Address of the current line of text being processed by the MONITOR command parser. Can be in display memory or a variable in memory. MONITOR will parse up to MTEXTLEN characters or to a null character.
-        public const int MCMDLEN = 0x000103; // 2 Bytes Length of string being read by the parser. This should be the screen width when in screen memory. Otherwise should be as long as the buffer used to hold the text to parse. 
-        public const int MCMDPOS = 0x000105; // 3 Bytes Next character being read by the command parser. 
-        public const int MCMD = 0x000108; // 3 Bytes Address of the command text. The first character is used to decide which function to execute
-        public const int MARG1 = 0x00010B; // 3 Bytes Address of the command arguments. 
-        public const int MARG2 = 0x00010E; // 3 Bytes Address of the command arguments. 
-        public const int MARG3 = 0x000111; // 3 Bytes Address of the command arguments. 
-        public const int MARG4 = 0x000114; // 3 Bytes Address of the command arguments. 
-        public const int MARG5 = 0x000117; // 3 Bytes Address of the command arguments. 
-        public const int MARG6 = 0x00011A; // 3 Bytes Address of the command arguments. 
-        public const int MARG7 = 0x00011D; // 3 Bytes Address of the command arguments. 
+        public const int GAVIN_BLOCK = 0x000100; // 256 Bytes Gavin reserved, overlaps debugging registers at $1F0
+        public const int MULTIPLIER_0 = 0x000100; // 0 Byte Unsigned multiplier
+        public const int M0_OPERAND_A = 0x000100; // 2 Bytes Operand A (ie: A x B)
+        public const int M0_OPERAND_B = 0x000102; // 2 Bytes Operand B (ie: A x B)
+        public const int M0_RESULT = 0x000104; // 4 Bytes Result of A x B
+        public const int MULTIPLIER_1 = 0x000108; // 0 Byte Signed Multiplier
+        public const int M1_OPERAND_A = 0x000108; // 2 Bytes Operand A (ie: A x B)
+        public const int M1_OPERAND_B = 0x00010A; // 2 Bytes Operand B (ie: A x B)
+        public const int M1_RESULT = 0x00010C; // 4 Bytes Result of A x B
+        public const int DIVIDER_0 = 0x000108; // 0 Byte Unsigned divider
+        public const int D0_OPERAND_A = 0x000108; // 2 Bytes Divider 0 Dividend ex: A in  A/B 
+        public const int D0_OPERAND_B = 0x00010A; // 2 Bytes Divider 0 Divisor ex B in A/B
+        public const int D0_RESULT = 0x00010C; // 2 Bytes Quotient result of A/B ex: 7/2 = 3 r 1
+        public const int D0_REMAINDER = 0x00010E; // 2 Bytes Remainder of A/B ex: 1 in 7/2=3 r 1
+        public const int DIVIDER_1 = 0x000110; // 0 Byte Signed divider
+        public const int D1_OPERAND_A = 0x000110; // 2 Bytes Divider 1 Dividend ex: A in  A/B 
+        public const int D1_OPERAND_B = 0x000112; // 2 Bytes Divider 1 Divisor ex B in A/B
+        public const int D1_RESULT = 0x000114; // 2 Bytes Signed quotient result of A/B ex: 7/2 = 3 r 1
+        public const int D1_REMAINDER = 0x000116; // 2 Bytes Signed remainder of A/B ex: 1 in 7/2=3 r 1
 
-        public const int BCMDADDR = 0x000100; // 3 Bytes Pointer to current BASIC line on screen
-        public const int BCMDLEN = 0x000103; // 2 Bytes Length of the BASIC command
-        public const int BCMDPOS = 0x000105; // 3 Bytes Next character being read in the BASIC command
+        public const int CPUPC = 0x0001F0; // 2 Bytes Debug registers. When BRK is executed, Interrupt service routine will populate this block with the CPU registers. 
+        public const int CPUPBR = 0x0001F2; // 1 Byte Program Bank Register (K)
+        public const int CPUDBR = 0x0001F3; // 1 Byte Data Bank Register (B)
+        public const int CPUA = 0x0001F4; // 2 Bytes Accumulator (A)
+        public const int CPUX = 0x0001F6; // 2 Bytes X Register
+        public const int CPUY = 0x0001F8; // 2 Bytes Y Index Register
+        public const int CPUSTACK = 0x0001FA; // 2 Bytes Stack (S)
+        public const int CPUDP = 0x0001FC; // 2 Bytes Direct Page Register (D)
+        public const int CPUFLAGS = 0x0001FE; // 1 Byte Flags (P)
 
-        public const int KEY_BUFFER = 0x000FC0; // 64 Bytes Keyboard Buffer
-        public const int KEY_BUFFER_END = 0x000FFF; // 64 Bytes End of keyboard buffer
+        public const int MCMDADDR = 0x000200; // 3 Bytes Address of the current line of text being processed by the MONITOR command parser. Can be in display memory or a variable in memory. MONITOR will parse up to MTEXTLEN characters or to a null character.
+        public const int MCMDLEN = 0x000203; // 2 Bytes Length of string being read by the parser. This should be the screen width when in screen memory. Otherwise should be as long as the buffer used to hold the text to parse. 
+        public const int MCMDPOS = 0x000205; // 3 Bytes Next character being read by the command parser. 
+        public const int MCMD = 0x000208; // 3 Bytes Address of the command text. The first character is used to decide which function to execute
+        public const int MARG1 = 0x00020B; // 3 Bytes Address of the command arguments. 
+        public const int MARG2 = 0x00020E; // 3 Bytes Address of the command arguments. 
+        public const int MARG3 = 0x000211; // 3 Bytes Address of the command arguments. 
+        public const int MARG4 = 0x000214; // 3 Bytes Address of the command arguments. 
+        public const int MARG5 = 0x000217; // 3 Bytes Address of the command arguments. 
+        public const int MARG6 = 0x00021A; // 3 Bytes Address of the command arguments. 
+        public const int MARG7 = 0x00021D; // 3 Bytes Address of the command arguments. 
+
+        public const int BCMDADDR = 0x000300; // 3 Bytes Pointer to current BASIC line on screen
+        public const int BCMDLEN = 0x000303; // 2 Bytes Length of the BASIC command
+        public const int BCMDPOS = 0x000305; // 3 Bytes Next character being read in the BASIC command
+
+        public const int KEY_BUFFER = 0x00F00; // 64 Bytes SCREEN_PAGE1
+        public const int KEY_BUFFER_LEN = 0x40; // 64 Bytes SCREEN_PAGE2
+        public const int KEY_BUFFER_END = 0x000F3F; // 1 Byte SCREEN_PAGE3
+        public const int KEY_BUFFER_RPOS = 0x000F40; // 2 Bytes keyboard buffer read position
+        public const int KEY_BUFFER_WPOS = 0x000F42; // 2 Bytes keyboard buffer write position
 
         public const int SCREEN_PAGE0 = 0x001000; // 6400 Bytes First page of display RAM. This is used at boot time to display the welcome screen and the BASIC or MONITOR command screens. 
         public const int SCREEN_PAGE1 = 0x002900; // 6400 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 

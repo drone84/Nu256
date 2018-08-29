@@ -23,21 +23,21 @@ namespace Nu64
     {
         public MemoryRAM Memory = null;
         int StartAddress;
-        int EndAddress;
+        int Length;
         int ReadPosAddress = 0;
         int WritePosAddress = 0;
 
 
-        public MemoryBuffer(MemoryRAM newMemory, int newStartAddress, int newEndAddress, int newReadPosAddress, int newWritePosAddress)
+        public MemoryBuffer(MemoryRAM newMemory, int newStartAddress, int newLength, int newReadPosAddress, int newWritePosAddress)
         {
             this.Memory = newMemory;
             this.StartAddress = newStartAddress;
-            this.EndAddress = newEndAddress;
+            this.Length = newLength;
             this.ReadPosAddress = newReadPosAddress;
             this.WritePosAddress = newWritePosAddress;
 
-            WritePos = newStartAddress;
-            ReadPos = newStartAddress;
+            WritePos = 0;
+            ReadPos = 0;
         }
 
         public void Write(int Value)
@@ -56,13 +56,13 @@ namespace Nu64
                 return;
 
             if (Bytes == 1)
-                Memory.WriteByte(WritePos, (byte)Value);
+                Memory.WriteByte(StartAddress + WritePos, (byte)Value);
             if (Bytes == 2)
-                Memory.WriteWord(WritePos, Value);
+                Memory.WriteWord(StartAddress + WritePos, Value);
 
             WritePos = WritePos + Bytes;
-            if (WritePos > EndAddress)
-                WritePos = StartAddress;
+            if (WritePos >= Length)
+                WritePos = 0;
         }
 
         public int Read(int Bytes)
@@ -73,13 +73,13 @@ namespace Nu64
                 return 0;
 
             if (Bytes == 1)
-                ret = Memory.ReadByte(ReadPos);
+                ret = Memory.ReadByte(StartAddress + ReadPos);
             if (Bytes == 2)
-                ret = Memory.ReadWord(ReadPos);
+                ret = Memory.ReadWord(StartAddress + ReadPos);
 
             ReadPos = ReadPos + Bytes;
-            if (ReadPos > EndAddress)
-                ReadPos = StartAddress;
+            if (ReadPos >= Length)
+                ReadPos = 0;
 
             return ret;
         }
@@ -104,7 +104,7 @@ namespace Nu64
         {
             get
             {
-                return EndAddress - StartAddress;
+                return Length;
             }
         }
 
@@ -156,12 +156,9 @@ namespace Nu64
 
         public void Discard(int Num)
         {
-            while (Num > 0)
-            {
-                ReadPos++;
-                if (ReadPos > EndAddress)
-                    ReadPos = StartAddress;
-            }
+            ReadPos += Num;
+            while (ReadPos >= Length)
+                ReadPos -= Length;
         }
     }
 }

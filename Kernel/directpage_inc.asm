@@ -4,47 +4,69 @@
 RESET            = $000000 ;4 Bytes Jumps to the beginning of kernel ROM. ($F8:0000). 
 RETURN           = $000004 ;4 Bytes Called when the RETURN key is pressed in the immediate mode screen. This will process a command in MONITOR, execute a BASIC command, or add a BASIC program line.
 KEYDOWN          = $000008 ;4 Bytes Custom keyboard handler. This defaults to the kernel keypress handler, but you can redirect this to your own routines. Make sure to JML to the original address at the end of your custom routine. Use this to make F-Key macros or custom keyboard commands. 
-KB_READPOS       = $00000C ;2 Bytes Keyboard buffer next write position. 
-KB_WRITEPOS      = $00000E ;2 Bytes Keyboard buffer next read position. When KEYRP = KEYWP, the buffer is empty. When KEYWP = KEYRP-1, buffer is full.
-SCREENBEGIN      = $000010 ;3 Bytes Start of screen in video RAM. This is the upper-left corrner of the current video page being written to. This may not be what's being displayed by VICKY. Update this if you change VICKY's display page. 
-SCRWIDTH         = $000013 ;2 Bytes Width of screen
-SCRHEIGHT        = $000015 ;2 Bytes Height of screen
-CURSORPOS        = $000017 ;3 Bytes The next character written to the screen will be written in this location. 
-CURSORX          = $00001A ;2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly. 
-CURSORY          = $00001C ;2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly. 
-CURCOLOR         = $00001E ;2 Bytes Color of next character to be printed to the screen. 
-CURATTR          = $000020 ;2 Bytes Attribute of next character to be printed to the screen.
-STACKBOT         = $000022 ;2 Bytes Lowest location the stack should be allowed to write to. If SP falls below this value, the runtime should generate STACK OVERFLOW error and abort.
-STACKTOP         = $000024 ;2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort. 
+SCREENBEGIN      = $00000C ;3 Bytes Start of screen in video RAM. This is the upper-left corrner of the current video page being written to. This may not be what's being displayed by VICKY. Update this if you change VICKY's display page. 
+SCRWIDTH         = $00000F ;2 Bytes Width of screen
+SCRHEIGHT        = $000011 ;2 Bytes Height of screen
+CURSORPOS        = $000013 ;3 Bytes The next character written to the screen will be written in this location. 
+CURSORX          = $000016 ;2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly. 
+CURSORY          = $000018 ;2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly. 
+CURCOLOR         = $00001A ;2 Bytes Color of next character to be printed to the screen. 
+CURATTR          = $00001C ;2 Bytes Attribute of next character to be printed to the screen.
+STACKBOT         = $00001E ;2 Bytes Lowest location the stack should be allowed to write to. If SP falls below this value, the runtime should generate STACK OVERFLOW error and abort.
+STACKTOP         = $000020 ;2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort. 
 TEMP             = $0000E0 ;16 Bytes Temp storage for kernel routines
-CPUPC            = $0000F0 ;2 Bytes CPU Program Counter. Stored by BRK. Stores CPU state after ML routine is finished running. These values are also loaded back into the CPU on a BASIC SYS command or MONITOR GO command.
-CPUPBR           = $0000F2 ;1 Byte  Program Bank
-CPUDP            = $0000F3 ;2 Bytes Direct Page
-CPUFLAGS         = $0000F5 ;1 Byte  Flags
-CPUA             = $0000F6 ;2 Bytes Accumulator
-CPUX             = $0000F8 ;2 Bytes X Index
-CPUY             = $0000FA ;2 Bytes Y Index
-CPUDBR           = $0000FC ;1 Byte  Data Bank
-CPUSTACK         = $0000FD ;2 Bytes Stack Pointer
 
-MCMDADDR         = $000100 ;3 Bytes Address of the current line of text being processed by the MONITOR command parser. Can be in display memory or a variable in memory. MONITOR will parse up to MTEXTLEN characters or to a null character.
-MCMDLEN          = $000103 ;2 Bytes Length of string being read by the parser. This should be the screen width when in screen memory. Otherwise should be as long as the buffer used to hold the text to parse. 
-MCMDPOS          = $000105 ;3 Bytes Next character being read by the command parser. 
-MCMD             = $000108 ;3 Bytes Address of the command text. The first character is used to decide which function to execute
-MARG1            = $00010B ;3 Bytes Address of the command arguments. 
-MARG2            = $00010E ;3 Bytes Address of the command arguments. 
-MARG3            = $000111 ;3 Bytes Address of the command arguments. 
-MARG4            = $000114 ;3 Bytes Address of the command arguments. 
-MARG5            = $000117 ;3 Bytes Address of the command arguments. 
-MARG6            = $00011A ;3 Bytes Address of the command arguments. 
-MARG7            = $00011D ;3 Bytes Address of the command arguments. 
+GAVIN_BLOCK      = $000100 ;256 Bytes Gavin reserved, overlaps debugging registers at $1F0
+MULTIPLIER_0     = $000100 ;0 Byte  Unsigned multiplier
+M0_OPERAND_A     = $000100 ;2 Bytes Operand A (ie: A x B)
+M0_OPERAND_B     = $000102 ;2 Bytes Operand B (ie: A x B)
+M0_RESULT        = $000104 ;4 Bytes Result of A x B
+MULTIPLIER_1     = $000108 ;0 Byte  Signed Multiplier
+M1_OPERAND_A     = $000108 ;2 Bytes Operand A (ie: A x B)
+M1_OPERAND_B     = $00010A ;2 Bytes Operand B (ie: A x B)
+M1_RESULT        = $00010C ;4 Bytes Result of A x B
+DIVIDER_0        = $000108 ;0 Byte  Unsigned divider
+D0_OPERAND_A     = $000108 ;2 Bytes Divider 0 Dividend ex: A in  A/B 
+D0_OPERAND_B     = $00010A ;2 Bytes Divider 0 Divisor ex B in A/B
+D0_RESULT        = $00010C ;2 Bytes Quotient result of A/B ex: 7/2 = 3 r 1
+D0_REMAINDER     = $00010E ;2 Bytes Remainder of A/B ex: 1 in 7/2=3 r 1
+DIVIDER_1        = $000110 ;0 Byte  Signed divider
+D1_OPERAND_A     = $000110 ;2 Bytes Divider 1 Dividend ex: A in  A/B 
+D1_OPERAND_B     = $000112 ;2 Bytes Divider 1 Divisor ex B in A/B
+D1_RESULT        = $000114 ;2 Bytes Signed quotient result of A/B ex: 7/2 = 3 r 1
+D1_REMAINDER     = $000116 ;2 Bytes Signed remainder of A/B ex: 1 in 7/2=3 r 1
 
-BCMDADDR         = $000100 ;3 Bytes Pointer to current BASIC line on screen
-BCMDLEN          = $000103 ;2 Bytes Length of the BASIC command
-BCMDPOS          = $000105 ;3 Bytes Next character being read in the BASIC command
+CPUPC            = $0001F0 ;2 Bytes Debug registers. When BRK is executed, Interrupt service routine will populate this block with the CPU registers. 
+CPUPBR           = $0001F2 ;1 Byte  Program Bank Register (K)
+CPUDBR           = $0001F3 ;1 Byte  Data Bank Register (B)
+CPUA             = $0001F4 ;2 Bytes Accumulator (A)
+CPUX             = $0001F6 ;2 Bytes X Register
+CPUY             = $0001F8 ;2 Bytes Y Index Register
+CPUSTACK         = $0001FA ;2 Bytes Stack (S)
+CPUDP            = $0001FC ;2 Bytes Direct Page Register (D)
+CPUFLAGS         = $0001FE ;1 Byte  Flags (P)
 
-KEY_BUFFER       = $000FC0 ;64 Bytes Keyboard Buffer
-KEY_BUFFER_END   = $000FFF ;64 Bytes End of keyboard buffer
+MCMDADDR         = $000200 ;3 Bytes Address of the current line of text being processed by the MONITOR command parser. Can be in display memory or a variable in memory. MONITOR will parse up to MTEXTLEN characters or to a null character.
+MCMDLEN          = $000203 ;2 Bytes Length of string being read by the parser. This should be the screen width when in screen memory. Otherwise should be as long as the buffer used to hold the text to parse. 
+MCMDPOS          = $000205 ;3 Bytes Next character being read by the command parser. 
+MCMD             = $000208 ;3 Bytes Address of the command text. The first character is used to decide which function to execute
+MARG1            = $00020B ;3 Bytes Address of the command arguments. 
+MARG2            = $00020E ;3 Bytes Address of the command arguments. 
+MARG3            = $000211 ;3 Bytes Address of the command arguments. 
+MARG4            = $000214 ;3 Bytes Address of the command arguments. 
+MARG5            = $000217 ;3 Bytes Address of the command arguments. 
+MARG6            = $00021A ;3 Bytes Address of the command arguments. 
+MARG7            = $00021D ;3 Bytes Address of the command arguments. 
+
+BCMDADDR         = $000300 ;3 Bytes Pointer to current BASIC line on screen
+BCMDLEN          = $000303 ;2 Bytes Length of the BASIC command
+BCMDPOS          = $000305 ;3 Bytes Next character being read in the BASIC command
+
+KEY_BUFFER       = $00F00 ;64 Bytes SCREEN_PAGE1
+KEY_BUFFER_LEN   = $40 ;64 Bytes SCREEN_PAGE2
+KEY_BUFFER_END   = $000F3F ;1 Byte  SCREEN_PAGE3
+KEY_BUFFER_RPOS  = $000F40 ;2 Bytes keyboard buffer read position
+KEY_BUFFER_WPOS  = $000F42 ;2 Bytes keyboard buffer write position
 
 SCREEN_PAGE0     = $001000 ;6400 Bytes First page of display RAM. This is used at boot time to display the welcome screen and the BASIC or MONITOR command screens. 
 SCREEN_PAGE1     = $002900 ;6400 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
