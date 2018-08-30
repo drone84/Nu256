@@ -133,7 +133,7 @@ namespace Nu64.UI
 
         private void resetToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            DebugWindow.ResetTrace();
+            DebugWindow.ClearTrace();
             kernel.CPU.DebugPause = false;
             kernel.Reset();
             kernel.Run();
@@ -141,9 +141,20 @@ namespace Nu64.UI
 
         private void debugToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DebugWindow.ResetTrace();
+            DebugWindow.ClearTrace();
             kernel.CPU.DebugPause = true;
             kernel.Reset();
+        }
+
+        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            kernel.Cls();
+            kernel.PrintLine("Shutting down CPU thread");
+            kernel.gpu.Refresh();
+            System.Threading.Thread.Sleep(1000);
+
+            kernel.CPU.CPUThread.Abort();
+            kernel.CPU.CPUThread.Join(1000);
         }
     }
 }

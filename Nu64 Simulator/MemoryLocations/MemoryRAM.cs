@@ -50,5 +50,10 @@ namespace Nu64
             WriteByte(Address, (byte)(Value & 0xff));
             WriteByte(Address + 1, (byte)(Value >> 8 & 0xff));
         }
+
+        internal int ReadLong(int Address)
+        {
+            return ReadByte(Address) + (ReadByte(Address + 1) << 8) + (ReadByte(Address + 1) << 16); 
+        }
     }
 }

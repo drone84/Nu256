@@ -87,6 +87,10 @@ IBOOT           ; boot the system
                 STA SCRWIDTH
                 LDA #25
                 STA SCRHEIGHT
+                ; reset keyboard buffer
+                setal
+                STZ KEY_BUFFER_RPOS
+                STZ KEY_BUFFER_WPOS
 
                 ; Copy vectors from ROM to Direct Page
                 setaxl 
@@ -130,9 +134,11 @@ IBREAK          setdp 0
                 setas 
                 PLA             ; Pull Program Bank (8 bits)
                 STA CPUPBR
+                setal
                 TSA             ; Get the stack 
                 STA CPUSTACK    ; Store the stack at immediately before the interrupt was asserted
-                LDA STACK_END   ; initialize stack pointer back to the bootup value 
+                LDA #<>STACK_END   ; initialize stack pointer back to the bootup value 
+                                ;<> is "lower word"
                 TAS             
                 
 IREADY          setdbr `ready_msg
@@ -176,12 +182,11 @@ IGETCHE         JSL IGETCHW
 ; A: Character read
 ; Carry: 1 if no valid data
 ;
-IGETCHW         PHP
-                PHD
+IGETCHW         PHD
                 PHX
+                PHP
                 setdp $0F00
-                setal
-                setxs
+                setaxl
                 ; Read from the keyboard buffer
                 ; If the read position and write position are the same
                 ; no data is waiting. 
@@ -207,9 +212,9 @@ igetchw2        LDA $0,D,X  ; Read the value in the keyboard buffer
 igetchw3        STA KEY_BUFFER_RPOS
                 PLA
                 
-igetchw_done    PLX             ; Restore the saved registers and return
+igetchw_done    PLP
+                PLX             ; Restore the saved registers and return
                 PLD
-                PLP
                 RTL
 ;
 ; IPRINT

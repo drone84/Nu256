@@ -59,6 +59,7 @@
     <Compile Include="Display\TerminalSequences.cs" />
     <Compile Include="KeyboardMap.cs" />
     <Compile Include="MemoryBuffer.cs" />
+    <Compile Include="Processor\Breakpoints.cs" />
     <Compile Include="Processor\CPUPins.cs" />
     <Compile Include="Processor\InteruptTypes.cs" />
     <Compile Include="Processor\RegisterAccumulator.cs" />

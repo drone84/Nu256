@@ -83,7 +83,7 @@ namespace Nu64.Processor
             }
         }
 
-        public void SetPC(int address)
+        public void SetLongPC(int address)
         {
             ProgramBank.Value = (address & 0xff0000) >> 16;
             PC.Value = (address & 0xffff);

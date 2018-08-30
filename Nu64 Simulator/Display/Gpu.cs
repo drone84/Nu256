@@ -73,7 +73,7 @@ namespace Nu64.Display
         {
             if (Memory == null)
                 return 0;
-            int baseAddress = MemoryMap_DirectPage.SCREENBEGIN;
+            int baseAddress = Memory.ReadLong(MemoryMap_DirectPage.SCREENBEGIN);
             return baseAddress + row * Columns + col;
         }
 
