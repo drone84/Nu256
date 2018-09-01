@@ -32,8 +32,8 @@
             this.messageText = new System.Windows.Forms.TextBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.stepsInput = new System.Windows.Forms.TextBox();
-            this.bpLabel = new System.Windows.Forms.Label();
-            this.Breakpoints = new System.Windows.Forms.ComboBox();
+            this.BPLabel = new System.Windows.Forms.Label();
+            this.BPCombo = new System.Windows.Forms.ComboBox();
             this.AddBPButton = new System.Windows.Forms.Button();
             this.DeleteBPButton = new System.Windows.Forms.Button();
             this.stepsLabel = new System.Windows.Forms.Label();
@@ -48,6 +48,7 @@
             this.HeaderTextbox = new System.Windows.Forms.TextBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.panel2 = new System.Windows.Forms.Panel();
+            this.ClearTraceButton = new System.Windows.Forms.Button();
             this.registerDisplay1 = new Nu64.RegisterDisplay();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -67,8 +68,8 @@
             // panel1
             // 
             this.panel1.Controls.Add(this.stepsInput);
-            this.panel1.Controls.Add(this.bpLabel);
-            this.panel1.Controls.Add(this.Breakpoints);
+            this.panel1.Controls.Add(this.BPLabel);
+            this.panel1.Controls.Add(this.BPCombo);
             this.panel1.Controls.Add(this.AddBPButton);
             this.panel1.Controls.Add(this.DeleteBPButton);
             this.panel1.Controls.Add(this.stepsLabel);
@@ -92,25 +93,25 @@
             this.stepsInput.Text = "1";
             this.stepsInput.Enter += new System.EventHandler(this.stepsInput_Enter);
             // 
-            // bpLabel
+            // BPLabel
             // 
-            this.bpLabel.AutoSize = true;
-            this.bpLabel.Dock = System.Windows.Forms.DockStyle.Right;
-            this.bpLabel.Location = new System.Drawing.Point(394, 0);
-            this.bpLabel.Name = "bpLabel";
-            this.bpLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
-            this.bpLabel.Size = new System.Drawing.Size(58, 17);
-            this.bpLabel.TabIndex = 5;
-            this.bpLabel.Text = "Breakpoint";
+            this.BPLabel.Dock = System.Windows.Forms.DockStyle.Right;
+            this.BPLabel.Location = new System.Drawing.Point(356, 0);
+            this.BPLabel.Name = "BPLabel";
+            this.BPLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
+            this.BPLabel.Size = new System.Drawing.Size(96, 24);
+            this.BPLabel.TabIndex = 5;
+            this.BPLabel.Text = "Breakpoint";
+            this.BPLabel.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
-            // Breakpoints
+            // BPCombo
             // 
-            this.Breakpoints.Dock = System.Windows.Forms.DockStyle.Right;
-            this.Breakpoints.FormattingEnabled = true;
-            this.Breakpoints.Location = new System.Drawing.Point(452, 0);
-            this.Breakpoints.Name = "Breakpoints";
-            this.Breakpoints.Size = new System.Drawing.Size(121, 21);
-            this.Breakpoints.TabIndex = 6;
+            this.BPCombo.Dock = System.Windows.Forms.DockStyle.Right;
+            this.BPCombo.FormattingEnabled = true;
+            this.BPCombo.Location = new System.Drawing.Point(452, 0);
+            this.BPCombo.Name = "BPCombo";
+            this.BPCombo.Size = new System.Drawing.Size(121, 21);
+            this.BPCombo.TabIndex = 6;
             // 
             // AddBPButton
             // 
@@ -180,7 +181,7 @@
             // locationLabel
             // 
             this.locationLabel.Dock = System.Windows.Forms.DockStyle.Left;
-            this.locationLabel.Location = new System.Drawing.Point(64, 0);
+            this.locationLabel.Location = new System.Drawing.Point(160, 0);
             this.locationLabel.Name = "locationLabel";
             this.locationLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
             this.locationLabel.Size = new System.Drawing.Size(64, 24);
@@ -191,7 +192,7 @@
             // 
             this.locationInput.Dock = System.Windows.Forms.DockStyle.Left;
             this.locationInput.Font = new System.Drawing.Font("Consolas", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.locationInput.Location = new System.Drawing.Point(128, 0);
+            this.locationInput.Location = new System.Drawing.Point(224, 0);
             this.locationInput.Name = "locationInput";
             this.locationInput.Size = new System.Drawing.Size(64, 23);
             this.locationInput.TabIndex = 10;
@@ -201,7 +202,7 @@
             // JumpButton
             // 
             this.JumpButton.Dock = System.Windows.Forms.DockStyle.Left;
-            this.JumpButton.Location = new System.Drawing.Point(0, 0);
+            this.JumpButton.Location = new System.Drawing.Point(96, 0);
             this.JumpButton.Name = "JumpButton";
             this.JumpButton.Size = new System.Drawing.Size(64, 24);
             this.JumpButton.TabIndex = 11;
@@ -241,7 +242,7 @@
             // 
             // timer1
             // 
-            this.timer1.Interval = 30;
+            this.timer1.Interval = 50;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // panel2
@@ -249,11 +250,23 @@
             this.panel2.Controls.Add(this.locationInput);
             this.panel2.Controls.Add(this.locationLabel);
             this.panel2.Controls.Add(this.JumpButton);
+            this.panel2.Controls.Add(this.ClearTraceButton);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel2.Location = new System.Drawing.Point(0, 24);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(621, 24);
             this.panel2.TabIndex = 5;
+            // 
+            // ClearTraceButton
+            // 
+            this.ClearTraceButton.Dock = System.Windows.Forms.DockStyle.Left;
+            this.ClearTraceButton.Location = new System.Drawing.Point(0, 0);
+            this.ClearTraceButton.Name = "ClearTraceButton";
+            this.ClearTraceButton.Size = new System.Drawing.Size(96, 24);
+            this.ClearTraceButton.TabIndex = 12;
+            this.ClearTraceButton.Text = "Clear Trace";
+            this.ClearTraceButton.UseVisualStyleBackColor = true;
+            this.ClearTraceButton.Click += new System.EventHandler(this.ClearTraceButton_Click);
             // 
             // registerDisplay1
             // 
@@ -280,7 +293,7 @@
             this.Name = "CPUWindow";
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.Text = "RegisterWindow";
-            this.Load += new System.EventHandler(this.DebugWindow_Load);
+            this.Load += new System.EventHandler(this.CPUWindow_Load);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.panel2.ResumeLayout(false);
@@ -307,10 +320,11 @@
         private System.Windows.Forms.TextBox stepsInput;
         private System.Windows.Forms.TextBox HeaderTextbox;
         private System.Windows.Forms.Timer timer1;
-        private System.Windows.Forms.Label bpLabel;
-        private System.Windows.Forms.ComboBox Breakpoints;
+        private System.Windows.Forms.Label BPLabel;
+        private System.Windows.Forms.ComboBox BPCombo;
         private System.Windows.Forms.Button AddBPButton;
         private System.Windows.Forms.Button DeleteBPButton;
         private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Button ClearTraceButton;
     }
 }

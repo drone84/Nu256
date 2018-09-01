@@ -20,6 +20,9 @@ namespace Nu64.Processor
         private OpcodeList opcodes = null;
         private Operations operations = null;
 
+        public DateTime StartTime = DateTime.MinValue;
+        public DateTime StopTime = DateTime.MinValue;
+
         /// <summary>
         /// Currently executing opcode 
         /// </summary>
@@ -70,6 +73,8 @@ namespace Nu64.Processor
         public AddressDataBus Memory = null;
         public Thread CPUThread = null;
 
+        public event Operations.SimulatorCommandEvent SimulatorCommand;
+
         public int ClockSpeed
         {
             get
@@ -89,14 +94,30 @@ namespace Nu64.Processor
             this.clockSpeed = 14000000;
             this.clockCyles = 0;
             this.operations = new Operations(this);
+            operations.SimulatorCommand += Operations_SimulatorCommand;
             this.opcodes = new OpcodeList(this.operations, this);
             this.Flags.Emulation = true;
+        }
+
+        private void Operations_SimulatorCommand(int EventID)
+        {
+            switch (EventID)
+            {
+                case SimulatorCommands.WaitForInterrupt:
+                    break;
+                case SimulatorCommands.RefreshDisplay:
+                    if (SimulatorCommand != null)
+                        SimulatorCommand(EventID);
+                    break;
+                default:
+                    break;
+            }
         }
 
         public void JumpTo(int Address, int newDataBank)
         {
             this.DataBank.Value = newDataBank;
-            SetPC(Address);
+            SetLongPC(Address);
             Halted = false;
         }
 
@@ -134,7 +155,10 @@ namespace Nu64.Processor
                 CPUThread = new Thread(new ThreadStart(this.RunLoop));
             Reset();
             Halted = false;
-            CPUThread.Start();
+            StartTime = DateTime.Now;
+            clockCyles = 0;
+            if (CPUThread.ThreadState != ThreadState.Running)
+                CPUThread.Start();
         }
 
         public void RunLoop()
@@ -147,6 +171,10 @@ namespace Nu64.Processor
             }
             if (Halted)
             {
+                StopTime = DateTime.Now;
+                System.Diagnostics.Debug.WriteLine("Elapsed time: " +
+                    (StopTime - StartTime).TotalMilliseconds.ToString() + "ms" +
+                    ", Cycles: " + CycleCounter.ToString());
                 Thread tmp = CPUThread;
                 CPUThread = null;
                 tmp.Abort();
@@ -181,7 +209,7 @@ namespace Nu64.Processor
         {
             OpCode oc = opcodes[opcodeByte];
             OpcodeLength = oc.Length;
-            OpcodeCycles = 4;
+            OpcodeCycles = 1;
             SignatureBytes = ReadSignature(oc);
             return oc;
         }
@@ -589,10 +617,17 @@ namespace Nu64.Processor
             Push(PC, 2);
             Push(Flags);
 
-            int addr = MemoryMap_DirectPage.VECTOR_BRK;
-            int eaddr = MemoryMap_DirectPage.VECTOR_EBRK;
+            int addr = 0;
+            int eaddr = 0;
+            Flags.Irqdisable = true;
+            Flags.Decimal = false;
+
             switch (T)
             {
+                case InteruptTypes.BRK:
+                    addr = MemoryMap_DirectPage.VECTOR_BRK;
+                    eaddr = MemoryMap_DirectPage.VECTOR_EBRK;
+                    break;
                 case InteruptTypes.ABORT:
                     eaddr = MemoryMap_DirectPage.VECTOR_EABORT;
                     addr = MemoryMap_DirectPage.VECTOR_ABORT;
@@ -613,6 +648,8 @@ namespace Nu64.Processor
                     eaddr = MemoryMap_DirectPage.VECTOR_ECOP;
                     addr = MemoryMap_DirectPage.VECTOR_COP;
                     break;
+                default:
+                    throw new Exception("Invalid interrupt type: " + T.ToString());
             }
 
             if (Flags.Emulation)

@@ -18,7 +18,7 @@ namespace Nu64
         public AddressDataBus Memory = null;
         public Processor.CPU CPU = null;
         public Gpu gpu = null;
-        public RingBuffer<Char> KeyboardBuffer = new RingBuffer<char>(256);
+        public MemoryBuffer KeyboardBuffer = null;
         public ColorCodes CurrentColor = ColorCodes.Green;
         public bool ConsoleEcho = false;
 
@@ -41,8 +41,15 @@ namespace Nu64
             Memory.GPU = gpu;
             Memory.ROM = new MemoryRAM(0x100000); // 1MB ROM
             this.CPU = new CPU(Memory);
+            this.CPU.SimulatorCommand += CPU_SimulatorCommand;
             this.gpu = gpu;
             gpu.LoadCharacterData(Memory.RAM);
+            KeyboardBuffer = new MemoryBuffer(
+                Memory.RAM,
+                MemoryMap_DirectPage.KEY_BUFFER, 
+                MemoryMap_DirectPage.KEY_BUFFER_LEN,
+                MemoryMap_DirectPage.KEY_BUFFER_RPOS, 
+                MemoryMap_DirectPage.KEY_BUFFER_WPOS);
 
             for(int i=MemoryMap_DirectPage.SCREEN_PAGE0; i< MemoryMap_DirectPage.SCREEN_PAGE1; i++)
             {
@@ -51,6 +58,18 @@ namespace Nu64
 
             this.Basic = new Basic.Immediate(this);
             this.Monitor = new Monitor.Monitor(this);
+        }
+
+        private void CPU_SimulatorCommand(int EventID)
+        {
+            switch (EventID)
+            {
+                case SimulatorCommands.RefreshDisplay:
+                    gpu.RefreshTimer = 0;
+                    break;
+                default:
+                    break;
+            }
         }
 
         public void Reset()
@@ -224,16 +243,16 @@ namespace Nu64
         public void Scroll1()
         {
             int addr = MemoryMap_DirectPage.SCREEN_PAGE0;
-            for (int c = 0; c < gpu.BufferSize - gpu.Columns; c++)
+            for (int c = 0; c < gpu.BufferSize - gpu.ColumnsVisible; c++)
             {
-                for (int col = 0; col < gpu.Columns; col++)
+                for (int col = 0; col < gpu.ColumnsVisible; col++)
                 {
-                    Memory[addr + c] = Memory[addr + c + gpu.Columns];
+                    Memory[addr + c] = Memory[addr + c + gpu.ColumnsVisible];
                     //gpu.ColorData[c] = gpu.ColorData[c + gpu.Columns];
                 }
             }
 
-            for (int c = gpu.BufferSize - gpu.Columns; c < gpu.BufferSize; c++)
+            for (int c = gpu.BufferSize - gpu.ColumnsVisible; c < gpu.BufferSize; c++)
             {
                 Memory[addr + c] = 0x20;
                 //gpu.ColorData[c] = _currentForeground;
@@ -256,12 +275,12 @@ namespace Nu64
             }
             else
             {
-                if (Y < Rows - 1)
+                if (Y < Lines - 1)
                     Y += 1;
                 else
                 {
                     Scroll1();
-                    Y = Rows - 1;
+                    Y = Lines - 1;
                 }
             }
         }
@@ -316,8 +335,8 @@ namespace Nu64
         {
             if (Row < 0)
                 Row = 0;
-            if (Row >= Rows)
-                Row = Rows - 1;
+            if (Row >= Lines)
+                Row = Lines - 1;
             if (Col < 0)
                 Col = 0;
             if (Col >= Columns)
@@ -378,14 +397,14 @@ namespace Nu64
             set { gpu.Y = value; }
         }
 
-        public int Rows
+        public int Lines
         {
-            get { return gpu.Rows; }
+            get { return gpu.LinesVisible; }
         }
 
         public int Columns
         {
-            get { return gpu.Columns; }
+            get { return gpu.ColumnsVisible; }
         }
 
         public void DoConsoleEcho()
@@ -395,15 +414,16 @@ namespace Nu64
             if (KeyboardBuffer.Count == 0)
                 return;
 
-            char c = KeyboardBuffer.Read();
+            int c = KeyboardBuffer.Read(1);
+            int shift = KeyboardBuffer.Read(1);
             int pos = GetStartOfLine();
-            switch (c)
+            switch ((char) c)
             {
                 case '\r':
                     ReturnPressed(pos);
                     break;
                 default:
-                    PrintChar(c);
+                    PrintChar((char) c);
                     break;
             }
         }

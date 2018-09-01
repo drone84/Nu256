@@ -16,6 +16,8 @@ namespace Nu64.UI
         private const int MNEMONIC_COLUMN = 22;
         private const int REGISTER_COLUMN = 34;
         private int StepCounter = 0;
+        string[] listing;
+        Processor.Breakpoints breakpoints = new Processor.Breakpoints();
 
         public CPUWindow()
         {
@@ -135,6 +137,19 @@ namespace Nu64.UI
 
         private void PrintNextInstruction()
         {
+            //if (listing != null || listing.Length > 0)
+            //{
+            //    string pc = "." + CPU.GetLongPC().ToString("x6");
+            //    foreach (string line in listing)
+            //    {
+            //        if (line.StartsWith(pc))
+            //        {
+            //            lastLine.Text = line;
+            //            return;
+            //        }
+            //    }
+            //}
+
             OpCode oc = CPU.PreFetch();
             int start = CPU.GetLongPC();
             PrintPC(start);
@@ -207,7 +222,7 @@ namespace Nu64.UI
             PrintClear();
         }
 
-        int TopOfStack = int.MinValue;
+        int TopOfStack = 0xd6ff;
         public void UpdateStackDisplay()
         {
             if (CPU.Stack.Value > TopOfStack)
@@ -218,9 +233,16 @@ namespace Nu64.UI
             stackText.AppendText("SP : $" + CPU.Stack.Value.ToString("X4") + "\r\n");
             stackText.AppendText("N  : " + (TopOfStack - CPU.Stack.Value).ToString().PadLeft(4) + "\r\n");
             stackText.AppendText("───────────\r\n");
-            for (int i = TopOfStack; i > CPU.Stack.Value; i--)
+
+            int i = TopOfStack;
+            if (CPU.Stack.Value == 0)
+                i = 0;
+            else if (CPU.Stack.Value - i > 1000)
+                i = CPU.Stack.Value - 1000;
+            while (i > CPU.Stack.Value)
             {
                 stackText.AppendText(i.ToString("X4") + " " + CPU.Memory[i].ToString("X2") + "\r\n");
+                i--;
             }
 
         }
@@ -249,37 +271,48 @@ namespace Nu64.UI
 
         public void ExecuteStep()
         {
-            StepCounter++;
-
-            PrintClear();
-
-            int pc1 = CPU.GetLongPC();
-            PrintPC(pc1);
-            CPU.ExecuteNext();
-            int pc2 = pc1 + CPU.Opcode.Length;
-            PrintStatus(pc1, pc2);
-
-            if (Breakpoints.Items.Contains(Kernel.CPU.GetLongPC()))
+            try
             {
-                CPU.DebugPause = true;
-                timer1.Enabled = false;
-                Breakpoints.Text = Kernel.CPU.PC.Value.ToString("X6");
+                StepCounter++;
+
+                PrintClear();
+
+                int pc1 = CPU.GetLongPC();
+                PrintPC(pc1);
+                CPU.ExecuteNext();
+                int pc2 = pc1 + CPU.Opcode.Length;
+                PrintStatus(pc1, pc2);
+
+                int pc = CPU.GetLongPC();
+                if (breakpoints.ContainsKey(pc))
+                {
+                    CPU.DebugPause = true;
+                    timer1.Enabled = false;
+                    BPCombo.Text = breakpoints.GetHex(pc);
+                }
+            }
+            catch (Exception ex)
+            {
+                Print(ex.Message);
+                CPU.Halted = true;
             }
         }
 
-        private void DebugWindow_Load(object sender, EventArgs e)
+        private void CPUWindow_Load(object sender, EventArgs e)
         {
             //if (messageText.Lines.Length == 0)
             //    PrintLine(GetHeaderText());
             PrintTab(REGISTER_COLUMN);
             HeaderTextbox.Text = GetHeaderText();
-            PrintLine(Kernel.Monitor.GetRegisterText());
+            //PrintLine(Kernel.Monitor.GetRegisterText());
+            ClearTrace();
             RefreshStatus();
         }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            for (int i = 0; i < 100; i++)
+            DateTime t = DateTime.Now.AddMilliseconds(timer1.Interval / 2);
+            while (DateTime.Now < t)
             {
                 if (CPU.DebugPause || CPU.Halted)
                     break;
@@ -288,33 +321,32 @@ namespace Nu64.UI
             RefreshStatus();
         }
 
-        int getbp()
+        private void RefreshBreakpoints()
         {
-            int bp = 0;
-            try
+            BPCombo.Items.Clear();
+            foreach (string s in breakpoints.Values)
             {
-                bp = Convert.ToInt32(Breakpoints.Text, 16);
-                Breakpoints.Text = bp.ToString("X6");
+                BPCombo.Items.Add(s);
             }
-            catch (System.FormatException ex)
-            {
-                System.Diagnostics.Debug.WriteLine(ex.Message);
-            }
-            return bp;
+            BPLabel.Text = breakpoints.Count.ToString() + " Breakpoints";
         }
 
         private void AddBPButton_Click(object sender, EventArgs e)
         {
-            int bp = getbp();
-            if (bp > 0)
-                Breakpoints.Items.Add(bp);
+            breakpoints.Add(BPCombo.Text);
+            BPCombo.Text = breakpoints.Format(BPCombo.Text);
+            RefreshBreakpoints();
         }
 
         private void DeleteBPButton_Click(object sender, EventArgs e)
         {
-            int bp = getbp();
-            Breakpoints.Items.Remove(bp);
-            Breakpoints.Text = Breakpoints.Items.Count.ToString();
+            if (BPCombo.Text != "")
+                breakpoints.Remove(BPCombo.Text);
+            if (breakpoints.Count == 0)
+                BPCombo.Text = "";
+            else
+                BPCombo.Text = breakpoints.Values[0];
+            RefreshBreakpoints();
         }
 
         private void MemoryButton_Click(object sender, EventArgs e)
@@ -324,7 +356,22 @@ namespace Nu64.UI
 
         private void JumpButton_Click(object sender, EventArgs e)
         {
+            int pc = breakpoints.GetIntFromHex(locationInput.Text);
+            CPU.SetLongPC(pc);
+            ClearTrace();
+            CPU.ExecuteNext();
+        }
 
+        private void ClearTraceButton_Click(object sender, EventArgs e)
+        {
+            ClearTrace();
+        }
+
+        public void ClearTrace()
+        {
+            StepCounter = 0;
+            messageText.Clear();
+            listing = System.IO.File.ReadAllLines(@"ROMs\kernel.lst");
         }
     }
 }

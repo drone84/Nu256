@@ -53,7 +53,7 @@ namespace Nu64.Processor
             kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_RESET, 0xc000);
             kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_BRK, 0xc000);
             kernel.CPU.Stack.Value = MemoryMap_DirectPage.STACK_END;
-            kernel.CPU.SetPC(Address);
+            kernel.CPU.SetLongPC(Address);
 
             // Wind up the CPU and get it ready. The user will advance the PC
             // using the debug window. 

@@ -3,45 +3,58 @@
 .include "directpage_inc.asm"
 .include "monitor_inc.asm"
 .include "kernel_vectors.asm"
+.include "simulator_inc.asm"
 
 ; C256 Foenix / Nu64 Kernel
 ; Loads to $F0:0000
 
 * = $F80000
 
+;Kernel.asm
+;Jump Table
+;Kernel.asm
+;Jump Table
 BOOT            JML IBOOT
-;RESTORE       JML IRESTORE
+RESTORE         JML IRESTORE
 BREAK           JML IBREAK
 READY           JML IREADY
-;SCINIT        JML ISCINIT
-;IOINIT        JML IIOINIT
-;PUTC          JML IPUTC
-;PUTS          JML IPUTS
-;PUTB          JML IPUTB
-;OPEN          JML IOPEN
-;CLOSE         JML ICLOSE
-;SETIN         JML ISETIN
-;SETOUT        JML ISETOUT
-;GETCH         JML IGETCH
-;GETCHE        JML IGETCHE
-;GETCHW        JML IGETCHW
-;GETS          JML IGETS
-;GETLINE       JML IGETLINE
-;GETFIELD      JML IGETFIELD
-;GETB          JML IGETB
-;TRIM          JML ITRIM
-;SPUTCH        JML ISPUTCH
-;SPUTS         JML ISPUTS
-;SGETCH        JML ISGETCH
-;SGETS         JML ISGETS
-;LOCATE        JML ILOCATE
-;PRINTI4       JML IPRINTI4
-;PRINTI        JML IPRINTI
-;PRINTH        JML IPRINTH
-;PRINTH2       JML IPRINTH2
-;PRINTH3       JML IPRINTH3
-;PRINTH4       JML IPRINTH4
-;TYPE          JML ITYPE
+SCINIT          JML ISCINIT
+IOINIT          JML IIOINIT
+PUTC            JML IPUTC
+PUTS            JML IPUTS
+PUTB            JML IPUTB
+PUTBLOCK        JML IPUTBLOCK
+SETLFS          JML ISETLFS
+SETNAM          JML ISETNAM
+OPEN            JML IOPEN
+CLOSE           JML ICLOSE
+SETIN           JML ISETIN
+SETOUT          JML ISETOUT
+GETB            JML IGETB
+GETBLOCK        JML IGETBLOCK
+GETCH           JML IGETCH
+GETCHW          JML IGETCHW
+GETCHE          JML IGETCHE
+GETS            JML IGETS
+GETLINE         JML IGETLINE
+GETFIELD        JML IGETFIELD
+TRIM            JML ITRIM
+PRINTC          JML IPRINTC
+PRINTS          JML IPRINTS
+PRINTCR         JML IPRINTCR
+PRINTF          JML IPRINTF
+PRINTI          JML IPRINTI
+PRINTH          JML IPRINTH
+PRINTAI         JML IPRINTAI
+PRINTAH         JML IPRINTAH
+LOCATE          JML ILOCATE
+PUSHKEY         JML IPUSHKEY
+PUSHKEYS        JML IPUSHKEYS
+CSRRIGHT        JML ICSRRIGHT
+CSRLEFT         JML ICSRLEFT
+CSRUP           JML ICSRUP
+CSRDOWN         JML ICSRDOWN
+CSRHOME         JML ICSRHOME
 
 * = $F81000
 IRESET          JMP IBOOT
@@ -66,11 +79,25 @@ IBOOT           ; boot the system
                 setas
                 LDA #$00
                 STA CURSORPOS+2
+                LDX #$0
+                LDY #$0
+                JSL ILOCATE
                 setas
-                LDA #80         ; Set screen dimensions
-                STA SCRWIDTH
+		; Set screen dimensions. There more columns in memory than 
+		; are visible. A virtual line is 128 bytes, but 80 columns will be
+		; visible on screen.
+                LDA #80         
+                STA COLS_VISIBLE
+                LDA #128        
+                STA COLS_PER_LINE
                 LDA #25
-                STA SCRHEIGHT
+                STA LINES_VISIBLE
+                LDA #64
+                STA LINES_MAX
+                ; reset keyboard buffer
+                setal
+                STZ KEY_BUFFER_RPOS
+                STZ KEY_BUFFER_WPOS
 
                 ; Copy vectors from ROM to Direct Page
                 setaxl 
@@ -95,37 +122,107 @@ greet_done      BRK             ;Terminate boot routine and go to Ready handler.
 ; ROM Break handler. This pulls the registers out of the stack
 ; and saves them in the "CPU" direct page locations 
 IBREAK          setdp 0
-                PLA             ; Y
+                PLA             ; Pull .Y and stuff it in the CPUY variable 
                 STA CPUY
-                PLA 
-                STA CPUX
-                PLA 
+                PLA             ; Pull .X and stuff it in the CPUY variable 
+                STA CPUX        
+                PLA             ; Pull .A and stuff it in the CPUY variable 
                 STA CPUA
-                PLD
-                STA CPUDP
+                PLA
+                STA CPUDP       ; Pull Direct page 
                 setas 
-                PLA 
+                PLA             ; Pull Data Bank (8 bits)
                 STA CPUDBR
-                setal 
-                PLA 
+                PLA             ; Pull Flags (8 bits)
+                STA CPUFLAGS    
+                setal           
+                PLA             ; Pull Program Counter (16 bits)
                 STA CPUPC 
                 setas 
-                PLA 
+                PLA             ; Pull Program Bank (8 bits)
                 STA CPUPBR
-                TSA
-                STA CPUSTACK
-                LDA STACK_END   ; initialize stack pointer 
-                TAS 
+                setal
+                TSA             ; Get the stack 
+                STA CPUSTACK    ; Store the stack at immediately before the interrupt was asserted
+                LDA #<>STACK_END   ; initialize stack pointer back to the bootup value 
+                                ;<> is "lower word"
+                TAS             
                 
 IREADY          setdbr `ready_msg
                 setas 
                 LDX #<>ready_msg
                 JSL IPRINT
-                STP 
+;
+; IREADYWAIT*
+;  Wait for a keypress and display it on the screen. When the RETURN key is pressed,
+;  call the RETURN event handler to process the command. Since RETURN can change, use
+;  the vector in Direct Page to invoke the handler.      
+;  
+;  *Does not return. Execution in your program should continue via the RETURN direct page 
+;  vector.
+IREADYWAIT      ; Check the keyboard buffer.
+                JSL IGETCHE
+                BCS IREADYWAIT
+                JSL IPUTC
+                JMP IREADYWAIT
                 
 IKEYDOWN        STP             ; Keyboard key pressed
 IRETURN         STP
 
+;
+;IGETCHE
+; Get a character from the current input chnannel and echo it to screen.
+; Waits for a character to be read. 
+; Return:
+; A: Character read
+; Carry: 1 if no valid data
+;
+IGETCHE         JSL IGETCHW
+                JSL IPUTC
+                RTL
+
+;
+;IGETCHW
+; Get a character from the current input chnannel.
+; Waits for a character to be read.
+; Return:
+; A: Character read
+; Carry: 1 if no valid data
+;
+IGETCHW         PHD
+                PHX
+                PHP
+                setdp $0F00
+                setaxl
+                ; Read from the keyboard buffer
+                ; If the read position and write position are the same
+                ; no data is waiting. 
+igetchw1        LDX KEY_BUFFER_RPOS
+                CPX KEY_BUFFER_WPOS
+                ; If data is waiting. return it.
+                ; Otherwise wait for data.
+                BNE igetchw2
+                ;SEC            ; In non-waiting version, set the Carry bit and return
+                ;BRA igetchw_done
+                ; Simulator should wait for input
+                SIM_WAIT
+                JMP igetchw1
+igetchw2        LDA $0,D,X  ; Read the value in the keyboard buffer
+                PHA
+                ; increment the read position and wrap it when it reaches the end of the buffer
+                TXA 
+                CLC
+                ADC #$02
+                CMP #KEY_BUFFER_LEN
+                BCC igetchw3
+                LDA #$0
+igetchw3        STA KEY_BUFFER_RPOS
+                PLA
+                
+igetchw_done    PLP
+                PLX             ; Restore the saved registers and return
+                PLD
+                RTL
 ;
 ; IPRINT
 ; Print a string, followed by a carriage return
@@ -151,10 +248,6 @@ IPUTS           PHA
                 setxl 
 iputs1          LDA $0,b,x      ; read from the string
                 BEQ iputs_done
-                CMP #$0D   ; handle CR
-                BNE iputs2
-                JSL IPRINTCR
-                BRA iputs3
 iputs2          JSL IPUTC
 iputs3          INX
                 JMP iputs1
@@ -165,18 +258,39 @@ iputs_done      INX
 
 ;
 ;IPUTC
-; Print a single character
+; Print a single character to a channel.
 ; Handles terminal sequences, based on the selected text mode
 ; Modifies: none
 ;
 IPUTC           PHD
-		PHP             ; stash the flags (we'll be changing M)
+                PHP             ; stash the flags (we'll be changing M)
                 setdp 0
-		setas
-                STA [CURSORPOS] ; Save the character on the screen                
+                setas
+                CMP #$0D        ; handle CR
+                BNE iputc_bs
+                JSL IPRINTCR
+                bra iputc_done
+iputc_bs        CMP #$08        ; backspace
+                BNE iputc_print
+                JSL IPRINTBS
+                BRA iputc_done
+iputc_print     STA [CURSORPOS] ; Save the character on the screen                
                 JSL ICSRRIGHT
+iputc_done	sim_refresh	
                 PLP
                 PLD
+                RTL
+
+;
+;IPUTB
+; Output a single byte to a channel. 
+; Does not handle terminal sequences. 
+; Modifies: none
+;
+IPUTB           
+                ;
+                ; TODO: write to open channel
+                ;
                 RTL
 
 ;
@@ -195,7 +309,24 @@ IPRINTCR	PHX
                 PLY
                 PLX
                 RTL				
-                
+
+;
+; IPRINTBS
+; Prints a carriage return.
+; This moves the cursor to the beginning of the next line of text on the screen
+; Modifies: Flags		
+IPRINTBS	PHX
+                PHY
+                PHP
+                LDX CURSORX
+                LDY CURSORY
+                DEX
+                JSL ILOCATE
+                PLP
+                PLY
+                PLX
+                RTL				
+
 ;
 ;ICSRRIGHT	
 ; Move the cursor right one space
@@ -210,7 +341,7 @@ ICSRRIGHT	; move the cursor right one space
                 INC CURSORPOS
                 LDX CURSORX
                 INX 
-                CPX SCRWIDTH
+                CPX COLS_VISIBLE
                 BCC icsr_nowrap  ; wrap if the cursor is at or past column 80
                 LDX #0
                 PHY
@@ -222,14 +353,17 @@ icsr_nowrap     STX CURSORX
                 PLB
                 PLX
                 RTL
-                          
-ISRLEFT		RTL
-ICSRUP		RTL
+
+ISRLEFT	RTL
+ICSRUP	RTL
 ICSRDOWN	RTL
 
 ;ILOCATE
 ;Sets the cursor X and Y positions to the X and Y registers
 ;Direct Page must be set to 0
+;Input:
+; X: column to set cursor
+; Y: row to set cursor 
 ;Modifies: none
 ILOCATE         PHA
                 PHP 
@@ -237,27 +371,62 @@ ILOCATE         PHA
                 setxl 
                 STX CURSORX
                 STY CURSORY 
+                CPY #$0
+                BEQ ilocate_right
                 LDA SCREENBEGIN
-                
 ilocate_down    CLC
-                ADC SCRWIDTH
+                ADC COLS_PER_LINE
                 DEY 
-		BEQ ilocate_right
+	BEQ ilocate_right
                 JMP ilocate_down
-ilocate_right   ADC CURSORX             ; move the cursor right X columns
+ilocate_right   CLC
+                ADC CURSORX             ; move the cursor right X columns
                 STA CURSORPOS
-		LDY CURSORY
+	LDY CURSORY
 ilocate_done    PLP
                 PLA
                 RTL
 
+;                
+;Not-implemented routines
+;
+
+IRESTORE        BRK ; Warm boot routine
+ISCINIT         BRK ; 
+IIOINIT         BRK ; 
+IPUTBLOCK       BRK ; Ouput a binary block to the currently selected channel
+ISETLFS         BRK ; Obsolete (done in OPEN)
+ISETNAM         BRK ; Obsolete (done in OPEN)
+IOPEN           BRK ; Open a channel for reading and/or writing. Use SETLFS and SETNAM to set the channels and filename first. 
+ICLOSE          BRK ; Close a channel
+ISETIN          BRK ; Set the current input channel
+ISETOUT         BRK ; Set the current output channel
+IGETB           BRK ; Get a byte from input channel. Return 0 if no input. Carry is set if no input.
+IGETBLOCK       BRK ; Get a X byes from input channel. If Carry is set, wait. If Carry is clear, do not wait.
+IGETCH          BRK ; Get a character from the input channel. A=0 and Carry=1 if no data is wating 
+IGETS           BRK ; Get a string from the input channel. NULL terminates
+IGETLINE        BRK ; Get a line of text from input channel. CR or NULL terminates.
+IGETFIELD       BRK ; Get a field from the input channel. Value in A, CR, or NULL terminates
+ITRIM           BRK ; Removes spaces at beginning and end of string. 
+IPRINTC         BRK ; Print character to screen. Handles terminal commands
+IPRINTS         BRK ; Print string to screen. Handles terminal commands
+IPRINTF         BRK ; Print a float value
+IPRINTI         BRK ; Prints integer value in TEMP
+IPRINTH         BRK ; Print Hex value in DP variable
+IPRINTAI        BRK ; Prints integer value in A
+IPRINTAH        BRK ; Prints hex value in A. Printed value is 2 wide if M flag is 1, 4 wide if M=0
+IPUSHKEY        BRK ; 
+IPUSHKEYS       BRK ; 
+ICSRLEFT        BRK ; 
+ICSRHOME        BRK ; 
+                
 ;
 ; Greeting message and other kernel boot data
 ;
 * = $F8F000                
 greet_msg       .text "  ///// FOENIX 256 DEVELOPMENT SYSTEM",$0D
-greet_msg1      .text " /////  FOENIX BASIC (c) 2018 C256 FOENIX TEAM",$0D
-greet_msg2      .text "/////   8MB SYSTEM 6016KB FREE",$00
+greet_msg1      .text " /////  OPEN SOURCE COMPUTER",$0D
+greet_msg2      .text "/////   8192KB SYSTEM 8128KB FREE",$00
 ready_msg       .text $0D,"READY.",$00
 ;ready_msg       .text " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
                 .text ";F81000 0000 0000 0000 D6FF F8  0000 ------Z-",$00

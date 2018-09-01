@@ -26,8 +26,8 @@ namespace Nu64.UI
 
         private void BasicWindow_KeyPress(object sender, KeyPressEventArgs e)
         {
-            lastKeyPressed.Text = "$" + ((UInt16)e.KeyChar).ToString("X2");
-            kernel.KeyboardBuffer.Add(e.KeyChar);
+            //lastKeyPressed.Text = "$" + ((UInt16)e.KeyChar).ToString("X2");
+            kernel.KeyboardBuffer.Write(e.KeyChar, 2);
         }
 
         private void BasicWindow_Load(object sender, EventArgs e)
@@ -69,27 +69,19 @@ namespace Nu64.UI
             switch (e.KeyCode)
             {
                 case Keys.Up:
-                    kernel.KeyboardBuffer.Add((char)PETSCIICommandCodes.Up);
+                    kernel.KeyboardBuffer.Write(KeyboardMap.KEY_Up);
                     break;
                 case Keys.Down:
-                    kernel.KeyboardBuffer.Add((char)PETSCIICommandCodes.Down);
+                    kernel.KeyboardBuffer.Write(KeyboardMap.KEY_Down);
                     break;
                 case Keys.Left:
-                    kernel.KeyboardBuffer.Add((char)PETSCIICommandCodes.Left);
+                    kernel.KeyboardBuffer.Write(KeyboardMap.KEY_Left);
                     break;
                 case Keys.Right:
-                    kernel.KeyboardBuffer.Add((char)PETSCIICommandCodes.Right);
+                    kernel.KeyboardBuffer.Write(KeyboardMap.KEY_Right);
                     break;
                 case Keys.Home:
-                    if (e.Shift)
-                        kernel.KeyboardBuffer.Add((char)PETSCIICommandCodes.Clear);
-                    else if (e.Control)
-                        kernel.KeyboardBuffer.Add((char)PETSCIICommandCodes.Home);
-                    else
-                    {
-                        kernel.KeyboardBuffer.Add((char)PETSCIICommandCodes.Esc);
-                        kernel.KeyboardBuffer.Add((char)PETSCIICommandCodes.Home);
-                    }
+                    kernel.KeyboardBuffer.Write(KeyboardMap.KEY_Home);
                     break;
                 default:
                     System.Diagnostics.Debug.WriteLine("KeyDown: " + e.KeyCode.ToString());
@@ -125,7 +117,7 @@ namespace Nu64.UI
 
         private void gpu_VisibleChanged(object sender, EventArgs e)
         {
-            if(gpu.Visible)
+            if (gpu.Visible)
                 BootTimer.Enabled = true;
         }
 
@@ -141,6 +133,7 @@ namespace Nu64.UI
 
         private void resetToolStripMenuItem1_Click(object sender, EventArgs e)
         {
+            DebugWindow.ClearTrace();
             kernel.CPU.DebugPause = false;
             kernel.Reset();
             kernel.Run();
@@ -148,8 +141,21 @@ namespace Nu64.UI
 
         private void debugToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DebugWindow.ClearTrace();
             kernel.CPU.DebugPause = true;
             kernel.Reset();
         }
+
+        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            ModeText.Text = "Shutting down CPU thread";
+
+            if (kernel.CPU.CPUThread != null)
+            {
+                kernel.CPU.CPUThread.Abort();
+                kernel.CPU.CPUThread.Join(1000);
+            }
+        }
     }
 }
+

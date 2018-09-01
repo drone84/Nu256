@@ -42,13 +42,18 @@ namespace Nu64
         /// <returns></returns>
         public int ReadWord(int Address)
         {
-            return ReadByte(Address) + (ReadByte(Address) << 8);
+            return ReadByte(Address) + (ReadByte(Address+1) << 8);
         }
 
         public void WriteWord(int Address, int Value)
         {
             WriteByte(Address, (byte)(Value & 0xff));
             WriteByte(Address + 1, (byte)(Value >> 8 & 0xff));
+        }
+
+        internal int ReadLong(int Address)
+        {
+            return ReadByte(Address) + (ReadByte(Address + 1) << 8) + (ReadByte(Address + 1) << 16); 
         }
     }
 }

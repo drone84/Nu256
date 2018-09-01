@@ -5,6 +5,7 @@ del *.lst
 if errorlevel 1 goto end
 
 copy kernel.hex ..\bin\debug\roms
+copy kernel.lst ..\bin\debug\roms
 
 :end
 pause

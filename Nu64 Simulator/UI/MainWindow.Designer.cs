@@ -141,6 +141,8 @@ namespace Nu64.UI
             this.resetToolStripMenuItem1,
             this.debugToolStripMenuItem});
             this.resetToolStripMenuItem.Name = "resetToolStripMenuItem";
+            this.resetToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Alt) 
+            | System.Windows.Forms.Keys.R)));
             this.resetToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
             this.resetToolStripMenuItem.Text = "Reset";
             // 
@@ -207,8 +209,11 @@ namespace Nu64.UI
             // 
             // gpu
             // 
+            this.gpu.COLS_PER_LINE = 0;
+            this.gpu.ColumnsVisible = 0;
             this.gpu.CursorPos = 0;
             this.gpu.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.gpu.LinesVisible = 0;
             this.gpu.Location = new System.Drawing.Point(16, 40);
             this.gpu.Name = "gpu";
             this.gpu.Size = new System.Drawing.Size(640, 480);
@@ -233,6 +238,7 @@ namespace Nu64.UI
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainWindow";
             this.Text = "Nu64 BASIC";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindow_FormClosing);
             this.Load += new System.EventHandler(this.BasicWindow_Load);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.BasicWindow_KeyDown);
             this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.BasicWindow_KeyPress);

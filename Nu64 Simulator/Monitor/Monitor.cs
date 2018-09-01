@@ -95,7 +95,7 @@ namespace Nu64.Monitor
         public void ReturnPressed(int LineStart)
         {
             StringBuilder s = new StringBuilder();
-            for (int i = 0; i < kernel.gpu.Columns; i++)
+            for (int i = 0; i < kernel.gpu.ColumnsVisible; i++)
             {
                 s.Append(kernel.Memory[LineStart]+i);
             }

@@ -92,7 +92,7 @@
             this.MemoryText.Multiline = true;
             this.MemoryText.Name = "MemoryText";
             this.MemoryText.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.MemoryText.Size = new System.Drawing.Size(460, 252);
+            this.MemoryText.Size = new System.Drawing.Size(460, 275);
             this.MemoryText.TabIndex = 0;
             this.MemoryText.Text = resources.GetString("MemoryText.Text");
             // 
@@ -106,7 +106,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(460, 272);
+            this.ClientSize = new System.Drawing.Size(460, 295);
             this.Controls.Add(this.MemoryText);
             this.Controls.Add(this.panel1);
             this.Name = "MemoryWindow";
