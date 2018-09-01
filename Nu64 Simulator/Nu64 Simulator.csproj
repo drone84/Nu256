@@ -66,6 +66,7 @@
     <Compile Include="Processor\AddressingModeEnum.cs" />
     <Compile Include="Processor\OpCode.cs" />
     <Compile Include="Processor\OpcodeList.cs" />
+    <Compile Include="Processor\SimulatorCommands.cs" />
     <Compile Include="UI\ColorCodes.cs" />
     <Compile Include="MemoryLocations\MemoryMap_Blocks.cs" />
     <Compile Include="Processor\CPUTest.cs" />

@@ -148,13 +148,14 @@ namespace Nu64.UI
 
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
-            kernel.Cls();
-            kernel.PrintLine("Shutting down CPU thread");
-            kernel.gpu.Refresh();
-            System.Threading.Thread.Sleep(1000);
+            ModeText.Text = "Shutting down CPU thread";
 
-            kernel.CPU.CPUThread.Abort();
-            kernel.CPU.CPUThread.Join(1000);
+            if (kernel.CPU.CPUThread != null)
+            {
+                kernel.CPU.CPUThread.Abort();
+                kernel.CPU.CPUThread.Join(1000);
+            }
         }
     }
 }
+

@@ -83,10 +83,17 @@ IBOOT           ; boot the system
                 LDY #$0
                 JSL ILOCATE
                 setas
-                LDA #80         ; Set screen dimensions
-                STA SCRWIDTH
+		; Set screen dimensions. There more columns in memory than 
+		; are visible. A virtual line is 128 bytes, but 80 columns will be
+		; visible on screen.
+                LDA #80         
+                STA COLS_VISIBLE
+                LDA #128        
+                STA COLS_PER_LINE
                 LDA #25
-                STA SCRHEIGHT
+                STA LINES_VISIBLE
+                LDA #64
+                STA LINES_MAX
                 ; reset keyboard buffer
                 setal
                 STZ KEY_BUFFER_RPOS
@@ -241,10 +248,6 @@ IPUTS           PHA
                 setxl 
 iputs1          LDA $0,b,x      ; read from the string
                 BEQ iputs_done
-                CMP #$0D   ; handle CR
-                BNE iputs2
-                JSL IPRINTCR
-                BRA iputs3
 iputs2          JSL IPUTC
 iputs3          INX
                 JMP iputs1
@@ -263,8 +266,17 @@ IPUTC           PHD
                 PHP             ; stash the flags (we'll be changing M)
                 setdp 0
                 setas
-                STA [CURSORPOS] ; Save the character on the screen                
+                CMP #$0D        ; handle CR
+                BNE iputc_bs
+                JSL IPRINTCR
+                bra iputc_done
+iputc_bs        CMP #$08        ; backspace
+                BNE iputc_print
+                JSL IPRINTBS
+                BRA iputc_done
+iputc_print     STA [CURSORPOS] ; Save the character on the screen                
                 JSL ICSRRIGHT
+iputc_done	sim_refresh	
                 PLP
                 PLD
                 RTL
@@ -299,6 +311,23 @@ IPRINTCR	PHX
                 RTL				
 
 ;
+; IPRINTBS
+; Prints a carriage return.
+; This moves the cursor to the beginning of the next line of text on the screen
+; Modifies: Flags		
+IPRINTBS	PHX
+                PHY
+                PHP
+                LDX CURSORX
+                LDY CURSORY
+                DEX
+                JSL ILOCATE
+                PLP
+                PLY
+                PLX
+                RTL				
+
+;
 ;ICSRRIGHT	
 ; Move the cursor right one space
 ; Modifies: none
@@ -312,7 +341,7 @@ ICSRRIGHT	; move the cursor right one space
                 INC CURSORPOS
                 LDX CURSORX
                 INX 
-                CPX SCRWIDTH
+                CPX COLS_VISIBLE
                 BCC icsr_nowrap  ; wrap if the cursor is at or past column 80
                 LDX #0
                 PHY
@@ -346,7 +375,7 @@ ILOCATE         PHA
                 BEQ ilocate_right
                 LDA SCREENBEGIN
 ilocate_down    CLC
-                ADC SCRWIDTH
+                ADC COLS_PER_LINE
                 DEY 
 	BEQ ilocate_right
                 JMP ilocate_down
@@ -396,8 +425,8 @@ ICSRHOME        BRK ;
 ;
 * = $F8F000                
 greet_msg       .text "  ///// FOENIX 256 DEVELOPMENT SYSTEM",$0D
-greet_msg1      .text " /////  FOENIX BASIC (c) 2018 C256 FOENIX TEAM",$0D
-greet_msg2      .text "/////   8MB SYSTEM 6016KB FREE",$00
+greet_msg1      .text " /////  OPEN SOURCE COMPUTER",$0D
+greet_msg2      .text "/////   8192KB SYSTEM 8128KB FREE",$00
 ready_msg       .text $0D,"READY.",$00
 ;ready_msg       .text " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
                 .text ";F81000 0000 0000 0000 D6FF F8  0000 ------Z-",$00

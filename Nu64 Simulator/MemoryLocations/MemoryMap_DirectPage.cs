@@ -11,19 +11,24 @@ namespace Nu64
         #region Direct page
         // c# Direct page Addresses
 
+        // * Addresses are the byte AFTER the block. Use this to confirm block locations and check for overlaps
+        public const int BANK0_BEGIN = 0x000000; // Start of bank 0 and Direct page
+        public const int DIRECT_PAGE = 0x000000; // Start of bank 0 and Direct page
         public const int RESET = 0x000000; // 4 Bytes Jumps to the beginning of kernel ROM. ($F8:0000). 
         public const int RETURN = 0x000004; // 4 Bytes Called when the RETURN key is pressed in the immediate mode screen. This will process a command in MONITOR, execute a BASIC command, or add a BASIC program line.
         public const int KEYDOWN = 0x000008; // 4 Bytes Custom keyboard handler. This defaults to the kernel keypress handler, but you can redirect this to your own routines. Make sure to JML to the original address at the end of your custom routine. Use this to make F-Key macros or custom keyboard commands. 
         public const int SCREENBEGIN = 0x00000C; // 3 Bytes Start of screen in video RAM. This is the upper-left corrner of the current video page being written to. This may not be what's being displayed by VICKY. Update this if you change VICKY's display page. 
-        public const int SCRWIDTH = 0x00000F; // 2 Bytes Width of screen
-        public const int SCRHEIGHT = 0x000011; // 2 Bytes Height of screen
-        public const int CURSORPOS = 0x000013; // 3 Bytes The next character written to the screen will be written in this location. 
-        public const int CURSORX = 0x000016; // 2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly. 
-        public const int CURSORY = 0x000018; // 2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly. 
-        public const int CURCOLOR = 0x00001A; // 2 Bytes Color of next character to be printed to the screen. 
-        public const int CURATTR = 0x00001C; // 2 Bytes Attribute of next character to be printed to the screen.
-        public const int STACKBOT = 0x00001E; // 2 Bytes Lowest location the stack should be allowed to write to. If SP falls below this value, the runtime should generate STACK OVERFLOW error and abort.
-        public const int STACKTOP = 0x000020; // 2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort. 
+        public const int COLS_VISIBLE = 0x00000F; // 2 Bytes Columns visible per screen line. A virtual line can be longer than displayed, up to COLS_PER_LINE long. Default = 80
+        public const int COLS_PER_LINE = 0x000011; // 2 Bytes Columns in memory per screen line. A virtual line can be this long. Default=128
+        public const int LINES_VISIBLE = 0x000013; // 2 Bytes The number of rows visible on the screen. Default=25
+        public const int LINES_MAX = 0x000015; // 2 Bytes The number of rows in memory for the screen. Default=64
+        public const int CURSORPOS = 0x000017; // 3 Bytes The next character written to the screen will be written in this location. 
+        public const int CURSORX = 0x00001A; // 2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly. 
+        public const int CURSORY = 0x00001C; // 2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly. 
+        public const int CURCOLOR = 0x00001E; // 2 Bytes Color of next character to be printed to the screen. 
+        public const int CURATTR = 0x000020; // 2 Bytes Attribute of next character to be printed to the screen.
+        public const int STACKBOT = 0x000022; // 2 Bytes Lowest location the stack should be allowed to write to. If SP falls below this value, the runtime should generate STACK OVERFLOW error and abort.
+        public const int STACKTOP = 0x000024; // 2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort. 
         public const int TEMP = 0x0000E0; // 16 Bytes Temp storage for kernel routines
 
         public const int GAVIN_BLOCK = 0x000100; // 256 Bytes Gavin reserved, overlaps debugging registers at $1F0
@@ -78,30 +83,34 @@ namespace Nu64
         public const int KEY_BUFFER_RPOS = 0x000F40; // 2 Bytes keyboard buffer read position
         public const int KEY_BUFFER_WPOS = 0x000F42; // 2 Bytes keyboard buffer write position
 
-        public const int SCREEN_PAGE0 = 0x001000; // 6400 Bytes First page of display RAM. This is used at boot time to display the welcome screen and the BASIC or MONITOR command screens. 
-        public const int SCREEN_PAGE1 = 0x002900; // 6400 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
-        public const int SCREEN_PAGE2 = 0x004200; // 6400 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
-        public const int SCREEN_PAGE3 = 0x005B00; // 6400 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
-        public const int USER_VARIABLES = 0x007400; // 0 Byte This space is avaialble for user code and variables, up to the beginning of the stack. Make sure not to write past STACKBOT without adjusting that value.
+        public const int SCREEN_PAGE0 = 0x001000; // 8192 Bytes First page of display RAM. This is used at boot time to display the welcome screen and the BASIC or MONITOR command screens. 
+        public const int SCREEN_PAGE1 = 0x003000; // 8192 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
+        public const int SCREEN_PAGE2 = 0x005000; // 8192 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
+        public const int SCREEN_PAGE3 = 0x007000; // 8192 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
+        public const int SCREEN_END = 0x009000; // This space is avaialble for user code and variables, up to the beginning of the stack. Do not write past STACK_BEGIN
 
-        public const int STACK_BEGIN = 0x009700; // 16384 Bytes The default beginning of stack space
-        public const int STACK_END = 0x00D6FF; // 0 Byte End of stack space. Everything below this is I/O space
+        public const int STACK_BEGIN = 0x009800; // 16384 Bytes The default beginning of stack space
+        public const int STACK_END = 0x00D7FF; // 0 Byte End of stack space. Everything below this is I/O space
 
+        public const int IO_BEGIN = 0x00D800; //  Byte Beginning of IO space
+        public const int IO_GAVIN = 0x00D800; // 1024 Bytes GAVIN I/O space
+        public const int IO_SUPERIO = 0x00DC00; // 1024 Bytes SuperIO I/O space
+        public const int IO_VICKY = 0x00E000; // 1024 Bytes VICKY I/O space
+        public const int IO_BEATRIX = 0x00E400; // 1024 Bytes BEATRIX I/O space
+        public const int IO_RTC = 0x00E800; // 1024 Bytes RTC I/O space
+        public const int IO_CIA = 0x00EC00; // 4864 Bytes CIA I/O space
+        public const int IO_END = 0x00FF00; // *End of I/O space
+
+        public const int ISR_BEGIN = 0x00FF00; //  Byte Beginning of CPU vectors in Direct page
         public const int HRESET = 0x00FF00; // 16 Bytes Handle RESET asserted. Reboot computer and re-initialize the kernel.
         public const int HCOP = 0x00FF10; // 16 Bytes Handle the COP instruction
         public const int HBRK = 0x00FF20; // 16 Bytes Handle the BRK instruction. Returns to BASIC Ready prompt.
         public const int HABORT = 0x00FF30; // 16 Bytes Handle ABORT asserted. Return to Ready prompt with an error message.
-        public const int HNMI = 0x00FF40; // 16 Bytes Handle NMI asserted. 
-        public const int HIRQ = 0x00FF50; // 16 Bytes Handle IRQ. Should read IRQ line from GAVIN and jump to appropriate IRQ handler.
-        public const int IRQ_0 = 0x00FF60; // 16 Bytes Handle IRQ 0
-        public const int IRQ_1 = 0x00FF70; // 16 Bytes Handle IRQ 1
-        public const int IRQ_2 = 0x00FF80; // 16 Bytes Handle IRQ 2
-        public const int IRQ_3 = 0x00FF90; // 16 Bytes Handle IRQ 3
-        public const int IRQ_4 = 0x00FFA0; // 16 Bytes Handle IRQ 4
-        public const int IRQ_5 = 0x00FFB0; // 16 Bytes Handle IRQ 5
-        public const int IRQ_6 = 0x00FFC0; // 16 Bytes Handle IRQ 6
-        public const int IRQ_7 = 0x00FFD0; // 16 Bytes Handle IRQ 7
+        public const int HNMI = 0x00FF40; // 80 Bytes Handle NMI asserted. 
+        public const int HIRQ = 0x00FF90; // 80 Bytes Handle IRQ. Should read IRQ line from GAVIN and jump to appropriate IRQ handler.
+        public const int ISR_END = 0x00FFE0; // *End of vector space
 
+        public const int VECTORS_BEGIN = 0x00FFE0; // 0 Byte Jumps to ROM READY routine. Modified whenever alternate command interpreter is loaded. 
         public const int JMP_READY = 0x00FFE0; // 4 Bytes Jumps to ROM READY routine. Modified whenever alternate command interpreter is loaded. 
         public const int VECTOR_COP = 0x00FFE4; // 2 Bytes Native interrupt vector
         public const int VECTOR_BRK = 0x00FFE6; // 2 Bytes Native interrupt vector
@@ -110,12 +119,14 @@ namespace Nu64
         public const int VECTOR_RESET = 0x00FFEC; // 2 Bytes Native interrupt vector
         public const int VECTOR_IRQ = 0x00FFEE; // 2 Bytes Native interrupt vector
 
+
         public const int VECTOR_ECOP = 0x00FFF4; // 2 Bytes Emulation mode interrupt handler
         public const int VECTOR_EBRK = 0x00FFF6; // 2 Bytes Emulation mode interrupt handler
         public const int VECTOR_EABORT = 0x00FFF8; // 2 Bytes Emulation mode interrupt handler
         public const int VECTOR_ENMI = 0x00FFFA; // 2 Bytes Emulation mode interrupt handler
         public const int VECTOR_ERESET = 0x00FFFC; // 2 Bytes Emulation mode interrupt handler
         public const int VECTOR_EIRQ = 0x00FFFE; // 2 Bytes Emulation mode interrupt handler
+        public const int VECTORS_END = 0x010000; // *End of vector space
         #endregion
 
     }

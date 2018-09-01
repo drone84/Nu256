@@ -19,6 +19,9 @@ namespace Nu64.Processor
         public const int ADDRESS_IMMEDIATE = 0xf000001;
         public const int ADDRESS_IMPLIED = 0xf000002;
 
+        public delegate void SimulatorCommandEvent(int EventID);
+        public event SimulatorCommandEvent SimulatorCommand;
+
         public Operations(CPU cPU)
         {
             this.cpu = cPU;
@@ -838,7 +841,10 @@ namespace Nu64.Processor
             switch (instruction)
             {
                 // WDM is a 2-byte NOP and an easter egg. William D Mensch designed the 6502 and 65816.
+                // We will use this to give the simulator commands
                 case OpcodeList.WDM_Implied:
+                    onSimulatorCommand(signature);
+                    break;
                 case OpcodeList.NOP_Implied:
                     break;
                 case OpcodeList.STP_Implied: //stop
@@ -847,6 +853,13 @@ namespace Nu64.Processor
                 default:
                     throw new NotImplementedException("ExecuteMisc() opcode not implemented: " + instruction.ToString("X2"));
             }
+        }
+
+        private void onSimulatorCommand(int signature)
+        {
+            if (SimulatorCommand == null)
+                return;
+            SimulatorCommand(signature);
         }
 
         /// <summary>

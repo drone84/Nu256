@@ -73,6 +73,8 @@ namespace Nu64.Processor
         public AddressDataBus Memory = null;
         public Thread CPUThread = null;
 
+        public event Operations.SimulatorCommandEvent SimulatorCommand;
+
         public int ClockSpeed
         {
             get
@@ -92,8 +94,24 @@ namespace Nu64.Processor
             this.clockSpeed = 14000000;
             this.clockCyles = 0;
             this.operations = new Operations(this);
+            operations.SimulatorCommand += Operations_SimulatorCommand;
             this.opcodes = new OpcodeList(this.operations, this);
             this.Flags.Emulation = true;
+        }
+
+        private void Operations_SimulatorCommand(int EventID)
+        {
+            switch (EventID)
+            {
+                case SimulatorCommands.WaitForInterrupt:
+                    break;
+                case SimulatorCommands.RefreshDisplay:
+                    if (SimulatorCommand != null)
+                        SimulatorCommand(EventID);
+                    break;
+                default:
+                    break;
+            }
         }
 
         public void JumpTo(int Address, int newDataBank)
@@ -139,7 +157,8 @@ namespace Nu64.Processor
             Halted = false;
             StartTime = DateTime.Now;
             clockCyles = 0;
-            CPUThread.Start();
+            if (CPUThread.ThreadState != ThreadState.Running)
+                CPUThread.Start();
         }
 
         public void RunLoop()
