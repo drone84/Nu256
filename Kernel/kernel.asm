@@ -86,14 +86,14 @@ IBOOT           ; boot the system
 		; Set screen dimensions. There more columns in memory than 
 		; are visible. A virtual line is 128 bytes, but 80 columns will be
 		; visible on screen.
-                LDA #80         
-                STA COLS_VISIBLE
-                LDA #128        
-                STA COLS_PER_LINE
-                LDA #25
-                STA LINES_VISIBLE
-                LDA #64
-                STA LINES_MAX
+                LDX #80         
+                STX COLS_VISIBLE
+                LDY #30
+                STY LINES_VISIBLE
+                LDX #128        
+                STX COLS_PER_LINE
+                LDY #64
+                STY LINES_MAX
                 ; reset keyboard buffer
                 setal
                 STZ KEY_BUFFER_RPOS
