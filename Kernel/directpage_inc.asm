@@ -10,7 +10,7 @@ KEYDOWN          = $000008 ;4 Bytes Custom keyboard handler. This defaults to th
 SCREENBEGIN      = $00000C ;3 Bytes Start of screen in video RAM. This is the upper-left corrner of the current video page being written to. This may not be what's being displayed by VICKY. Update this if you change VICKY's display page. 
 COLS_VISIBLE     = $00000F ;2 Bytes Columns visible per screen line. A virtual line can be longer than displayed, up to COLS_PER_LINE long. Default = 80
 COLS_PER_LINE    = $000011 ;2 Bytes Columns in memory per screen line. A virtual line can be this long. Default=128
-LINES_VISIBLE    = $000013 ;2 Bytes The number of rows visible on the screen. Default=25
+LINES_VISIBLE    = $000013 ;2 Bytes The number of rows visible on the screen. Default=60
 LINES_MAX        = $000015 ;2 Bytes The number of rows in memory for the screen. Default=64
 CURSORPOS        = $000017 ;3 Bytes The next character written to the screen will be written in this location. 
 CURSORX          = $00001A ;2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly. 

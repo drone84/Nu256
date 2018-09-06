@@ -2,7 +2,7 @@
 .include "macros_inc.asm"
 .include "directpage_inc.asm"
 .include "monitor_inc.asm"
-.include "kernel_vectors.asm"
+.include "kernel_bank_FF.asm"
 .include "simulator_inc.asm"
 
 ; C256 Foenix / Nu64 Kernel
@@ -55,16 +55,13 @@ CSRLEFT         JML ICSRLEFT
 CSRUP           JML ICSRUP
 CSRDOWN         JML ICSRDOWN
 CSRHOME         JML ICSRHOME
+SCROLLUP        JML ISCROLLUP
 
-* = $F81000
-IRESET          JMP IBOOT
-
+* = $F80400
 IBOOT           ; boot the system
                 CLC           ; clear the carry flag
                 XCE           ; move carry to emulation flag.
-                REP #$30        ; set long A and X
-                .al 
-                .xl 
+                setaxl
                 LDA #STACK_END   ; initialize stack pointer 
                 TAS 
                 setdp 0
@@ -88,7 +85,7 @@ IBOOT           ; boot the system
 		; visible on screen.
                 LDX #80         
                 STX COLS_VISIBLE
-                LDY #30
+                LDY #60
                 STY LINES_VISIBLE
                 LDX #128        
                 STX COLS_PER_LINE
@@ -369,24 +366,73 @@ ILOCATE         PHA
                 PHP 
                 setal
                 setxl 
+ilocate_scroll  ; If the cursor is below the bottom row of the screen
+                ; scroll the screen up one line. Keep doing this until
+                ; the cursor is visible. 
+                CPY LINES_VISIBLE
+                BCC ilocate_scrolldone 
+                JSL ISCROLLUP
+                DEY 
+                ; repeat until the cursor is visible again
+                BRA ilocate_scroll  
+ilocate_scrolldone
                 STX CURSORX
                 STY CURSORY 
+                
+ilocate_row     ; compute the row 
                 CPY #$0
                 BEQ ilocate_right
                 LDA SCREENBEGIN
 ilocate_down    CLC
                 ADC COLS_PER_LINE
                 DEY 
-	BEQ ilocate_right
+                BEQ ilocate_right 
                 JMP ilocate_down
+                
+                ; compute the column 
 ilocate_right   CLC
+                LDY CURSORY
                 ADC CURSORX             ; move the cursor right X columns
-                STA CURSORPOS
-	LDY CURSORY
+                STA CURSORPOS                
 ilocate_done    PLP
                 PLA
                 RTL
-
+;
+; ISCROLLUP
+; Scroll the screen up one line
+; Inputs: 
+;   None 
+; Affects:
+;   None 
+ISCROLLUP       ; Scroll the screen up by one row
+                ; Place an empty line at the bottom of the screen. 
+                ; TODO: use DMA to move the data 
+                PHA
+                PHX
+                PHY
+                PHB 
+                PHP
+                setaxl
+                ; Set block move source to second row 
+                CLC
+                LDA SCREENBEGIN
+                TAY             ; Destination is first row 
+                ADC COLS_PER_LINE
+                TAX             ; Source is second row 
+                ;TODO compute screen bottom with multiplier
+                ;(once implemented)
+                ; for now, should be 8064 or $1f80 bytes 
+                LDA #SCREEN_PAGE1-SCREEN_PAGE0-COLS_PER_LINE
+                ; Move the data 
+                MVP $00,$00 
+                
+                PLP
+                PLB 
+                PLY
+                PLX
+                PLA 
+                RTL 
+                
 ;                
 ;Not-implemented routines
 ;

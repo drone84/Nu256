@@ -43,6 +43,7 @@ namespace Nu64.UI
                 for (int j = 0; j < 16; j++)
                 {
                     s.Append(Memory.ReadByte(i + j).ToString("X2"));
+                    s.Append(" ");
                     if (j == 7 || j == 15)
                         s.Append(" ");
                 }

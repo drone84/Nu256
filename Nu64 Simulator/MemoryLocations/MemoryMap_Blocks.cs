@@ -9,15 +9,10 @@ namespace Nu64.MemoryLocations
     public static class MemoryMap_Blocks
     {
         public const int START_OF_DIRECT_PAGE = 0x000000;
-        public const int END_OF_DIRECT_PAGE = 0xFFFF;
-        /// <summary>
-        /// I/O block: ports, CIAs, keyboard, etc. Basically everything that's not video.
-        /// </summary>
-        public const int START_OF_IO = 0xD800;
-        public const int END_OF_IO = 0xFEFF;
-
+        public const int END_OF_DIRECT_PAGE = 0x00FFFF;
 
         public const int START_OF_RAM = 0x000000;
+        public const int RAM_BANK_01 = 0x010000;
         public const int END_OF_RAM = 0x5FFFFF;  // 8MB
 
         /// <summary>
@@ -40,5 +35,8 @@ namespace Nu64.MemoryLocations
         /// </summary>
         public const int START_OF_ROM = 0xF00000;
         public const int END_OF_ROM = 0xFFFFFF;
+
+        public const int START_OF_ROM_VECTORS = 0xFF0000;
+        public const int END_OF_ROM_VECTORS = 0xFFFFFF;
     }
 }

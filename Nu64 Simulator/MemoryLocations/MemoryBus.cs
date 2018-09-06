@@ -13,7 +13,7 @@ namespace Nu64
     /// Maps an address on the bus to a device or memory. GPU, RAM, and ROM are hard coded. Other I/O devices will be added 
     /// later.
     /// </summary>
-    public class AddressDataBus : Nu64.Common.IMappable
+    public class MemoryBus : Nu64.Common.IMappable
     {
         public const int MinAddress = 0x000000;
         public const int MaxAddress = 0xffffff;
@@ -22,6 +22,8 @@ namespace Nu64
         public IODevice GenericDevice = new IODevice();
         public MemoryRAM ROM = null;
         public MemoryRAM RAM = null;
+
+        public bool VectorPull = false;
 
         public SortedList<int, IODevice> IODevices = new SortedList<int, IODevice>();
 
@@ -32,54 +34,62 @@ namespace Nu64
         /// </summary>
         /// <param name="Address"></param>
         /// <param name="Device"></param>
-        /// <param name="Offset"></param>
-        public void GetDeviceAt(int Address, out Nu64.Common.IMappable Device, out int Offset)
+        /// <param name="DeviceAddress"></param>
+        public void GetDeviceAt(int Address, out Nu64.Common.IMappable Device, out int DeviceAddress)
         {
-            if (Address >= MemoryMap_Blocks.START_OF_DIRECT_PAGE && Address < MemoryMap_Blocks.START_OF_IO)
+            // Vector pull
+            // Vector pull will redirect calls from $00FF00-$00FFFF to $FFFF00-$FFFFFF
+            // Rather than handle that special, just let the ROM logic handle it below. 
+            if (VectorPull && Address >= MemoryMap_DirectPage.VECTORS_BEGIN && Address < MemoryMap_DirectPage.VECTORS_END)
+            {
+                Address = Address | 0xff0000;
+            }
+
+            if (Address >= MemoryMap_Blocks.START_OF_DIRECT_PAGE && Address < MemoryMap_DirectPage.IO_BEGIN)
             {
                 Device = RAM;
-                Offset = MemoryLocations.MemoryMap_Blocks.START_OF_DIRECT_PAGE;
+                DeviceAddress = Address - MemoryLocations.MemoryMap_Blocks.START_OF_DIRECT_PAGE;
                 return;
             }
 
-            if (Address > MemoryMap_Blocks.END_OF_IO && Address <= MemoryMap_Blocks.END_OF_DIRECT_PAGE)
+            if (Address >= MemoryMap_DirectPage.IO_END && Address <= MemoryMap_Blocks.END_OF_DIRECT_PAGE)
             {
                 Device = RAM;
-                Offset = MemoryLocations.MemoryMap_Blocks.START_OF_DIRECT_PAGE;
+                DeviceAddress = Address - MemoryLocations.MemoryMap_Blocks.START_OF_DIRECT_PAGE;
                 return;
             }
 
-            if (Address > MemoryMap_Blocks.END_OF_DIRECT_PAGE && Address <= MemoryMap_Blocks.END_OF_RAM)
+            if (Address >= MemoryMap_Blocks.END_OF_DIRECT_PAGE && Address <= MemoryMap_Blocks.END_OF_RAM)
             {
                 Device = RAM;
-                Offset = MemoryLocations.MemoryMap_Blocks.START_OF_RAM;
-                return;
-            }
-
-            if (Address >= MemoryLocations.MemoryMap_Blocks.START_OF_ROM && Address <= MemoryLocations.MemoryMap_Blocks.END_OF_ROM)
-            {
-                Device = ROM;
-                Offset = MemoryLocations.MemoryMap_Blocks.START_OF_ROM;
+                DeviceAddress = Address - MemoryLocations.MemoryMap_Blocks.START_OF_RAM;
                 return;
             }
 
             if (Address >= MemoryLocations.MemoryMap_Blocks.START_OF_GPU && Address <= MemoryLocations.MemoryMap_Blocks.END_OF_GPU)
             {
                 Device = GPU;
-                Offset = MemoryLocations.MemoryMap_Blocks.START_OF_GPU;
+                DeviceAddress = Address - MemoryLocations.MemoryMap_Blocks.START_OF_GPU;
                 return;
             }
 
-            if (Address >= MemoryMap_Blocks.START_OF_IO && Address <= MemoryMap_Blocks.END_OF_IO)
+            if (Address >= MemoryMap_DirectPage.IO_BEGIN && Address < MemoryMap_DirectPage.IO_END)
             {
                 Device = GenericDevice;
-                Offset = MemoryLocations.MemoryMap_Blocks.START_OF_IO;
+                DeviceAddress = Address - MemoryMap_DirectPage.IO_BEGIN;
+                return;
+            }
+
+            if (Address >= MemoryLocations.MemoryMap_Blocks.START_OF_ROM && Address <= MemoryLocations.MemoryMap_Blocks.END_OF_ROM)
+            {
+                Device = ROM;
+                DeviceAddress = Address - MemoryLocations.MemoryMap_Blocks.START_OF_ROM;
                 return;
             }
 
             // oops, we didn't map this to anything. 
             Device = null;
-            Offset = 0;
+            DeviceAddress = 0;
         }
 
         public virtual byte this[int Address]
@@ -96,8 +106,8 @@ namespace Nu64
 
         public virtual byte ReadByte(int Address)
         {
-            GetDeviceAt(Address, out Nu64.Common.IMappable device, out int offset);
-            return device.ReadByte(Address - offset);
+            GetDeviceAt(Address, out Nu64.Common.IMappable device, out int deviceAddress);
+            return device.ReadByte(deviceAddress);
         }
 
         /// <summary>
@@ -107,8 +117,8 @@ namespace Nu64
         /// <returns></returns>
         public int ReadWord(int Address)
         {
-            GetDeviceAt(Address, out Nu64.Common.IMappable device, out int offset);
-            return device.ReadByte(Address - offset) + (device.ReadByte(Address - offset + 1) << 8);
+            GetDeviceAt(Address, out Nu64.Common.IMappable device, out int deviceAddress);
+            return device.ReadByte(deviceAddress) + (device.ReadByte(deviceAddress + 1) << 8);
         }
 
         /// <summary>
@@ -118,37 +128,37 @@ namespace Nu64
         /// <returns></returns>
         public int ReadLong(int Address)
         {
-            GetDeviceAt(Address, out Nu64.Common.IMappable device, out int offset);
-            return device.ReadByte(Address - offset)
-                + (device.ReadByte(Address - offset + 1) << 8)
-                + (device.ReadByte(Address - offset + 2) << 16);
+            GetDeviceAt(Address, out Nu64.Common.IMappable device, out int deviceAddress);
+            return device.ReadByte(deviceAddress)
+                + (device.ReadByte(deviceAddress + 1) << 8)
+                + (device.ReadByte(deviceAddress + 2) << 16);
         }
 
         public virtual void WriteByte(int Address, byte Value)
         {
-            GetDeviceAt(Address, out Nu64.Common.IMappable device, out int offset);
-            device.WriteByte(Address - offset, Value);
+            GetDeviceAt(Address, out Nu64.Common.IMappable device, out int deviceAddress);
+            device.WriteByte(deviceAddress, Value);
         }
 
         public void WriteWord(int Address, int Value)
         {
-            GetDeviceAt(Address, out Nu64.Common.IMappable device, out int offset);
+            GetDeviceAt(Address, out Nu64.Common.IMappable device, out int deviceAddress);
             device.WriteByte(Address, (byte)(Value & 0xff));
             device.WriteByte(Address + 1, (byte)(Value >> 8 & 0xff));
         }
 
         public void WriteLong(int Address, int Value)
         {
-            GetDeviceAt(Address, out Nu64.Common.IMappable device, out int offset);
-            device.WriteByte(Address - offset, (byte)(Value & 0xff));
-            device.WriteByte(Address - offset + 1, (byte)(Value >> 8 & 0xff));
-            device.WriteByte(Address - offset + 2, (byte)(Value >> 16 & 0xff));
+            GetDeviceAt(Address, out Nu64.Common.IMappable device, out int deviceAddress);
+            device.WriteByte(deviceAddress, (byte)(Value & 0xff));
+            device.WriteByte(deviceAddress + 1, (byte)(Value >> 8 & 0xff));
+            device.WriteByte(deviceAddress + 2, (byte)(Value >> 16 & 0xff));
         }
 
         public int Read(int Address, int Length)
         {
-            GetDeviceAt(Address, out Nu64.Common.IMappable device, out int offset);
-            int addr = Address - offset;
+            GetDeviceAt(Address, out Nu64.Common.IMappable device, out int deviceAddress);
+            int addr = deviceAddress;
             int ret = device.ReadByte(addr);
             if (Length >= 2)
                 ret += device.ReadByte(addr + 1) << 8;
@@ -159,12 +169,12 @@ namespace Nu64
 
         internal void Write(int Address, int Value, int Length)
         {
-            GetDeviceAt(Address, out Nu64.Common.IMappable device, out int offset);
-            device.WriteByte(Address - offset, (byte)(Value & 0xff));
+            GetDeviceAt(Address, out Nu64.Common.IMappable device, out int deviceAddress);
+            device.WriteByte(deviceAddress, (byte)(Value & 0xff));
             if (Length >= 2)
-                device.WriteByte(Address - offset + 1, (byte)(Value >> 8 & 0xff));
+                device.WriteByte(deviceAddress + 1, (byte)(Value >> 8 & 0xff));
             if (Length >= 3)
-                device.WriteByte(Address - offset + 2, (byte)(Value >> 16 & 0xff));
+                device.WriteByte(deviceAddress + 2, (byte)(Value >> 16 & 0xff));
         }
     }
 }

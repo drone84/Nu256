@@ -48,6 +48,8 @@ namespace Nu64.UI
             DebugWindow.CPU = kernel.CPU;
             kernel.CPU.DebugPause = true;
             DebugWindow.Kernel = kernel;
+            DebugWindow.Left = Screen.PrimaryScreen.WorkingArea.Width - DebugWindow.Width;
+            DebugWindow.Top = Screen.PrimaryScreen.WorkingArea.Top;
             DebugWindow.Show();
         }
 
@@ -55,6 +57,8 @@ namespace Nu64.UI
         {
             MemoryWindow = new MemoryWindow();
             MemoryWindow.Memory = kernel.CPU.Memory;
+            MemoryWindow.Left = this.Right;
+            MemoryWindow.Top = this.Top;
             MemoryWindow.Show();
         }
 

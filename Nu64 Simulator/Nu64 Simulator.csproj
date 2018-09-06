@@ -110,7 +110,7 @@
     <Compile Include="Kernel.cs" />
     <Compile Include="MemoryLocations\MemoryRAM.cs" />
     <Compile Include="MemoryLocations\MemoryMap_DirectPage.cs" />
-    <Compile Include="MemoryLocations\AddressDataBus.cs" />
+    <Compile Include="MemoryLocations\MemoryBus.cs" />
     <Compile Include="Monitor\Monitor.cs" />
     <Compile Include="Processor\Operations.cs" />
     <Compile Include="ROMs\PETSCIICommandCodes.cs" />

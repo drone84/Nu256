@@ -294,7 +294,7 @@ namespace Nu64.UI
             catch (Exception ex)
             {
                 Print(ex.Message);
-                CPU.Halted = true;
+                CPU.Halt();
             }
         }
 
@@ -314,7 +314,7 @@ namespace Nu64.UI
             DateTime t = DateTime.Now.AddMilliseconds(timer1.Interval / 2);
             while (DateTime.Now < t)
             {
-                if (CPU.DebugPause || CPU.Halted)
+                if (CPU.DebugPause || CPU.Waiting)
                     break;
                 ExecuteStep();
             }

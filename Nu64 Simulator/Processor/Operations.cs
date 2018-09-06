@@ -48,11 +48,8 @@ namespace Nu64.Processor
         {
             cpu.OpcodeLength = 1;
             cpu.OpcodeCycles = 1;
-            SystemLog.WriteLine(SystemLog.SeverityCodes.Recoverable, "Invalid Instruction (Not implemented.) Abort processed."
-                + "\r\nPC: " + cpu.ProgramBank.GetLongAddress(cpu.PC)
-                + "\r\ninstruction: " + cpu.Opcode.ToString());
 
-            cpu.Halted = true;
+            cpu.Interrupt(InteruptTypes.ABORT);
         }
 
         public void OpORA(int val)
@@ -848,7 +845,7 @@ namespace Nu64.Processor
                 case OpcodeList.NOP_Implied:
                     break;
                 case OpcodeList.STP_Implied: //stop
-                    cpu.Halted = true;
+                    cpu.Halt();
                     break;
                 default:
                     throw new NotImplementedException("ExecuteMisc() opcode not implemented: " + instruction.ToString("X2"));
@@ -1007,7 +1004,7 @@ namespace Nu64.Processor
 
         public void ExecuteWAI(byte Instruction, AddressModes AddressMode, int Signature)
         {
-            cpu.Halted = true;
+            cpu.Waiting = true;
         }
     }
 }

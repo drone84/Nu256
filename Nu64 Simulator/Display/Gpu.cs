@@ -438,7 +438,7 @@ namespace Nu64.Display
         int lastWidth = 0;
         private void DrawBitmapText(Graphics controlGraphics)
         {
-            if(lastWidth != ColumnsVisible)
+            if (lastWidth != ColumnsVisible)
             {
                 frameBuffer = new Bitmap(8 * ColumnsVisible, 8 * LinesVisible, PixelFormat.Format32bppArgb);
                 lastWidth = ColumnsVisible;
@@ -518,10 +518,13 @@ namespace Nu64.Display
         void timer_Tick(object sender, EventArgs e)
         {
             if (RefreshTimer-- > 0)
+            {
+                if (Form.ActiveForm == this.ParentForm)
+                    Refresh();
                 return;
+            }
 
             this.Refresh();
-
             CursorState = !CursorState;
             RefreshTimer = BlinkRate;
         }

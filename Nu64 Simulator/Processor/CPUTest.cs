@@ -57,7 +57,6 @@ namespace Nu64.Processor
 
             // Wind up the CPU and get it ready. The user will advance the PC
             // using the debug window. 
-            CPU.Halted = false;
             CPU.DebugPause = true;
 
             //kernel.OutputDevice = DeviceEnum.DebugWindow;

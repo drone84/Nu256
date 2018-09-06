@@ -15,7 +15,7 @@ namespace Nu64
     public class Kernel
     {
         private const int TAB_WIDTH = 4;
-        public AddressDataBus Memory = null;
+        public MemoryBus Memory = null;
         public Processor.CPU CPU = null;
         public Gpu gpu = null;
         public MemoryBuffer KeyboardBuffer = null;
@@ -36,7 +36,7 @@ namespace Nu64
 
         public Kernel(Gpu gpu)
         {
-            Memory = new AddressDataBus();
+            Memory = new MemoryBus();
             Memory.RAM = new MemoryRAM(0x800000); // 8MB RAM
             Memory.GPU = gpu;
             Memory.ROM = new MemoryRAM(0x100000); // 1MB ROM
@@ -74,16 +74,17 @@ namespace Nu64
 
         public void Reset()
         {
+            CPU.Halt();
+
             Cls();
             gpu.Refresh();
 
             this.ReadyHandler = Monitor;
-            HexFile h = new HexFile(Memory, @"ROMs\kernel.hex");
+            HexFile.Load(Memory, @"ROMs\kernel.hex");
 
             CopyVectors();
 
             CPU.Reset();
-            CPU.Halted = false; 
 
             //CPUTest test= new CPUTest(this);
             //test.BeginTest(0xf81000);
