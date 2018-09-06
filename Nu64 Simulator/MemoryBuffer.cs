@@ -61,8 +61,6 @@ namespace Nu64
                 Memory.WriteWord(StartAddress + WritePos, Value);
 
             WritePos = WritePos + Bytes;
-            if (WritePos >= Length)
-                WritePos = 0;
         }
 
         public int Read(int Bytes)
@@ -78,8 +76,6 @@ namespace Nu64
                 ret = Memory.ReadWord(StartAddress + ReadPos);
 
             ReadPos = ReadPos + Bytes;
-            if (ReadPos >= Length)
-                ReadPos = 0;
 
             return ret;
         }
@@ -117,7 +113,10 @@ namespace Nu64
 
             protected set
             {
-                Memory.WriteWord(ReadPosAddress, value);
+                int i = value;
+                if (i >= Length)
+                    i = 0;
+                Memory.WriteWord(ReadPosAddress, i);
             }
         }
 
@@ -130,7 +129,10 @@ namespace Nu64
 
             protected set
             {
-                Memory.WriteWord(WritePosAddress, value);
+                int i = value;
+                if (i >= Length)
+                    i = 0;
+                Memory.WriteWord(WritePosAddress, i);
             }
         }
 
