@@ -206,8 +206,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>echo Copying latest kernel.hex
-copy "$(ProjectDir)..\kernel\kernel.hex" "$(ProjectDir)ROMs"
-</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
 </Project>

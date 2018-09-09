@@ -8,6 +8,7 @@ namespace Nu64
 {
     public static class MemoryMap_DirectPage
     {
+
         #region Direct page
         // c# Direct page Addresses
 
@@ -50,6 +51,7 @@ namespace Nu64
         public const int D1_OPERAND_B = 0x000112; // 2 Bytes Divider 1 Divisor ex B in A/B
         public const int D1_RESULT = 0x000114; // 2 Bytes Signed quotient result of A/B ex: 7/2 = 3 r 1
         public const int D1_REMAINDER = 0x000116; // 2 Bytes Signed remainder of A/B ex: 1 in 7/2=3 r 1
+        public const int VECTOR_STATE = 0x0001FF; // 1 Byte Interrupt Vector State. See VECTOR_STATE_ENUM
 
         public const int CPUPC = 0x0001F0; // 2 Bytes Debug registers. When BRK is executed, Interrupt service routine will populate this block with the CPU registers. 
         public const int CPUPBR = 0x0001F2; // 1 Byte Program Bank Register (K)
@@ -62,24 +64,28 @@ namespace Nu64
         public const int CPUFLAGS = 0x0001FE; // 1 Byte Flags (P)
 
         public const int MCMDADDR = 0x000200; // 3 Bytes Address of the current line of text being processed by the MONITOR command parser. Can be in display memory or a variable in memory. MONITOR will parse up to MTEXTLEN characters or to a null character.
-        public const int MCMDLEN = 0x000203; // 2 Bytes Length of string being read by the parser. This should be the screen width when in screen memory. Otherwise should be as long as the buffer used to hold the text to parse. 
-        public const int MCMDPOS = 0x000205; // 3 Bytes Next character being read by the command parser. 
-        public const int MCMD = 0x000208; // 3 Bytes Address of the command text. The first character is used to decide which function to execute
-        public const int MARG1 = 0x00020B; // 3 Bytes Address of the command arguments. 
-        public const int MARG2 = 0x00020E; // 3 Bytes Address of the command arguments. 
-        public const int MARG3 = 0x000211; // 3 Bytes Address of the command arguments. 
-        public const int MARG4 = 0x000214; // 3 Bytes Address of the command arguments. 
-        public const int MARG5 = 0x000217; // 3 Bytes Address of the command arguments. 
-        public const int MARG6 = 0x00021A; // 3 Bytes Address of the command arguments. 
-        public const int MARG7 = 0x00021D; // 3 Bytes Address of the command arguments. 
+        public const int MCMP_TEXT = 0x000203; // 3 Bytes Address of symbol being evaluated for COMPARE routine
+        public const int MCMP_LEN = 0x000206; // 2 Bytes Length of symbol being evaluated for COMPARE routine
+        public const int MCMD = 0x000208; // 3 Bytes Address of the current command/function string
+        public const int MCMD_LEN = 0x00020B; // 2 Bytes Length of the current command/function string
+        public const int MARG1 = 0x00020D; // 3 Bytes Address of the command arguments. 
+        public const int MARG1_LEN = 0x000210; // 2 Bytes Length of the argument 
+        public const int MARG2 = 0x000212; // 3 Bytes Address of the command arguments. 
+        public const int MARG2_LEN = 0x000215; // 2 Bytes Length of the argument 
+        public const int MARG3 = 0x000217; // 3 Bytes Address of the command arguments. 
+        public const int MARG3_LEN = 0x00021A; // 2 Bytes Length of the argument 
+        public const int MARG4 = 0x00021C; // 3 Bytes Address of the command arguments. 
+        public const int MARG4_LEN = 0x00021F; // 2 Bytes Length of the argument 
+        public const int MARG5 = 0x000221; // 3 Bytes Address of the command arguments. 
+        public const int MARG5_LEN = 0x000224; // 2 Bytes Length of the argument 
+        public const int MARG6 = 0x000226; // 3 Bytes Address of the command arguments. 
+        public const int MARG6_LEN = 0x000229; // 2 Bytes Length of the argument 
+        public const int MARG7 = 0x00022B; // 3 Bytes Address of the command arguments. 
+        public const int MARG7_LEN = 0x00022E; // 2 Bytes Length of the argument 
 
-        public const int BCMDADDR = 0x000300; // 3 Bytes Pointer to current BASIC line on screen
-        public const int BCMDLEN = 0x000303; // 2 Bytes Length of the BASIC command
-        public const int BCMDPOS = 0x000305; // 3 Bytes Next character being read in the BASIC command
-
-        public const int KEY_BUFFER = 0x00F00; // 64 Bytes SCREEN_PAGE1
-        public const int KEY_BUFFER_LEN = 0x40; // 64 Bytes SCREEN_PAGE2
-        public const int KEY_BUFFER_END = 0x000F3F; // 1 Byte SCREEN_PAGE3
+        public const int KEY_BUFFER = 0x00F00; // 64 Bytes keyboard buffer
+        public const int KEY_BUFFER_SIZE = 0x40; // 64 Bytes (constant) keyboard buffer length
+        public const int KEY_BUFFER_END = 0x000F3F; // 1 Byte keyboard buffer end address
         public const int KEY_BUFFER_RPOS = 0x000F40; // 2 Bytes keyboard buffer read position
         public const int KEY_BUFFER_WPOS = 0x000F42; // 2 Bytes keyboard buffer write position
 
@@ -87,7 +93,10 @@ namespace Nu64
         public const int SCREEN_PAGE1 = 0x003000; // 8192 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
         public const int SCREEN_PAGE2 = 0x005000; // 8192 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
         public const int SCREEN_PAGE3 = 0x007000; // 8192 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
-        public const int SCREEN_END = 0x009000; // This space is avaialble for user code and variables, up to the beginning of the stack. Do not write past STACK_BEGIN
+        public const int SCREEN_END = 0x009000; // End of display memory
+
+        public const int USER_VARIABLES = 0x009000; // 2048 Bytes This space is free for user data in Direct Page
+        public const int USER_VARIABLES_END = 0x009800; // *End of user free space
 
         public const int STACK_BEGIN = 0x009800; // 16384 Bytes The default beginning of stack space
         public const int STACK_END = 0x00D7FF; // 0 Byte End of stack space. Everything below this is I/O space
@@ -103,12 +112,11 @@ namespace Nu64
 
         public const int ISR_BEGIN = 0x00FF00; //  Byte Beginning of CPU vectors in Direct page
         public const int HRESET = 0x00FF00; // 16 Bytes Handle RESET asserted. Reboot computer and re-initialize the kernel.
-        public const int HCOP = 0x00FF10; // 16 Bytes Handle the COP instruction
+        public const int HCOP = 0x00FF10; // 16 Bytes Handle the COP instruction. Program use; not used by OS
         public const int HBRK = 0x00FF20; // 16 Bytes Handle the BRK instruction. Returns to BASIC Ready prompt.
         public const int HABORT = 0x00FF30; // 16 Bytes Handle ABORT asserted. Return to Ready prompt with an error message.
-        public const int HNMI = 0x00FF40; // 80 Bytes Handle NMI asserted. 
-        public const int HIRQ = 0x00FF90; // 80 Bytes Handle IRQ. Should read IRQ line from GAVIN and jump to appropriate IRQ handler.
-        public const int ISR_END = 0x00FFE0; // *End of vector space
+        public const int INT_TABLE = 0x00FF40; // 96 Bytes Interrupt vectors for GAVIN interrupt handler
+        public const int ISR_END = 0x00FFA0; // *End of vector space
 
         public const int VECTORS_BEGIN = 0x00FFE0; // 0 Byte Jumps to ROM READY routine. Modified whenever alternate command interpreter is loaded. 
         public const int JMP_READY = 0x00FFE0; // 4 Bytes Jumps to ROM READY routine. Modified whenever alternate command interpreter is loaded. 
@@ -118,7 +126,6 @@ namespace Nu64
         public const int VECTOR_NMI = 0x00FFEA; // 2 Bytes Native interrupt vector
         public const int VECTOR_RESET = 0x00FFEC; // 2 Bytes Native interrupt vector
         public const int VECTOR_IRQ = 0x00FFEE; // 2 Bytes Native interrupt vector
-
 
         public const int VECTOR_ECOP = 0x00FFF4; // 2 Bytes Emulation mode interrupt handler
         public const int VECTOR_EBRK = 0x00FFF6; // 2 Bytes Emulation mode interrupt handler

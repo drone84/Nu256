@@ -47,7 +47,7 @@ namespace Nu64
             KeyboardBuffer = new MemoryBuffer(
                 Memory.RAM,
                 MemoryMap_DirectPage.KEY_BUFFER, 
-                MemoryMap_DirectPage.KEY_BUFFER_LEN,
+                MemoryMap_DirectPage.KEY_BUFFER_SIZE,
                 MemoryMap_DirectPage.KEY_BUFFER_RPOS, 
                 MemoryMap_DirectPage.KEY_BUFFER_WPOS);
 

@@ -10,7 +10,7 @@ KEYDOWN          = $000008 ;4 Bytes Custom keyboard handler. This defaults to th
 SCREENBEGIN      = $00000C ;3 Bytes Start of screen in video RAM. This is the upper-left corrner of the current video page being written to. This may not be what's being displayed by VICKY. Update this if you change VICKY's display page. 
 COLS_VISIBLE     = $00000F ;2 Bytes Columns visible per screen line. A virtual line can be longer than displayed, up to COLS_PER_LINE long. Default = 80
 COLS_PER_LINE    = $000011 ;2 Bytes Columns in memory per screen line. A virtual line can be this long. Default=128
-LINES_VISIBLE    = $000013 ;2 Bytes The number of rows visible on the screen. Default=60
+LINES_VISIBLE    = $000013 ;2 Bytes The number of rows visible on the screen. Default=25
 LINES_MAX        = $000015 ;2 Bytes The number of rows in memory for the screen. Default=64
 CURSORPOS        = $000017 ;3 Bytes The next character written to the screen will be written in this location. 
 CURSORX          = $00001A ;2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly. 
@@ -40,6 +40,9 @@ D1_OPERAND_A     = $000110 ;2 Bytes Divider 1 Dividend ex: A in  A/B
 D1_OPERAND_B     = $000112 ;2 Bytes Divider 1 Divisor ex B in A/B
 D1_RESULT        = $000114 ;2 Bytes Signed quotient result of A/B ex: 7/2 = 3 r 1
 D1_REMAINDER     = $000116 ;2 Bytes Signed remainder of A/B ex: 1 in 7/2=3 r 1
+VECTOR_STATE     = $0001FF ;1 Byte  Interrupt Vector State. See VECTOR_STATE_ENUM
+
+
 
 CPUPC            = $0001F0 ;2 Bytes Debug registers. When BRK is executed, Interrupt service routine will populate this block with the CPU registers. 
 CPUPBR           = $0001F2 ;1 Byte  Program Bank Register (K)
@@ -52,32 +55,39 @@ CPUDP            = $0001FC ;2 Bytes Direct Page Register (D)
 CPUFLAGS         = $0001FE ;1 Byte  Flags (P)
 
 MCMDADDR         = $000200 ;3 Bytes Address of the current line of text being processed by the MONITOR command parser. Can be in display memory or a variable in memory. MONITOR will parse up to MTEXTLEN characters or to a null character.
-MCMDLEN          = $000203 ;2 Bytes Length of string being read by the parser. This should be the screen width when in screen memory. Otherwise should be as long as the buffer used to hold the text to parse. 
-MCMDPOS          = $000205 ;3 Bytes Next character being read by the command parser. 
-MCMD             = $000208 ;3 Bytes Address of the command text. The first character is used to decide which function to execute
-MARG1            = $00020B ;3 Bytes Address of the command arguments. 
-MARG2            = $00020E ;3 Bytes Address of the command arguments. 
-MARG3            = $000211 ;3 Bytes Address of the command arguments. 
-MARG4            = $000214 ;3 Bytes Address of the command arguments. 
-MARG5            = $000217 ;3 Bytes Address of the command arguments. 
-MARG6            = $00021A ;3 Bytes Address of the command arguments. 
-MARG7            = $00021D ;3 Bytes Address of the command arguments. 
+MCMP_TEXT        = $000203 ;3 Bytes Address of symbol being evaluated for COMPARE routine
+MCMP_LEN         = $000206 ;2 Bytes Length of symbol being evaluated for COMPARE routine
+MCMD             = $000208 ;3 Bytes Address of the current command/function string
+MCMD_LEN         = $00020B ;2 Bytes Length of the current command/function string
+MARG1            = $00020D ;3 Bytes Address of the command arguments. 
+MARG1_LEN        = $000210 ;2 Bytes Length of the argument 
+MARG2            = $000212 ;3 Bytes Address of the command arguments. 
+MARG2_LEN        = $000215 ;2 Bytes Length of the argument 
+MARG3            = $000217 ;3 Bytes Address of the command arguments. 
+MARG3_LEN        = $00021A ;2 Bytes Length of the argument 
+MARG4            = $00021C ;3 Bytes Address of the command arguments. 
+MARG4_LEN        = $00021F ;2 Bytes Length of the argument 
+MARG5            = $000221 ;3 Bytes Address of the command arguments. 
+MARG5_LEN        = $000224 ;2 Bytes Length of the argument 
+MARG6            = $000226 ;3 Bytes Address of the command arguments. 
+MARG6_LEN        = $000229 ;2 Bytes Length of the argument 
+MARG7            = $00022B ;3 Bytes Address of the command arguments. 
+MARG7_LEN        = $00022E ;2 Bytes Length of the argument 
 
-BCMDADDR         = $000300 ;3 Bytes Pointer to current BASIC line on screen
-BCMDLEN          = $000303 ;2 Bytes Length of the BASIC command
-BCMDPOS          = $000305 ;3 Bytes Next character being read in the BASIC command
-
-KEY_BUFFER       = $00F00 ;64 Bytes SCREEN_PAGE1
-KEY_BUFFER_LEN   = $40 ;64 Bytes SCREEN_PAGE2
-KEY_BUFFER_END   = $000F3F ;1 Byte  SCREEN_PAGE3
-KEY_BUFFER_RPOS  = $000F40 ;2 Bytes keyboard buffer read position
-KEY_BUFFER_WPOS  = $000F42 ;2 Bytes keyboard buffer write position
+KEY_BUFFER       = $00F00 ;64 Bytes KEY_BUFFER
+KEY_BUFFER_SIZE  = $40 ;64 Bytes KEY_BUFFER_SIZE
+KEY_BUFFER_END   = $000F3F ;1 Byte  KEY_BUFFER_END
+KEY_BUFFER_RPOS  = $000F40 ;2 Bytes KEY_BUFFER_RPOS
+KEY_BUFFER_WPOS  = $000F42 ;2 Bytes KEY_BUFFER_WPOS
 
 SCREEN_PAGE0     = $001000 ;8192 Bytes First page of display RAM. This is used at boot time to display the welcome screen and the BASIC or MONITOR command screens. 
 SCREEN_PAGE1     = $003000 ;8192 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
 SCREEN_PAGE2     = $005000 ;8192 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
 SCREEN_PAGE3     = $007000 ;8192 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
-SCREEN_END       = $009000 ;This space is avaialble for user code and variables, up to the beginning of the stack. Do not write past STACK_BEGIN
+SCREEN_END       = $009000 ;End of display memory
+
+USER_VARIABLES   = $009000 ;2048 Bytes This space is free for user data in Direct Page
+USER_VARIABLES_E = $009800 ;*End of user free space
 
 STACK_BEGIN      = $009800 ;16384 Bytes The default beginning of stack space
 STACK_END        = $00D7FF ;0 Byte  End of stack space. Everything below this is I/O space
@@ -93,12 +103,11 @@ IO_END           = $00FF00 ;*End of I/O space
 
 ISR_BEGIN        = $00FF00 ; Byte  Beginning of CPU vectors in Direct page
 HRESET           = $00FF00 ;16 Bytes Handle RESET asserted. Reboot computer and re-initialize the kernel.
-HCOP             = $00FF10 ;16 Bytes Handle the COP instruction
+HCOP             = $00FF10 ;16 Bytes Handle the COP instruction. Program use; not used by OS
 HBRK             = $00FF20 ;16 Bytes Handle the BRK instruction. Returns to BASIC Ready prompt.
 HABORT           = $00FF30 ;16 Bytes Handle ABORT asserted. Return to Ready prompt with an error message.
-HNMI             = $00FF40 ;80 Bytes Handle NMI asserted. 
-HIRQ             = $00FF90 ;80 Bytes Handle IRQ. Should read IRQ line from GAVIN and jump to appropriate IRQ handler.
-ISR_END          = $00FFE0 ;*End of vector space
+INT_TABLE        = $00FF40 ;96 Bytes Interrupt vectors for GAVIN interrupt handler
+ISR_END          = $00FFA0 ;*End of vector space
 
 VECTORS_BEGIN    = $00FFE0 ;0 Byte  Jumps to ROM READY routine. Modified whenever alternate command interpreter is loaded. 
 JMP_READY        = $00FFE0 ;4 Bytes Jumps to ROM READY routine. Modified whenever alternate command interpreter is loaded. 

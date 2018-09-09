@@ -438,7 +438,9 @@ namespace Nu64.Display
         int lastWidth = 0;
         private void DrawBitmapText(Graphics controlGraphics)
         {
-            if (lastWidth != ColumnsVisible)
+            if (lastWidth != ColumnsVisible
+                && ColumnsVisible > 0 
+                && LinesVisible > 0)
             {
                 frameBuffer = new Bitmap(8 * ColumnsVisible, 8 * LinesVisible, PixelFormat.Format32bppArgb);
                 lastWidth = ColumnsVisible;

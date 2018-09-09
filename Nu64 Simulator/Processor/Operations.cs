@@ -972,11 +972,10 @@ namespace Nu64.Processor
         public void Compare(AddressModes addressMode, int signature, Register Reg)
         {
             int val = GetValue(addressMode, signature, Reg.Width);
-            int test = Reg.Value - val;
 
-            cpu.Flags.Zero = test == 0;
-            cpu.Flags.Carry = test >= 0;
-            cpu.Flags.SetN(val, Reg.Width);
+            cpu.Flags.Zero = Reg.Value == val;
+            cpu.Flags.Carry = Reg.Value >= val;
+            cpu.Flags.Negative = Reg.Value < val;
         }
 
         /// <summary>

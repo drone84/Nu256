@@ -1,9 +1,10 @@
 .cpu "65816"
 .include "macros_inc.asm"
-.include "directpage_inc.asm"
-.include "monitor_inc.asm"
-.include "kernel_bank_FF.asm"
 .include "simulator_inc.asm"
+.include "directpage_inc.asm"
+.include "monitor.asm"
+.include "kernel_bank_FF.asm"
+
 
 ; C256 Foenix / Nu64 Kernel
 ; Loads to $F0:0000
@@ -70,19 +71,10 @@ IBOOT           ; boot the system
                 setas
                 LDA #$00
                 STA SCREENBEGIN+2
-                setal           
-                LDA #$1000      ; store the initial cursor position
-                STA CURSORPOS
-                setas
-                LDA #$00
-                STA CURSORPOS+2
-                LDX #$0
-                LDY #$0
-                JSL ILOCATE
-                setas
-		; Set screen dimensions. There more columns in memory than 
-		; are visible. A virtual line is 128 bytes, but 80 columns will be
-		; visible on screen.
+                setaxl           
+                ; Set screen dimensions. There more columns in memory than 
+                ; are visible. A virtual line is 128 bytes, but 80 columns will be
+                ; visible on screen.
                 LDX #80         
                 STX COLS_VISIBLE
                 LDY #60
@@ -91,11 +83,14 @@ IBOOT           ; boot the system
                 STX COLS_PER_LINE
                 LDY #64
                 STY LINES_MAX
-                ; reset keyboard buffer
                 setal
+                ; set the location of the cursor (top left corner of screen)
+                LDX #$0
+                LDY #$0
+                JSL ILOCATE
+                ; reset keyboard buffer
                 STZ KEY_BUFFER_RPOS
                 STZ KEY_BUFFER_WPOS
-
                 ; Copy vectors from ROM to Direct Page
                 setaxl 
                 LDA #$FF
@@ -210,7 +205,7 @@ igetchw2        LDA $0,D,X  ; Read the value in the keyboard buffer
                 TXA 
                 CLC
                 ADC #$02
-                CMP #KEY_BUFFER_LEN
+                CMP #KEY_BUFFER_SIZE
                 BCC igetchw3
                 LDA #$0
 igetchw3        STA KEY_BUFFER_RPOS
@@ -364,8 +359,7 @@ ICSRDOWN	RTL
 ;Modifies: none
 ILOCATE         PHA
                 PHP 
-                setal
-                setxl 
+                setaxl
 ilocate_scroll  ; If the cursor is below the bottom row of the screen
                 ; scroll the screen up one line. Keep doing this until
                 ; the cursor is visible. 
@@ -376,24 +370,24 @@ ilocate_scroll  ; If the cursor is below the bottom row of the screen
                 ; repeat until the cursor is visible again
                 BRA ilocate_scroll  
 ilocate_scrolldone
+                ; done scrolling store the resultant cursor positions. 
                 STX CURSORX
                 STY CURSORY 
-                
+                LDA SCREENBEGIN
 ilocate_row     ; compute the row 
                 CPY #$0
                 BEQ ilocate_right
-                LDA SCREENBEGIN
+                ; move down the number of rows in Y
 ilocate_down    CLC
                 ADC COLS_PER_LINE
                 DEY 
                 BEQ ilocate_right 
-                JMP ilocate_down
-                
+                BRA ilocate_down
                 ; compute the column 
 ilocate_right   CLC
-                LDY CURSORY
                 ADC CURSORX             ; move the cursor right X columns
                 STA CURSORPOS                
+                LDY CURSORY
 ilocate_done    PLP
                 PLA
                 RTL
@@ -472,17 +466,18 @@ ICSRHOME        BRK ;
 * = $F8F000                
 greet_msg       .text "  ///// FOENIX 256 DEVELOPMENT SYSTEM",$0D
 greet_msg1      .text " /////  OPEN SOURCE COMPUTER",$0D
-greet_msg2      .text "/////   8192KB SYSTEM 8128KB FREE",$00
-ready_msg       .text $0D,"READY.",$00
-;ready_msg       .text " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
-                .text ";F81000 0000 0000 0000 D6FF F8  0000 ------Z-",$00
-hello_basic     .text "10 PRINT ""Hello World""",$0D
-                .text "RUN",$0D
-                .text "Hello World",$0D
-                .text $0D,"READY.",$00
-hello_ml        .text "G 020000",$0D
-                .text "HELLO WORLD",$0D
-                .text $0D
-                .text " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
-                .text ";002112 0019 F0AA 0000 D6FF F8  0000 --M-----",$00
-error_01        .text "ABORT ERROR",$00
+greet_msg2      .null "/////   8192KB SYSTEM 8128KB FREE"
+ready_msg       .null $0D,"READY."
+;ready_msg       .null " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
+;                .null ";F81000 0000 0000 0000 D6FF F8  0000 ------Z-"
+hello_basic     .null "10 PRINT ""Hello World""",$0D
+                .null "RUN",$0D
+                .null "Hello World",$0D
+                .null $0D,"READY."
+hello_ml        .null "G 020000",$0D
+                .null "HELLO WORLD",$0D
+                .null $0D
+                .null " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
+                .null ";002112 0019 F0AA 0000 D6FF F8  0000 --M-----"
+error_01        .null "ABORT ERROR"
+

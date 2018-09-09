@@ -37,6 +37,11 @@ namespace Nu64.UI
             ShowDebugWindow();
             ShowMemoryWindow();
 
+            this.Top = 0;
+            this.Left = 0;
+            this.Width = DebugWindow.Left;
+            this.Height = Convert.ToInt32(this.Width * 0.75);
+
             BootTimer.Interval = 100;
             BootTimer.Tick += BootTimer_Tick;
             //kernel.READY();
@@ -57,8 +62,8 @@ namespace Nu64.UI
         {
             MemoryWindow = new MemoryWindow();
             MemoryWindow.Memory = kernel.CPU.Memory;
-            MemoryWindow.Left = this.Right;
-            MemoryWindow.Top = this.Top;
+            MemoryWindow.Left = DebugWindow.Left;
+            MemoryWindow.Top = DebugWindow.Top + DebugWindow.Height;
             MemoryWindow.Show();
         }
 
