@@ -59,6 +59,9 @@
     <Compile Include="Display\TerminalSequences.cs" />
     <Compile Include="KeyboardMap.cs" />
     <Compile Include="MemoryBuffer.cs" />
+    <Compile Include="MemoryLocations\MemoryMap_IO.cs" />
+    <Compile Include="MemoryLocations\MemoryMap_Blocks.cs" />
+    <Compile Include="MemoryLocations\MemoryMap_Other.cs" />
     <Compile Include="Processor\Breakpoints.cs" />
     <Compile Include="Processor\CPUPins.cs" />
     <Compile Include="Processor\InteruptTypes.cs" />
@@ -68,7 +71,7 @@
     <Compile Include="Processor\OpcodeList.cs" />
     <Compile Include="Processor\SimulatorCommands.cs" />
     <Compile Include="UI\ColorCodes.cs" />
-    <Compile Include="MemoryLocations\MemoryMap_Blocks.cs" />
+    <Compile Include="MemoryLocations\MemoryMap_DRAM.cs" />
     <Compile Include="Processor\CPUTest.cs" />
     <Compile Include="Processor\CPU.cs" />
     <Compile Include="Processor\CPU_Registers.cs" />
@@ -107,10 +110,10 @@
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="MemoryLocations\IODevice.cs" />
-    <Compile Include="Kernel.cs" />
+    <Compile Include="NuSystem.cs" />
     <Compile Include="MemoryLocations\MemoryRAM.cs" />
-    <Compile Include="MemoryLocations\MemoryMap_DirectPage.cs" />
-    <Compile Include="MemoryLocations\MemoryBus.cs" />
+    <Compile Include="MemoryLocations\MemoryMap_Page00.cs" />
+    <Compile Include="MemoryLocations\MemoryManager.cs" />
     <Compile Include="Monitor\Monitor.cs" />
     <Compile Include="Processor\Operations.cs" />
     <Compile Include="ROMs\PETSCIICommandCodes.cs" />

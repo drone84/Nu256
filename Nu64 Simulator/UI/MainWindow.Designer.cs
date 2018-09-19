@@ -209,12 +209,16 @@ namespace Nu64.UI
             // 
             // gpu
             // 
+            this.gpu.BackColor = System.Drawing.Color.Blue;
             this.gpu.COLS_PER_LINE = 0;
             this.gpu.ColumnsVisible = 0;
             this.gpu.CursorPos = 0;
             this.gpu.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.gpu.Font = new System.Drawing.Font("Consolas", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.gpu.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.gpu.LinesVisible = 0;
             this.gpu.Location = new System.Drawing.Point(16, 40);
+            this.gpu.Margin = new System.Windows.Forms.Padding(4);
             this.gpu.Name = "gpu";
             this.gpu.Size = new System.Drawing.Size(1152, 1083);
             this.gpu.TabIndex = 0;
@@ -260,22 +264,22 @@ namespace Nu64.UI
         private global::System.Windows.Forms.StatusStrip statusStrip1;
         private global::System.Windows.Forms.ToolStripStatusLabel ModeText;
         private global::System.Windows.Forms.ToolStripStatusLabel lastKeyPressed;
-        private System.Windows.Forms.MenuStrip menuStrip1;
-        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem windowsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem cPUToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem memoryToolStripMenuItem;
-        private System.Windows.Forms.Timer executeTimer;
-        private System.Windows.Forms.ToolStripStatusLabel timerStatus;
-        private System.Windows.Forms.Timer performanceTimer;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.Panel panel2;
-        private System.Windows.Forms.Panel panel3;
-        private System.Windows.Forms.Panel panel4;
-        private System.Windows.Forms.ToolStripMenuItem resetToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem resetToolStripMenuItem1;
-        private System.Windows.Forms.ToolStripMenuItem debugToolStripMenuItem;
+        private global::System.Windows.Forms.MenuStrip menuStrip1;
+        private global::System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
+        private global::System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
+        private global::System.Windows.Forms.ToolStripMenuItem windowsToolStripMenuItem;
+        private global::System.Windows.Forms.ToolStripMenuItem cPUToolStripMenuItem;
+        private global::System.Windows.Forms.ToolStripMenuItem memoryToolStripMenuItem;
+        private global::System.Windows.Forms.Timer executeTimer;
+        private global::System.Windows.Forms.ToolStripStatusLabel timerStatus;
+        private global::System.Windows.Forms.Timer performanceTimer;
+        private global::System.Windows.Forms.Panel panel1;
+        private global::System.Windows.Forms.Panel panel2;
+        private global::System.Windows.Forms.Panel panel3;
+        private global::System.Windows.Forms.Panel panel4;
+        private global::System.Windows.Forms.ToolStripMenuItem resetToolStripMenuItem;
+        private global::System.Windows.Forms.ToolStripMenuItem resetToolStripMenuItem1;
+        private global::System.Windows.Forms.ToolStripMenuItem debugToolStripMenuItem;
     }
 }
 

@@ -12,7 +12,7 @@ namespace Nu64.UI
 {
     public partial class MainWindow : Form
     {
-        public Kernel kernel;
+        public NuSystem kernel;
         public UI.CPUWindow DebugWindow;
         public Timer BootTimer = new Timer();
         public int CyclesPerTick = 35000;
@@ -32,7 +32,7 @@ namespace Nu64.UI
 
         private void BasicWindow_Load(object sender, EventArgs e)
         {
-            kernel = new Kernel(this.gpu);
+            kernel = new NuSystem(this.gpu);
 
             ShowDebugWindow();
             ShowMemoryWindow();
@@ -93,7 +93,7 @@ namespace Nu64.UI
                     kernel.KeyboardBuffer.Write(KeyboardMap.KEY_Home);
                     break;
                 default:
-                    System.Diagnostics.Debug.WriteLine("KeyDown: " + e.KeyCode.ToString());
+                    global::System.Diagnostics.Debug.WriteLine("KeyDown: " + e.KeyCode.ToString());
                     break;
             }
         }

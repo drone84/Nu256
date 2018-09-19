@@ -17,5 +17,7 @@ namespace Nu64.Common
         /// <returns></returns>
         void WriteByte(int Address, byte Data);
         byte ReadByte(int Address);
+        int StartAddress { get; }
+        int Length { get; }
     }
 }

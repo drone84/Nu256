@@ -67,18 +67,18 @@ namespace Nu64.Display
         /// </summary>
         /// <param name="Filename">data file with character glyphs</param>
         /// <param name="Vram">array to store glyph data</param>
-        /// <param name="newStartAddress">starting address in array</param>
+        /// <param name="StartAddress">starting address in array</param>
         /// <param name="newCharSize">Size of glyhphs (8x8 or 8x16)</param>
-        public void Load(string Filename, int Offset, MemoryRAM Vram, int newStartAddress, SizeCodes newCharSize)
+        public void Load(string Filename, int Offset, MemoryRAM Vram, int StartAddress, SizeCodes newCharSize)
         {
-            this.StartAddress = newStartAddress;
+            this.StartAddress = StartAddress;
             this.CharSize = newCharSize;
             this.CharacterData = Vram;
 
             try
             {
-                byte[] d = System.IO.File.ReadAllBytes(Filename);
-                Vram.Load(d, Offset, newStartAddress, d.Length - Offset);
+                byte[] d = global::System.IO.File.ReadAllBytes(Filename);
+                Vram.Load(d, Offset, StartAddress, d.Length - Offset);
             }
             catch (Exception ex)
             {

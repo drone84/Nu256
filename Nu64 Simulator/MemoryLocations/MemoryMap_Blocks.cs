@@ -6,37 +6,21 @@ using System.Threading.Tasks;
 
 namespace Nu64.MemoryLocations
 {
-    public static class MemoryMap_Blocks
+    public static partial class MemoryMap
     {
-        public const int START_OF_DIRECT_PAGE = 0x000000;
-        public const int END_OF_DIRECT_PAGE = 0x00FFFF;
+        #region Memory Blocks
+        // c# Memory Blocks
 
-        public const int START_OF_RAM = 0x000000;
-        public const int RAM_BANK_01 = 0x010000;
-        public const int END_OF_RAM = 0x5FFFFF;  // 8MB
+        public const int SRAM_START = 0x000000; // Beginning of 1MB Static RAM: Code, Data. Extra code can be stashed in DRAM but must be pulled to RAM before being used.
+        public const int SRAM_END = 0x07FFFF; // End of 1MB Static RAM
+        public const int SRAM_SIZE = 0x080000; // 1MB Static RAM
+        public const int IO_START = 0x7F0000; // Beginning of I/O Space
+        public const int IO_END = 0x7FFFFF; // End of I/O Space
+        public const int IO_SIZE = 0x00FFFF; // 
+        public const int DRAM_START = 0x800000; // Beginning of 8MB DRAM for graphics, sound, and offline code
+        public const int DRAM_END = 0xFFFFFF; // End of 8MB DRAM 
+        public const int DRAM_SIZE = 0x00FFFF; // 
 
-        /// <summary>
-        /// DMA buffers. 
-        /// </summary>
-        public const int START_OF_DMA = 0x600000;
-        public const int END_OF_DMA = 0x6FFFFF;
-
-        public const int START_OF_INTERRUPTS = 0xFF00;
-        public const int END_OF_INTERRUPTS = 0xFFFF;
-
-        /// <summary>
-        /// GPU takes the top 1MB of RAM
-        /// </summary>
-        public const int START_OF_GPU = 0x700000;
-        public const int END_OF_GPU = 0x7FFFFF;
-
-        /// <summary>
-        /// ROM takes 1MB in the 15-16MB block.
-        /// </summary>
-        public const int START_OF_ROM = 0xF00000;
-        public const int END_OF_ROM = 0xFFFFFF;
-
-        public const int START_OF_ROM_VECTORS = 0xFF0000;
-        public const int END_OF_ROM_VECTORS = 0xFFFFFF;
+        #endregion
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Nu64;
+using Nu64.MemoryLocations;
 
 namespace Nu64.Processor
 {
@@ -38,7 +39,7 @@ namespace Nu64.Processor
             cpu.ProgramBank.Reset();
             cpu.PC.Reset();
 
-            cpu.PC.Value = cpu.Memory.ReadWord(MemoryMap_DirectPage.VECTOR_RESET);
+            cpu.PC.Value = cpu.Memory.ReadWord(MemoryMap.VECTOR_RESET);
         }
 
         /// <summary>
@@ -935,7 +936,7 @@ namespace Nu64.Processor
         {
             int val = GetValue(addressMode, signature);
             if (addressMode == AddressModes.AbsoluteIndexedWithX && (val & 0xff) == 0)
-                System.Diagnostics.Debug.WriteLine("break");
+                global::System.Diagnostics.Debug.WriteLine("break");
             cpu.A.Value = val;
             cpu.Flags.SetNZ(cpu.A);
         }

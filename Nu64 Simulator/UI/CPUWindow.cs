@@ -27,7 +27,7 @@ namespace Nu64.UI
 
         public static CPUWindow Instance = null;
         private Processor.CPU _cpu = null;
-        private Kernel _kernel = null;
+        private NuSystem _kernel = null;
 
         List<string> PrintQueue = new List<string>();
         static StringBuilder lineBuffer = new StringBuilder();
@@ -46,7 +46,7 @@ namespace Nu64.UI
             }
         }
 
-        public Kernel Kernel
+        public NuSystem Kernel
         {
             get
             {
@@ -251,7 +251,7 @@ namespace Nu64.UI
         private void RunButton_Click(object sender, EventArgs e)
         {
             RefreshStatus();
-            int counter = COUNTER_STEPS;
+            //int counter = COUNTER_STEPS;
             CPU.DebugPause = false;
             timer1.Enabled = true;
         }
@@ -371,7 +371,7 @@ namespace Nu64.UI
         {
             StepCounter = 0;
             messageText.Clear();
-            listing = System.IO.File.ReadAllLines(@"ROMs\kernel.lst");
+            this.listing = global::System.IO.File.ReadAllLines(@"ROMs\kernel.lst");
         }
     }
 }

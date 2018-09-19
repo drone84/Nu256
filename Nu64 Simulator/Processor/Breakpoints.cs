@@ -59,8 +59,8 @@ namespace Nu64.Processor
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("Breakpoints.Add(" + HexAddress + ")");
-                System.Diagnostics.Debug.WriteLine("Message:  " + ex.Message);
+                global::System.Diagnostics.Debug.WriteLine("Breakpoints.Add(" + HexAddress + ")");
+                global::System.Diagnostics.Debug.WriteLine("Message:  " + ex.Message);
             }
         }
 
@@ -74,8 +74,8 @@ namespace Nu64.Processor
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("Breakpoints.Remove(" + HexAddress + ")");
-                System.Diagnostics.Debug.WriteLine("Message:  " + ex.Message);
+                global::System.Diagnostics.Debug.WriteLine("Breakpoints.Remove(" + HexAddress + ")");
+                global::System.Diagnostics.Debug.WriteLine("Message:  " + ex.Message);
             }
         }
 

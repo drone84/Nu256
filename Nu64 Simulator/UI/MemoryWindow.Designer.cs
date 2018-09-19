@@ -5,7 +5,7 @@
         /// <summary>
         /// Required designer variable.
         /// </summary>
-        private System.ComponentModel.IContainer components = null;
+        private global::System.ComponentModel.IContainer components = null;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -104,6 +104,7 @@
             // 
             // MemoryWindow
             // 
+            this.AcceptButton = this.ViewButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(593, 295);
@@ -121,11 +122,11 @@
         }
 
         #endregion
-        private System.Windows.Forms.Button ViewButton;
-        private System.Windows.Forms.TextBox EndAddressText;
-        private System.Windows.Forms.TextBox StartAddressText;
-        private System.Windows.Forms.TextBox MemoryText;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.Timer timer1;
+        private global::System.Windows.Forms.Button ViewButton;
+        private global::System.Windows.Forms.TextBox EndAddressText;
+        private global::System.Windows.Forms.TextBox StartAddressText;
+        private global::System.Windows.Forms.TextBox MemoryText;
+        private global::System.Windows.Forms.Panel panel1;
+        private global::System.Windows.Forms.Timer timer1;
     }
 }

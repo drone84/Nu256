@@ -4,17 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Nu64
+namespace Nu64.MemoryLocations
 {
-    public static class MemoryMap_DirectPage
+    public static partial class MemoryMap
     {
-
         #region Direct page
         // c# Direct page Addresses
 
         // * Addresses are the byte AFTER the block. Use this to confirm block locations and check for overlaps
         public const int BANK0_BEGIN = 0x000000; // Start of bank 0 and Direct page
-        public const int DIRECT_PAGE = 0x000000; // Start of bank 0 and Direct page
         public const int RESET = 0x000000; // 4 Bytes Jumps to the beginning of kernel ROM. ($F8:0000). 
         public const int RETURN = 0x000004; // 4 Bytes Called when the RETURN key is pressed in the immediate mode screen. This will process a command in MONITOR, execute a BASIC command, or add a BASIC program line.
         public const int KEYDOWN = 0x000008; // 4 Bytes Custom keyboard handler. This defaults to the kernel keypress handler, but you can redirect this to your own routines. Make sure to JML to the original address at the end of your custom routine. Use this to make F-Key macros or custom keyboard commands. 
@@ -30,7 +28,9 @@ namespace Nu64
         public const int CURATTR = 0x000020; // 2 Bytes Attribute of next character to be printed to the screen.
         public const int STACKBOT = 0x000022; // 2 Bytes Lowest location the stack should be allowed to write to. If SP falls below this value, the runtime should generate STACK OVERFLOW error and abort.
         public const int STACKTOP = 0x000024; // 2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort. 
-        public const int TEMP = 0x0000E0; // 16 Bytes Temp storage for kernel routines
+        public const int KERNEL_TEMP = 0x0000C0; // 32 Bytes Temp space for kernel
+        public const int USER_TEMP = 0x0000E0; // 32 Bytes Temp space for user programs
+        public const int PAGE0_END_ = 0x000100; //  Byte 
 
         public const int GAVIN_BLOCK = 0x000100; // 256 Bytes Gavin reserved, overlaps debugging registers at $1F0
         public const int MULTIPLIER_0 = 0x000100; // 0 Byte Unsigned multiplier
@@ -53,35 +53,44 @@ namespace Nu64
         public const int D1_REMAINDER = 0x000116; // 2 Bytes Signed remainder of A/B ex: 1 in 7/2=3 r 1
         public const int VECTOR_STATE = 0x0001FF; // 1 Byte Interrupt Vector State. See VECTOR_STATE_ENUM
 
-        public const int CPUPC = 0x0001F0; // 2 Bytes Debug registers. When BRK is executed, Interrupt service routine will populate this block with the CPU registers. 
-        public const int CPUPBR = 0x0001F2; // 1 Byte Program Bank Register (K)
-        public const int CPUDBR = 0x0001F3; // 1 Byte Data Bank Register (B)
-        public const int CPUA = 0x0001F4; // 2 Bytes Accumulator (A)
-        public const int CPUX = 0x0001F6; // 2 Bytes X Register
-        public const int CPUY = 0x0001F8; // 2 Bytes Y Index Register
-        public const int CPUSTACK = 0x0001FA; // 2 Bytes Stack (S)
-        public const int CPUDP = 0x0001FC; // 2 Bytes Direct Page Register (D)
-        public const int CPUFLAGS = 0x0001FE; // 1 Byte Flags (P)
+        public const int CPU_REGISTERS = 0x000200; //  Byte 
+        public const int CPUPC = 0x000200; // 2 Bytes Debug registers. When BRK is executed, Interrupt service routine will populate this block with the CPU registers. 
+        public const int CPUPBR = 0x000202; // 1 Byte Program Bank Register (K)
+        public const int CPUDBR = 0x000203; // 1 Byte Data Bank Register (B)
+        public const int CPUFLAGS = 0x000204; // 1 Byte Flags (P) (The second byte is ignored)
+        public const int CPUA = 0x000205; // 2 Bytes Accumulator (A)
+        public const int CPUX = 0x000207; // 2 Bytes X Register
+        public const int CPUY = 0x000209; // 2 Bytes Y Index Register
+        public const int CPUDP = 0x00020B; // 2 Bytes Direct Page Register (D)
+        public const int CPUSTACK = 0x00020D; // 2 Bytes Stack Pointer
 
-        public const int MCMDADDR = 0x000200; // 3 Bytes Address of the current line of text being processed by the MONITOR command parser. Can be in display memory or a variable in memory. MONITOR will parse up to MTEXTLEN characters or to a null character.
-        public const int MCMP_TEXT = 0x000203; // 3 Bytes Address of symbol being evaluated for COMPARE routine
-        public const int MCMP_LEN = 0x000206; // 2 Bytes Length of symbol being evaluated for COMPARE routine
-        public const int MCMD = 0x000208; // 3 Bytes Address of the current command/function string
-        public const int MCMD_LEN = 0x00020B; // 2 Bytes Length of the current command/function string
-        public const int MARG1 = 0x00020D; // 3 Bytes Address of the command arguments. 
-        public const int MARG1_LEN = 0x000210; // 2 Bytes Length of the argument 
-        public const int MARG2 = 0x000212; // 3 Bytes Address of the command arguments. 
-        public const int MARG2_LEN = 0x000215; // 2 Bytes Length of the argument 
-        public const int MARG3 = 0x000217; // 3 Bytes Address of the command arguments. 
-        public const int MARG3_LEN = 0x00021A; // 2 Bytes Length of the argument 
-        public const int MARG4 = 0x00021C; // 3 Bytes Address of the command arguments. 
-        public const int MARG4_LEN = 0x00021F; // 2 Bytes Length of the argument 
-        public const int MARG5 = 0x000221; // 3 Bytes Address of the command arguments. 
-        public const int MARG5_LEN = 0x000224; // 2 Bytes Length of the argument 
-        public const int MARG6 = 0x000226; // 3 Bytes Address of the command arguments. 
-        public const int MARG6_LEN = 0x000229; // 2 Bytes Length of the argument 
-        public const int MARG7 = 0x00022B; // 3 Bytes Address of the command arguments. 
-        public const int MARG7_LEN = 0x00022E; // 2 Bytes Length of the argument 
+        public const int MONITOR_VARS = 0x000210; //  Byte MONITOR Variables. BASIC variables may overlap this space
+        public const int MCMDADDR = 0x000210; // 3 Bytes Address of the current line of text being processed by the command parser. Can be in display memory or a variable in memory. MONITOR will parse up to MTEXTLEN characters or to a null character.
+        public const int MCMP_TEXT = 0x000213; // 3 Bytes Address of symbol being evaluated for COMPARE routine
+        public const int MCMP_LEN = 0x000216; // 2 Bytes Length of symbol being evaluated for COMPARE routine
+        public const int MCMD = 0x000218; // 3 Bytes Address of the current command/function string
+        public const int MCMD_LEN = 0x00021B; // 2 Bytes Length of the current command/function string
+        public const int MARG1 = 0x00021D; // 4 Bytes First command argument. May be data or address, depending on command
+        public const int MARG2 = 0x000221; // 4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
+        public const int MARG3 = 0x000225; // 4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
+        public const int MARG4 = 0x000229; // 4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
+        public const int MARG5 = 0x00022D; // 4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
+        public const int MARG6 = 0x000231; // 4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
+        public const int MARG7 = 0x000235; // 4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
+        public const int MARG8 = 0x000239; // 4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
+
+        public const int LOADFILE_VARS = 0x000300; //  Byte 
+        public const int LOADFILE_NAME = 0x000300; // 3 Bytes (addr) Name of file to load. Address in Data Page
+        public const int LOADFILE_LEN = 0x000303; // 1 Byte Length of filename. 0=Null Terminated
+        public const int LOADPBR = 0x000304; // 1 Byte First Program Bank of loaded file ($05 segment)
+        public const int LOADPC = 0x000305; // 2 Bytes Start address of loaded file ($05 segment)
+        public const int LOADDBR = 0x000307; // 1 Byte First data bank of loaded file ($06 segment)
+        public const int LOADADDR = 0x000308; // 2 Bytes FIrst data address of loaded file ($06 segment)
+        public const int LOADFILE_TYPE = 0x00030A; // 3 Bytes (addr) File type string in loaded data file. Actual string data will be in Bank 1. Valid values are BIN, PRG, P16
+        public const int BLOCK_LEN = 0x00030D; // 2 Bytes Length of block being loaded
+        public const int BLOCK_ADDR = 0x00030F; // 2 Bytes (temp) Address of block being loaded
+        public const int BLOCK_BANK = 0x000311; // 1 Byte (temp) Bank of block being loaded
+        public const int BLOCK_COUNT = 0x000312; // 2 Bytes (temp) Counter of bytes read as file is loaded
 
         public const int KEY_BUFFER = 0x00F00; // 64 Bytes keyboard buffer
         public const int KEY_BUFFER_SIZE = 0x40; // 64 Bytes (constant) keyboard buffer length
@@ -89,43 +98,30 @@ namespace Nu64
         public const int KEY_BUFFER_RPOS = 0x000F40; // 2 Bytes keyboard buffer read position
         public const int KEY_BUFFER_WPOS = 0x000F42; // 2 Bytes keyboard buffer write position
 
-        public const int SCREEN_PAGE0 = 0x001000; // 8192 Bytes First page of display RAM. This is used at boot time to display the welcome screen and the BASIC or MONITOR command screens. 
-        public const int SCREEN_PAGE1 = 0x003000; // 8192 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
-        public const int SCREEN_PAGE2 = 0x005000; // 8192 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
-        public const int SCREEN_PAGE3 = 0x007000; // 8192 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
-        public const int SCREEN_END = 0x009000; // End of display memory
+        public const int TEST_BEGIN = 0x001000; // 28672 Bytes Test/diagnostic code for prototype.
+        public const int TEST_END = 0x007FFF; // 0 Byte 
 
-        public const int USER_VARIABLES = 0x009000; // 2048 Bytes This space is free for user data in Direct Page
-        public const int USER_VARIABLES_END = 0x009800; // *End of user free space
-
-        public const int STACK_BEGIN = 0x009800; // 16384 Bytes The default beginning of stack space
-        public const int STACK_END = 0x00D7FF; // 0 Byte End of stack space. Everything below this is I/O space
-
-        public const int IO_BEGIN = 0x00D800; //  Byte Beginning of IO space
-        public const int IO_GAVIN = 0x00D800; // 1024 Bytes GAVIN I/O space
-        public const int IO_SUPERIO = 0x00DC00; // 1024 Bytes SuperIO I/O space
-        public const int IO_VICKY = 0x00E000; // 1024 Bytes VICKY I/O space
-        public const int IO_BEATRIX = 0x00E400; // 1024 Bytes BEATRIX I/O space
-        public const int IO_RTC = 0x00E800; // 1024 Bytes RTC I/O space
-        public const int IO_CIA = 0x00EC00; // 4864 Bytes CIA I/O space
-        public const int IO_END = 0x00FF00; // *End of I/O space
+        public const int STACK_BEGIN = 0x008000; // 32512 Bytes The default beginning of stack space
+        public const int STACK_END = 0x00FEFF; // 0 Byte End of stack space. Everything below this is I/O space
 
         public const int ISR_BEGIN = 0x00FF00; //  Byte Beginning of CPU vectors in Direct page
         public const int HRESET = 0x00FF00; // 16 Bytes Handle RESET asserted. Reboot computer and re-initialize the kernel.
         public const int HCOP = 0x00FF10; // 16 Bytes Handle the COP instruction. Program use; not used by OS
         public const int HBRK = 0x00FF20; // 16 Bytes Handle the BRK instruction. Returns to BASIC Ready prompt.
         public const int HABORT = 0x00FF30; // 16 Bytes Handle ABORT asserted. Return to Ready prompt with an error message.
-        public const int INT_TABLE = 0x00FF40; // 96 Bytes Interrupt vectors for GAVIN interrupt handler
-        public const int ISR_END = 0x00FFA0; // *End of vector space
+        public const int HNMI = 0x00FF40; // 32 Bytes Handle NMI
+        public const int HIRQ = 0x00FF60; // 32 Bytes Handle IRQ
+        public const int ISR_END = 0x00FF80; // End of direct page Interrrupt handlers
 
         public const int VECTORS_BEGIN = 0x00FFE0; // 0 Byte Jumps to ROM READY routine. Modified whenever alternate command interpreter is loaded. 
         public const int JMP_READY = 0x00FFE0; // 4 Bytes Jumps to ROM READY routine. Modified whenever alternate command interpreter is loaded. 
-        public const int VECTOR_COP = 0x00FFE4; // 2 Bytes Native interrupt vector
-        public const int VECTOR_BRK = 0x00FFE6; // 2 Bytes Native interrupt vector
-        public const int VECTOR_ABORT = 0x00FFE8; // 2 Bytes Native interrupt vector
-        public const int VECTOR_NMI = 0x00FFEA; // 2 Bytes Native interrupt vector
-        public const int VECTOR_RESET = 0x00FFEC; // 2 Bytes Native interrupt vector
-        public const int VECTOR_IRQ = 0x00FFEE; // 2 Bytes Native interrupt vector
+        public const int VECTOR_COP = 0x00FFE4; // 2 Bytes Native COP Interrupt vector
+        public const int VECTOR_BRK = 0x00FFE6; // 2 Bytes Native BRK Interrupt vector
+        public const int VECTOR_ABORT = 0x00FFE8; // 2 Bytes Native ABORT Interrupt vector
+        public const int VECTOR_NMI = 0x00FFEA; // 2 Bytes Native NMI Interrupt vector
+        public const int VECTOR_RESET = 0x00FFEC; // 2 Bytes Unused (Native RESET vector)
+        public const int VECTOR_IRQ = 0x00FFEE; // 2 Bytes Native IRQ Vector
+
 
         public const int VECTOR_ECOP = 0x00FFF4; // 2 Bytes Emulation mode interrupt handler
         public const int VECTOR_EBRK = 0x00FFF6; // 2 Bytes Emulation mode interrupt handler
@@ -134,6 +130,7 @@ namespace Nu64
         public const int VECTOR_ERESET = 0x00FFFC; // 2 Bytes Emulation mode interrupt handler
         public const int VECTOR_EIRQ = 0x00FFFE; // 2 Bytes Emulation mode interrupt handler
         public const int VECTORS_END = 0x010000; // *End of vector space
+        public const int BANK0_END = 0x00FFFF; // End of Bank 00 and Direct page
         #endregion
 
     }

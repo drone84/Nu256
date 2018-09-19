@@ -8,7 +8,7 @@ namespace Nu64.Basic
 {
     class Editor
     {
-        public void Draw(Kernel kernel)
+        public void Draw(NuSystem kernel)
         {
             kernel.Cls();
             kernel.Locate(0, 0);

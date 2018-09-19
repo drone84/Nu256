@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Nu64.Processor;
 using Nu64.Display;
 using Nu64.MemoryLocations;
+using Nu64.Common;
 
 namespace Nu64
 {
@@ -13,20 +14,33 @@ namespace Nu64
     /// Maps an address on the bus to a device or memory. GPU, RAM, and ROM are hard coded. Other I/O devices will be added 
     /// later.
     /// </summary>
-    public class MemoryBus : Nu64.Common.IMappable
+    public class MemoryManager : Nu64.Common.IMappable
     {
         public const int MinAddress = 0x000000;
         public const int MaxAddress = 0xffffff;
 
-        public Gpu GPU = null;
-        public IODevice GenericDevice = new IODevice();
-        public MemoryRAM ROM = null;
-        public MemoryRAM RAM = null;
+        public MemoryRAM VRAM = null;
+        public MemoryRAM CodeRAM = null;
 
         public bool VectorPull = false;
 
-        public SortedList<int, IODevice> IODevices = new SortedList<int, IODevice>();
+        public List<IMappable> Devices = new List<IMappable>();
 
+        public int StartAddress
+        {
+            get
+            {
+                return 0;
+            }
+        }
+
+        public int Length
+        {
+            get
+            {
+                return 0x1000000;
+            }
+        }
 
         /// <summary>
         /// Determine whehter the address being read from or written to is an I/O device or a memory cell.
@@ -37,53 +51,17 @@ namespace Nu64
         /// <param name="DeviceAddress"></param>
         public void GetDeviceAt(int Address, out Nu64.Common.IMappable Device, out int DeviceAddress)
         {
-            // Vector pull
-            // Vector pull will redirect calls from $00FF00-$00FFFF to $FFFF00-$FFFFFF
-            // Rather than handle that special, just let the ROM logic handle it below. 
-            if (VectorPull && Address >= MemoryMap_DirectPage.VECTORS_BEGIN && Address < MemoryMap_DirectPage.VECTORS_END)
+            if (Address >= MemoryMap.SRAM_START && Address <= MemoryMap.SRAM_END)
             {
-                Address = Address | 0xff0000;
-            }
-
-            if (Address >= MemoryMap_Blocks.START_OF_DIRECT_PAGE && Address < MemoryMap_DirectPage.IO_BEGIN)
-            {
-                Device = RAM;
-                DeviceAddress = Address - MemoryLocations.MemoryMap_Blocks.START_OF_DIRECT_PAGE;
+                Device = CodeRAM;
+                DeviceAddress = Address - CodeRAM.StartAddress;
                 return;
             }
 
-            if (Address >= MemoryMap_DirectPage.IO_END && Address <= MemoryMap_Blocks.END_OF_DIRECT_PAGE)
+            if(Address >= MemoryMap.DRAM_START && Address <= MemoryMap.DRAM_END)
             {
-                Device = RAM;
-                DeviceAddress = Address - MemoryLocations.MemoryMap_Blocks.START_OF_DIRECT_PAGE;
-                return;
-            }
-
-            if (Address >= MemoryMap_Blocks.END_OF_DIRECT_PAGE && Address <= MemoryMap_Blocks.END_OF_RAM)
-            {
-                Device = RAM;
-                DeviceAddress = Address - MemoryLocations.MemoryMap_Blocks.START_OF_RAM;
-                return;
-            }
-
-            if (Address >= MemoryLocations.MemoryMap_Blocks.START_OF_GPU && Address <= MemoryLocations.MemoryMap_Blocks.END_OF_GPU)
-            {
-                Device = GPU;
-                DeviceAddress = Address - MemoryLocations.MemoryMap_Blocks.START_OF_GPU;
-                return;
-            }
-
-            if (Address >= MemoryMap_DirectPage.IO_BEGIN && Address < MemoryMap_DirectPage.IO_END)
-            {
-                Device = GenericDevice;
-                DeviceAddress = Address - MemoryMap_DirectPage.IO_BEGIN;
-                return;
-            }
-
-            if (Address >= MemoryLocations.MemoryMap_Blocks.START_OF_ROM && Address <= MemoryLocations.MemoryMap_Blocks.END_OF_ROM)
-            {
-                Device = ROM;
-                DeviceAddress = Address - MemoryLocations.MemoryMap_Blocks.START_OF_ROM;
+                Device = VRAM;
+                DeviceAddress = Address - VRAM.StartAddress;
                 return;
             }
 
@@ -107,6 +85,8 @@ namespace Nu64
         public virtual byte ReadByte(int Address)
         {
             GetDeviceAt(Address, out Nu64.Common.IMappable device, out int deviceAddress);
+            if (device == null)
+                return 0xff;
             return device.ReadByte(deviceAddress);
         }
 

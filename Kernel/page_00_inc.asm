@@ -3,7 +3,6 @@
 ;
 ;* Addresses are the byte AFTER the block. Use this to confirm block locations and check for overlaps
 BANK0_BEGIN      = $000000 ;Start of bank 0 and Direct page
-DIRECT_PAGE      = $000000 ;Start of bank 0 and Direct page
 RESET            = $000000 ;4 Bytes Jumps to the beginning of kernel ROM. ($F8:0000). 
 RETURN           = $000004 ;4 Bytes Called when the RETURN key is pressed in the immediate mode screen. This will process a command in MONITOR, execute a BASIC command, or add a BASIC program line.
 KEYDOWN          = $000008 ;4 Bytes Custom keyboard handler. This defaults to the kernel keypress handler, but you can redirect this to your own routines. Make sure to JML to the original address at the end of your custom routine. Use this to make F-Key macros or custom keyboard commands. 
@@ -19,7 +18,9 @@ CURCOLOR         = $00001E ;2 Bytes Color of next character to be printed to the
 CURATTR          = $000020 ;2 Bytes Attribute of next character to be printed to the screen.
 STACKBOT         = $000022 ;2 Bytes Lowest location the stack should be allowed to write to. If SP falls below this value, the runtime should generate STACK OVERFLOW error and abort.
 STACKTOP         = $000024 ;2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort. 
-TEMP             = $0000E0 ;16 Bytes Temp storage for kernel routines
+KERNEL_TEMP      = $0000C0 ;32 Bytes Temp space for kernel
+USER_TEMP        = $0000E0 ;32 Bytes Temp space for user programs
+PAGE0_END_       = $000100 ; Byte  
 
 GAVIN_BLOCK      = $000100 ;256 Bytes Gavin reserved, overlaps debugging registers at $1F0
 MULTIPLIER_0     = $000100 ;0 Byte  Unsigned multiplier
@@ -42,37 +43,44 @@ D1_RESULT        = $000114 ;2 Bytes Signed quotient result of A/B ex: 7/2 = 3 r 
 D1_REMAINDER     = $000116 ;2 Bytes Signed remainder of A/B ex: 1 in 7/2=3 r 1
 VECTOR_STATE     = $0001FF ;1 Byte  Interrupt Vector State. See VECTOR_STATE_ENUM
 
+CPU_REGISTERS    = $000200 ; Byte  
+CPUPC            = $000200 ;2 Bytes Debug registers. When BRK is executed, Interrupt service routine will populate this block with the CPU registers. 
+CPUPBR           = $000202 ;1 Byte  Program Bank Register (K)
+CPUDBR           = $000203 ;1 Byte  Data Bank Register (B)
+CPUFLAGS         = $000204 ;1 Byte  Flags (P) (The second byte is ignored)
+CPUA             = $000205 ;2 Bytes Accumulator (A)
+CPUX             = $000207 ;2 Bytes X Register
+CPUY             = $000209 ;2 Bytes Y Index Register
+CPUDP            = $00020B ;2 Bytes Direct Page Register (D)
+CPUSTACK         = $00020D ;2 Bytes Stack Pointer
 
+MONITOR_VARS     = $000210 ; Byte  MONITOR Variables. BASIC variables may overlap this space
+MCMDADDR         = $000210 ;3 Bytes Address of the current line of text being processed by the command parser. Can be in display memory or a variable in memory. MONITOR will parse up to MTEXTLEN characters or to a null character.
+MCMP_TEXT        = $000213 ;3 Bytes Address of symbol being evaluated for COMPARE routine
+MCMP_LEN         = $000216 ;2 Bytes Length of symbol being evaluated for COMPARE routine
+MCMD             = $000218 ;3 Bytes Address of the current command/function string
+MCMD_LEN         = $00021B ;2 Bytes Length of the current command/function string
+MARG1            = $00021D ;4 Bytes First command argument. May be data or address, depending on command
+MARG2            = $000221 ;4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
+MARG3            = $000225 ;4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
+MARG4            = $000229 ;4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
+MARG5            = $00022D ;4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
+MARG6            = $000231 ;4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
+MARG7            = $000235 ;4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
+MARG8            = $000239 ;4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
 
-CPUPC            = $0001F0 ;2 Bytes Debug registers. When BRK is executed, Interrupt service routine will populate this block with the CPU registers. 
-CPUPBR           = $0001F2 ;1 Byte  Program Bank Register (K)
-CPUDBR           = $0001F3 ;1 Byte  Data Bank Register (B)
-CPUA             = $0001F4 ;2 Bytes Accumulator (A)
-CPUX             = $0001F6 ;2 Bytes X Register
-CPUY             = $0001F8 ;2 Bytes Y Index Register
-CPUSTACK         = $0001FA ;2 Bytes Stack (S)
-CPUDP            = $0001FC ;2 Bytes Direct Page Register (D)
-CPUFLAGS         = $0001FE ;1 Byte  Flags (P)
-
-MCMDADDR         = $000200 ;3 Bytes Address of the current line of text being processed by the MONITOR command parser. Can be in display memory or a variable in memory. MONITOR will parse up to MTEXTLEN characters or to a null character.
-MCMP_TEXT        = $000203 ;3 Bytes Address of symbol being evaluated for COMPARE routine
-MCMP_LEN         = $000206 ;2 Bytes Length of symbol being evaluated for COMPARE routine
-MCMD             = $000208 ;3 Bytes Address of the current command/function string
-MCMD_LEN         = $00020B ;2 Bytes Length of the current command/function string
-MARG1            = $00020D ;3 Bytes Address of the command arguments. 
-MARG1_LEN        = $000210 ;2 Bytes Length of the argument 
-MARG2            = $000212 ;3 Bytes Address of the command arguments. 
-MARG2_LEN        = $000215 ;2 Bytes Length of the argument 
-MARG3            = $000217 ;3 Bytes Address of the command arguments. 
-MARG3_LEN        = $00021A ;2 Bytes Length of the argument 
-MARG4            = $00021C ;3 Bytes Address of the command arguments. 
-MARG4_LEN        = $00021F ;2 Bytes Length of the argument 
-MARG5            = $000221 ;3 Bytes Address of the command arguments. 
-MARG5_LEN        = $000224 ;2 Bytes Length of the argument 
-MARG6            = $000226 ;3 Bytes Address of the command arguments. 
-MARG6_LEN        = $000229 ;2 Bytes Length of the argument 
-MARG7            = $00022B ;3 Bytes Address of the command arguments. 
-MARG7_LEN        = $00022E ;2 Bytes Length of the argument 
+LOADFILE_VARS    = $000300 ; Byte  
+LOADFILE_NAME    = $000300 ;3 Bytes (addr) Name of file to load. Address in Data Page
+LOADFILE_LEN     = $000303 ;1 Byte  Length of filename. 0=Null Terminated
+LOADPBR          = $000304 ;1 Byte  First Program Bank of loaded file ($05 segment)
+LOADPC           = $000305 ;2 Bytes Start address of loaded file ($05 segment)
+LOADDBR          = $000307 ;1 Byte  First data bank of loaded file ($06 segment)
+LOADADDR         = $000308 ;2 Bytes FIrst data address of loaded file ($06 segment)
+LOADFILE_TYPE    = $00030A ;3 Bytes (addr) File type string in loaded data file. Actual string data will be in Bank 1. Valid values are BIN, PRG, P16
+BLOCK_LEN        = $00030D ;2 Bytes Length of block being loaded
+BLOCK_ADDR       = $00030F ;2 Bytes (temp) Address of block being loaded
+BLOCK_BANK       = $000311 ;1 Byte  (temp) Bank of block being loaded
+BLOCK_COUNT      = $000312 ;2 Bytes (temp) Counter of bytes read as file is loaded
 
 KEY_BUFFER       = $00F00 ;64 Bytes KEY_BUFFER
 KEY_BUFFER_SIZE  = $40 ;64 Bytes KEY_BUFFER_SIZE
@@ -80,43 +88,29 @@ KEY_BUFFER_END   = $000F3F ;1 Byte  KEY_BUFFER_END
 KEY_BUFFER_RPOS  = $000F40 ;2 Bytes KEY_BUFFER_RPOS
 KEY_BUFFER_WPOS  = $000F42 ;2 Bytes KEY_BUFFER_WPOS
 
-SCREEN_PAGE0     = $001000 ;8192 Bytes First page of display RAM. This is used at boot time to display the welcome screen and the BASIC or MONITOR command screens. 
-SCREEN_PAGE1     = $003000 ;8192 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
-SCREEN_PAGE2     = $005000 ;8192 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
-SCREEN_PAGE3     = $007000 ;8192 Bytes Additional page of display RAM. This can be used for page flipping or to handle multiple edit buffers. 
-SCREEN_END       = $009000 ;End of display memory
+TEST_BEGIN       = $001000 ;28672 Bytes Test/diagnostic code for prototype.
+TEST_END         = $007FFF ;0 Byte  
 
-USER_VARIABLES   = $009000 ;2048 Bytes This space is free for user data in Direct Page
-USER_VARIABLES_E = $009800 ;*End of user free space
-
-STACK_BEGIN      = $009800 ;16384 Bytes The default beginning of stack space
-STACK_END        = $00D7FF ;0 Byte  End of stack space. Everything below this is I/O space
-
-IO_BEGIN         = $00D800 ; Byte  Beginning of IO space
-IO_GAVIN         = $00D800 ;1024 Bytes GAVIN I/O space
-IO_SUPERIO       = $00DC00 ;1024 Bytes SuperIO I/O space
-IO_VICKY         = $00E000 ;1024 Bytes VICKY I/O space
-IO_BEATRIX       = $00E400 ;1024 Bytes BEATRIX I/O space
-IO_RTC           = $00E800 ;1024 Bytes RTC I/O space
-IO_CIA           = $00EC00 ;4864 Bytes CIA I/O space
-IO_END           = $00FF00 ;*End of I/O space
+STACK_BEGIN      = $008000 ;32512 Bytes The default beginning of stack space
+STACK_END        = $00FEFF ;0 Byte  End of stack space. Everything below this is I/O space
 
 ISR_BEGIN        = $00FF00 ; Byte  Beginning of CPU vectors in Direct page
 HRESET           = $00FF00 ;16 Bytes Handle RESET asserted. Reboot computer and re-initialize the kernel.
 HCOP             = $00FF10 ;16 Bytes Handle the COP instruction. Program use; not used by OS
 HBRK             = $00FF20 ;16 Bytes Handle the BRK instruction. Returns to BASIC Ready prompt.
 HABORT           = $00FF30 ;16 Bytes Handle ABORT asserted. Return to Ready prompt with an error message.
-INT_TABLE        = $00FF40 ;96 Bytes Interrupt vectors for GAVIN interrupt handler
-ISR_END          = $00FFA0 ;*End of vector space
+HNMI             = $00FF40 ;32 Bytes Handle NMI
+HIRQ             = $00FF60 ;32 Bytes Handle IRQ
+ISR_END          = $00FF80 ;End of direct page Interrrupt handlers
 
 VECTORS_BEGIN    = $00FFE0 ;0 Byte  Jumps to ROM READY routine. Modified whenever alternate command interpreter is loaded. 
 JMP_READY        = $00FFE0 ;4 Bytes Jumps to ROM READY routine. Modified whenever alternate command interpreter is loaded. 
-VECTOR_COP       = $00FFE4 ;2 Bytes Native interrupt vector
-VECTOR_BRK       = $00FFE6 ;2 Bytes Native interrupt vector
-VECTOR_ABORT     = $00FFE8 ;2 Bytes Native interrupt vector
-VECTOR_NMI       = $00FFEA ;2 Bytes Native interrupt vector
-VECTOR_RESET     = $00FFEC ;2 Bytes Native interrupt vector
-VECTOR_IRQ       = $00FFEE ;2 Bytes Native interrupt vector
+VECTOR_COP       = $00FFE4 ;2 Bytes Native COP Interrupt vector
+VECTOR_BRK       = $00FFE6 ;2 Bytes Native BRK Interrupt vector
+VECTOR_ABORT     = $00FFE8 ;2 Bytes Native ABORT Interrupt vector
+VECTOR_NMI       = $00FFEA ;2 Bytes Native NMI Interrupt vector
+VECTOR_RESET     = $00FFEC ;2 Bytes Unused (Native RESET vector)
+VECTOR_IRQ       = $00FFEE ;2 Bytes Native IRQ Vector
 
 
 VECTOR_ECOP      = $00FFF4 ;2 Bytes Emulation mode interrupt handler
@@ -126,4 +120,5 @@ VECTOR_ENMI      = $00FFFA ;2 Bytes Emulation mode interrupt handler
 VECTOR_ERESET    = $00FFFC ;2 Bytes Emulation mode interrupt handler
 VECTOR_EIRQ      = $00FFFE ;2 Bytes Emulation mode interrupt handler
 VECTORS_END      = $010000 ;*End of vector space
+BANK0_END        = $00FFFF ;End of Bank 00 and Direct page
 ; 

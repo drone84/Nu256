@@ -26,7 +26,7 @@ namespace Nu64.Processor
             this.AddressMode = Mode;
             this.ExecuteOp += newDelegate;
 
-            System.Diagnostics.Debug.WriteLine("public const int " + Mnemonic + "_" + Mode.ToString() + "=0x" + Value.ToString("X2") + ";");
+            global::System.Diagnostics.Debug.WriteLine("public const int " + Mnemonic + "_" + Mode.ToString() + "=0x" + Value.ToString("X2") + ";");
         }
 
         public OpCode(byte Value, string Mnemonic, int Length, AddressModes Mode, ExecuteDelegate newDelegate)
@@ -37,7 +37,7 @@ namespace Nu64.Processor
             this.AddressMode = Mode;
             this.ExecuteOp += newDelegate;
 
-            System.Diagnostics.Debug.WriteLine("public const int " + Mnemonic + "_" + Mode.ToString() + "=0x" + Value.ToString("X2") + ";");
+            global::System.Diagnostics.Debug.WriteLine("public const int " + Mnemonic + "_" + Mode.ToString() + "=0x" + Value.ToString("X2") + ";");
         }
 
         public void Execute(int SignatureBytes)

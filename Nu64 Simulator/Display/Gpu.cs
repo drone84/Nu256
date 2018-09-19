@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Drawing.Text;
 using System.Drawing.Imaging;
+using Nu64.MemoryLocations;
 
 namespace Nu64.Display
 {
@@ -21,10 +22,30 @@ namespace Nu64.Display
         const int MAX_TEXT_LINES = 64;
         const int SCREEN_PAGE_SIZE = 128 * 64;
 
-        public MemoryRAM Memory = null;
+        private int startAddress;
+        private int length;
+
+        public int StartAddress
+        {
+            get
+            {
+                return this.startAddress;
+            }
+        }
+
+        public int Length
+        {
+            get
+            {
+                return length;
+            }
+        }
+
+        public MemoryRAM VRAM = null;
+        public MemoryRAM CodeRAM = null;
 
         // Video page 0 is 0x1000. Each page is 8192 (128x64) bytes long.
-        private int characterMatrixStart = MemoryMap_DirectPage.SCREEN_PAGE0;
+        private int characterMatrixStart = MemoryLocations.MemoryMap.SCREEN_PAGE0;
         //private int colorMatrixStart = 6096;
         //private int attributeStart = 8096;
         // character bitmaps are stored in the reserved video memory space.
@@ -70,9 +91,9 @@ namespace Nu64.Display
 
         private int GetCharPos(int row, int col)
         {
-            if (Memory == null)
+            if (CodeRAM == null)
                 return 0;
-            int baseAddress = Memory.ReadLong(MemoryMap_DirectPage.SCREENBEGIN);
+            int baseAddress = CodeRAM.ReadLong(MemoryMap.SCREENBEGIN);
             return baseAddress + row * COLS_PER_LINE + col;
         }
 
@@ -84,10 +105,10 @@ namespace Nu64.Display
         {
             get
             {
-                if (Memory == null)
+                if (CodeRAM == null)
                     return 0;
 
-                return Memory.ReadByte(MemoryMap_DirectPage.CURSORX);
+                return CodeRAM.ReadByte(MemoryMap.CURSORX);
             }
             set
             {
@@ -96,8 +117,8 @@ namespace Nu64.Display
                     x = 0;
                 if (x >= ColumnsVisible)
                     x = ColumnsVisible - 1;
-                if (Memory != null)
-                    Memory.WriteByte(MemoryMap_DirectPage.CURSORX, (byte)x);
+                if (CodeRAM != null)
+                    CodeRAM.WriteByte(MemoryMap.CURSORX, (byte)x);
                 ResetDrawTimer();
                 CursorPos = GetCharPos(Y, x);
             }
@@ -111,10 +132,10 @@ namespace Nu64.Display
         {
             get
             {
-                if (Memory == null)
+                if (CodeRAM == null)
                     return 0;
 
-                return Memory.ReadByte(MemoryMap_DirectPage.CURSORY);
+                return CodeRAM.ReadByte(MemoryMap.CURSORY);
             }
             set
             {
@@ -123,8 +144,8 @@ namespace Nu64.Display
                     y = 0;
                 if (y >= LinesVisible)
                     y = LinesVisible - 1;
-                if (Memory != null)
-                    Memory.WriteByte(MemoryMap_DirectPage.CURSORY, (byte)y);
+                if (CodeRAM != null)
+                    CodeRAM.WriteByte(MemoryMap.CURSORY, (byte)y);
                 ResetDrawTimer();
                 CursorPos = GetCharPos(y, X);
             }
@@ -135,14 +156,14 @@ namespace Nu64.Display
         {
             get
             {
-                if (Memory == null)
+                if (CodeRAM == null)
                     return 0;
 
-                return Memory.ReadByte(MemoryMap_DirectPage.COLS_VISIBLE);
+                return CodeRAM.ReadByte(MemoryMap.COLS_VISIBLE);
             }
             set
             {
-                if (Memory == null)
+                if (CodeRAM == null)
                     return;
 
                 int i = value;
@@ -150,7 +171,7 @@ namespace Nu64.Display
                     i = 0;
                 if (i > MAX_TEXT_COLS)
                     i = MAX_TEXT_COLS;
-                Memory.WriteWord(MemoryMap_DirectPage.COLS_VISIBLE, i);
+                CodeRAM.WriteWord(MemoryMap.COLS_VISIBLE, i);
             }
         }
 
@@ -159,14 +180,13 @@ namespace Nu64.Display
         {
             get
             {
-                if (Memory == null)
+                if (CodeRAM == null)
                     return 0;
-
-                return Memory.ReadByte(MemoryMap_DirectPage.LINES_VISIBLE);
+                return CodeRAM.ReadByte(MemoryMap.LINES_VISIBLE);
             }
             set
             {
-                if (Memory == null)
+                if (CodeRAM == null)
                     return;
 
                 int i = value;
@@ -174,7 +194,7 @@ namespace Nu64.Display
                     i = 0;
                 if (i > MAX_TEXT_LINES)
                     i = MAX_TEXT_LINES;
-                Memory.WriteWord(MemoryMap_DirectPage.LINES_VISIBLE, i);
+                CodeRAM.WriteWord(MemoryMap.LINES_VISIBLE, i);
             }
         }
 
@@ -182,14 +202,14 @@ namespace Nu64.Display
         {
             get
             {
-                if (Memory == null)
+                if (CodeRAM == null)
                     return 0;
 
-                return Memory.ReadByte(MemoryMap_DirectPage.COLS_PER_LINE);
+                return CodeRAM.ReadByte(MemoryMap.COLS_PER_LINE);
             }
             set
             {
-                if (Memory == null)
+                if (CodeRAM == null)
                     return;
 
                 int i = value;
@@ -197,7 +217,7 @@ namespace Nu64.Display
                     i = 0;
                 if (i > MAX_TEXT_COLS)
                     i = MAX_TEXT_COLS;
-                Memory.WriteWord(MemoryMap_DirectPage.COLS_PER_LINE, i);
+                CodeRAM.WriteWord(MemoryMap.COLS_PER_LINE, i);
             }
         }
 
@@ -221,14 +241,14 @@ namespace Nu64.Display
             this.VisibleChanged += new EventHandler(FrameBufferControl_VisibleChanged);
             this.DoubleBuffered = true;
 
-            var info = new Microsoft.VisualBasic.Devices.ComputerInfo();
-            var tot = info.TotalPhysicalMemory;
-            var fre = info.AvailablePhysicalMemory;
+            //var info = new Microsoft.VisualBasic.Devices.ComputerInfo();
+            //var tot = info.TotalPhysicalMemory;
+            //var fre = info.AvailablePhysicalMemory;
 
-            tot = (tot / 1024 / 1024 / 1024);
-            fre = (fre / 1024 / 1024);
-            string line1 = "**** Nu64 BASIC TEST PLATFORM ****";
-            string line2 = tot.ToString() + "GB RAM SYSTEM " + fre.ToString() + " MEGABYTES FREE";
+            //tot = (tot / 1024 / 1024 / 1024);
+            //fre = (fre / 1024 / 1024);
+            //string line1 = "**** Nu64 BASIC TEST PLATFORM ****";
+            //string line2 = tot.ToString() + "GB RAM SYSTEM " + fre.ToString() + " MEGABYTES FREE";
             //int adjust = columns / 2 - line1.Length / 2;
 
             X = 0;
@@ -250,9 +270,10 @@ namespace Nu64.Display
             }
         }
 
-        public void LoadCharacterData(MemoryRAM newVRAM)
+        public void LoadCharacterData(MemoryRAM VideoRAM, MemoryRAM CodeRAM)
         {
-            this.Memory = newVRAM;
+            this.VRAM = VideoRAM;
+            this.CodeRAM = CodeRAM;
             LoadCharacterSet("ASCII-PET", @"Resources\FOENIX-CHARACTER-ASCII.bin", 0, CharacterSet.CharTypeCodes.ASCII_PET, CharacterSet.SizeCodes.Size8x8);
             //LoadCharacterSet("ASCII-PET", @"Resources\FOENIX-CHARACTER-ASCII.bin", 0, CharacterSet.CharTypeCodes.ASCII_PET, CharacterSet.SizeCodes.Size8x8);
             //LoadCharacterSet("PETSCII_GRAPHICS", @"Resources\PETSCII.901225-01.bin", 0, CharacterSet.CharTypeCodes.PETSCII_GRAPHICS, CharacterSet.SizeCodes.Size8x8);
@@ -345,16 +366,16 @@ namespace Nu64.Display
         {
             get
             {
-                if (Memory == null)
+                if (CodeRAM == null)
                     return 0;
-                return Memory.ReadWord(MemoryMap_DirectPage.CURSORPOS);
+                return CodeRAM.ReadWord(MemoryMap.CURSORPOS);
             }
 
             set
             {
-                if (Memory == null)
+                if (CodeRAM == null)
                     return;
-                Memory.WriteWord(MemoryMap_DirectPage.CURSORPOS, value);
+                CodeRAM.WriteWord(MemoryMap.CURSORPOS, value);
             }
         }
 
@@ -366,61 +387,78 @@ namespace Nu64.Display
         /// <param name="e"></param>
         void Gpu_Paint(object sender, PaintEventArgs e)
         {
+            Graphics g = e.Graphics;
+            g.Clear(BackColor);
+            if (VRAM == null)
+            {
+                g.DrawString("VRAM Not initialized", this.Font, TextBrush, 0, 0);
+                return;
+            }
+            if (CodeRAM == null)
+            {
+                g.DrawString("CodeRAM Not initialized", this.Font, TextBrush, 0, 0);
+                return;
+            }
+
+            if (ColumnsVisible < 1 || ColumnsVisible > 128)
+            {
+                g.DrawString("ColumnsVisible invalid:" + ColumnsVisible.ToString(), this.Font, TextBrush, 0, 0);
+                return;
+            }
+            if (LinesVisible < 1)
+            {
+                g.DrawString("LinesVisible invalid:" + LinesVisible.ToString(), this.Font, TextBrush, 0, 0);
+                return;
+            }
+
             //DrawVectorText(e.Graphics);
             DrawBitmapText(e.Graphics);
         }
 
         private void DrawVectorText(Graphics g)
         {
-            //float x;
-            //float y;
+            float x;
+            float y;
 
-            //if (TextFont == null)
-            //    TextFont = GetBestFont();
-            //SizeF charSize = MeasureFont(TextFont, g);
-            //float charWidth = charSize.Width / MEASURE_STRING.Length;
-            //float charHeight = charSize.Height;
-            //float Col80 = charWidth * columns;
-            //float Row25 = charWidth * LINES;
+            if (TextFont == null)
+                TextFont = GetBestFont();
+            SizeF charSize = MeasureFont(TextFont, g);
+            float charWidth = charSize.Width / MEASURE_STRING.Length;
+            float charHeight = charSize.Height;
+            float RightCol = charWidth * ColumnsVisible;
+            float BottomRow = charWidth * LinesVisible;
 
-            //if (halfWidth)
-            //{
-            //    g.ScaleTransform(0.5f, 1.0f);
-            //}
-            //float ScaleX = this.ClientRectangle.Width / Col80;
-            //float ScaleY = this.ClientRectangle.Height / Row25;
-            //g.ScaleTransform(ScaleX, ScaleY);
+            float ScaleX = this.ClientRectangle.Width / RightCol;
+            float ScaleY = this.ClientRectangle.Height / BottomRow;
+            g.ResetTransform();
+            g.ScaleTransform(ScaleX, ScaleY);
 
-            //g.Clear(Color.Blue);
+            if (VRAM == null)
+                return;
 
-            //if (VRAM == null)
-            //    return;
+            int col = 0, row = 0;
+            for (int i = 0; i < BufferSize; i++)
+            {
+                if (col < ColumnsVisible)
+                {
+                    x = col * charWidth;
+                    y = row * charHeight;
 
-            //int col = 0, row = 0;
-            //for (int i = 0; i < BufferSize; i++)
-            //{
-            //    x = col * charWidth;
-            //    y = row * charHeight;
+                    char c = (char)VRAM.ReadByte(i);
+                    g.DrawString(c.ToString(),
+                        this.Font,
+                        TextBrush,
+                        x, y,
+                        StringFormat.GenericTypographic);
+                }
 
-            //    if ((ColorData[i] & ColorCodes.Reverse) == 0)
-            //        g.DrawString(CharacterData[i].ToString(), TextFont, TextBrush, x, y, StringFormat.GenericTypographic);
-            //    else
-            //    {
-            //        g.FillRectangle(CursorBrush, x, y, charWidth, charHeight);
-            //        g.DrawString(CharacterData[i].ToString(),
-            //            TextFont,
-            //            InvertedBrush,
-            //            x, y,
-            //            StringFormat.GenericTypographic);
-            //    }
-
-            //    col++;
-            //    if (col >= Columns)
-            //    {
-            //        col = 0;
-            //        row++;
-            //    }
-            //}
+                col++;
+                if (col >= COLS_PER_LINE)
+                {
+                    col = 0;
+                    row++;
+                }
+            }
 
             //if (CursorState && CursorEnabled)
             //{
@@ -439,7 +477,7 @@ namespace Nu64.Display
         private void DrawBitmapText(Graphics controlGraphics)
         {
             if (lastWidth != ColumnsVisible
-                && ColumnsVisible > 0 
+                && ColumnsVisible > 0
                 && LinesVisible > 0)
             {
                 frameBuffer = new Bitmap(8 * ColumnsVisible, 8 * LinesVisible, PixelFormat.Format32bppArgb);
@@ -447,7 +485,7 @@ namespace Nu64.Display
             }
 
             Graphics g = Graphics.FromImage(frameBuffer);
-            if (Memory == null)
+            if (VRAM == null)
             {
                 controlGraphics.Clear(Color.Blue);
                 controlGraphics.DrawString("VRAM not initialized", this.Font, TextBrush, 0, 0);
@@ -473,8 +511,8 @@ namespace Nu64.Display
             float charWidth = 8;
             float charHeight = 8;
 
-            g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighSpeed;
-            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+            g.CompositingQuality = global::System.Drawing.Drawing2D.CompositingQuality.HighSpeed;
+            g.InterpolationMode = global::System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
 
             g.Clear(Color.Blue);
 
@@ -482,19 +520,22 @@ namespace Nu64.Display
             //this._cursorRow = Memory.ReadByte(MemoryMap_DirectPage.CURSORY);
 
             int col = 0, line = 0;
+            int screenStart = characterMatrixStart - VRAM.StartAddress;
+            int lineStart = screenStart;
             for (line = 0; line < LinesVisible; line++)
             {
+                int addr = lineStart;
                 for (col = 0; col < ColumnsVisible; col++)
                 {
                     x = col * charWidth;
                     y = line * charHeight;
-                    int addr = characterMatrixStart + line * COLS_PER_LINE + col;
-                    byte c = Memory.ReadByte(addr);
+                    byte c = VRAM.ReadByte(addr++);
                     Bitmap bmp = CharacterSetSlots[0].Bitmaps[c];
                     RectangleF rect = new RectangleF((int)x, (int)y, bmp.Width, bmp.Height);
                     //g.DrawImage(bmp, rect, 0, 0, rect.Width, rect.Height, GraphicsUnit.Pixel, attr);
                     g.DrawImage(bmp, rect);
                 }
+                lineStart += COLS_PER_LINE;
             }
 
             if (CursorState && CursorEnabled)
@@ -560,35 +601,31 @@ namespace Nu64.Display
 
         public byte ReadByte(int Address)
         {
-            if (Address >= 0 && Address < REGISTER_BLOCK_SIZE)
-            {
-                return GetGPURegister(Address);
-            }
-            return Memory.ReadByte(characterMatrixStart + Address);
+            if (VRAM == null)
+                return 0;
+            return VRAM.ReadByte(Address - VRAM.StartAddress);
         }
 
-        /// <summary>
         /// return the GPU registers: start of text page, start of color page, start of character data, 
         /// number of columns, number of LINES, graphics mode, etc. 
         /// </summary>
         /// <param name="Address">Address to read</param>
         /// <returns></returns>
-        public byte GetGPURegister(int Address)
+        public byte ReadGPURegister(int Address)
         {
             return 0;
         }
 
-        public void SetGPURegister(int Address, byte Data)
+        public void WriteGPURegister(int Address, byte Data)
         {
 
         }
 
         public void WriteByte(int Address, byte Data)
         {
-            if (Address >= 0 && Address < REGISTER_BLOCK_SIZE)
-            {
-                SetGPURegister(Address, Data);
-            }
+            if (VRAM == null)
+                return;
+            VRAM.WriteByte(Address - VRAM.StartAddress, Data);
             //else if (Address >= characterMatrixStart && Address < (characterMatrixStart + CharacterData.Length))
             //{
             //    CharacterData[Address - characterMatrixStart] = (char)Data;
@@ -607,7 +644,7 @@ namespace Nu64.Display
         public CharacterSet LoadCharacterSet(string Name, string Filename, int Offset, CharacterSet.CharTypeCodes CharType, CharacterSet.SizeCodes CharSize)
         {
             CharacterSet cs = new CharacterSet();
-            cs.Load(Filename, Offset, Memory, characterSetStart + CharacterSetSlots.Count * CharacterSet.SlotSize, CharSize);
+            cs.Load(Filename, Offset, VRAM, MemoryLocations.MemoryMap.CHARDATA_BEGIN & 0xffff, CharSize);
             CharacterSetSlots.Add(cs);
             cs.CharType = CharType;
             return cs;

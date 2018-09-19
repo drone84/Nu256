@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Nu64;
+using Nu64.MemoryLocations;
 
 namespace Nu64.Processor
 {
@@ -64,7 +65,7 @@ namespace Nu64.Processor
         /// </summary>
         private DateTime checkStartTime = DateTime.Now;
 
-        public MemoryBus Memory = null;
+        public MemoryManager Memory = null;
         public Thread CPUThread = null;
 
         public event Operations.SimulatorCommandEvent SimulatorCommand;
@@ -82,7 +83,7 @@ namespace Nu64.Processor
             }
         }
 
-        public CPU(MemoryBus newMemory)
+        public CPU(MemoryManager newMemory)
         {
             this.Memory = newMemory;
             this.clockSpeed = 14000000;
@@ -176,9 +177,9 @@ namespace Nu64.Processor
         public void Halt()
         {
             StopTime = DateTime.Now;
-            System.Diagnostics.Debug.WriteLine("Elapsed time: " +
-                (StopTime - StartTime).TotalMilliseconds.ToString() + "ms" +
-                ", Cycles: " + CycleCounter.ToString());
+            global::System.Diagnostics.Debug.WriteLine("Elapsed time: " +
+                (this.StopTime - this.StartTime).TotalMilliseconds.ToString() + "ms" +
+                ", Cycles: " + this.CycleCounter.ToString());
             if (CPUThread != null && CPUThread.ThreadState == ThreadState.Running)
             {
                 Thread tmp = CPUThread;
@@ -201,8 +202,8 @@ namespace Nu64.Processor
             DirectPage.Value = 0;
             ProgramBank.Value = 0;
 
-            PC.Value = Memory.ReadWord(MemoryMap_DirectPage.VECTOR_ERESET);
-            SetLongPC(0xF80000);
+            PC.Value = Memory.ReadWord(MemoryMap.VECTOR_ERESET);
+            //SetLongPC(0xF80000);
 
             Pins.VectorPull = false;
             Memory.VectorPull = false;
@@ -435,28 +436,28 @@ namespace Nu64.Processor
             switch (T)
             {
                 case InteruptTypes.BRK:
-                    addr = MemoryMap_DirectPage.VECTOR_BRK;
-                    eaddr = MemoryMap_DirectPage.VECTOR_EBRK;
+                    addr = MemoryMap.VECTOR_BRK;
+                    eaddr = MemoryMap.VECTOR_EBRK;
                     break;
                 case InteruptTypes.ABORT:
-                    eaddr = MemoryMap_DirectPage.VECTOR_EABORT;
-                    addr = MemoryMap_DirectPage.VECTOR_ABORT;
+                    eaddr = MemoryMap.VECTOR_EABORT;
+                    addr = MemoryMap.VECTOR_ABORT;
                     break;
                 case InteruptTypes.IRQ:
-                    eaddr = MemoryMap_DirectPage.VECTOR_EIRQ;
-                    addr = MemoryMap_DirectPage.VECTOR_IRQ;
+                    eaddr = MemoryMap.VECTOR_EIRQ;
+                    addr = MemoryMap.VECTOR_IRQ;
                     break;
                 case InteruptTypes.NMI:
-                    eaddr = MemoryMap_DirectPage.VECTOR_ENMI;
-                    addr = MemoryMap_DirectPage.VECTOR_NMI;
+                    eaddr = MemoryMap.VECTOR_ENMI;
+                    addr = MemoryMap.VECTOR_NMI;
                     break;
                 case InteruptTypes.RESET:
-                    eaddr = MemoryMap_DirectPage.VECTOR_ERESET;
-                    addr = MemoryMap_DirectPage.VECTOR_RESET;
+                    eaddr = MemoryMap.VECTOR_ERESET;
+                    addr = MemoryMap.VECTOR_RESET;
                     break;
                 case InteruptTypes.COP:
-                    eaddr = MemoryMap_DirectPage.VECTOR_ECOP;
-                    addr = MemoryMap_DirectPage.VECTOR_COP;
+                    eaddr = MemoryMap.VECTOR_ECOP;
+                    addr = MemoryMap.VECTOR_COP;
                     break;
                 default:
                     throw new Exception("Invalid interrupt type: " + T.ToString());
