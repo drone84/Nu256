@@ -1,7 +1,7 @@
 .cpu "65816"
 .include "macros_inc.asm"
 .include "simulator_inc.asm"
-.include "directpage_inc.asm"
+.include "page_00_inc.asm"
 .include "monitor.asm"
 .include "kernel_bank_FF.asm"
 
