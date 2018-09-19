@@ -2,6 +2,7 @@
 .include "macros_inc.asm"
 .include "simulator_inc.asm"
 .include "page_00_inc.asm"
+.include "dram_inc.asm"
 .include "monitor.asm"
 .include "kernel_bank_FF.asm"
 
@@ -9,7 +10,7 @@
 ; C256 Foenix / Nu64 Kernel
 ; Loads to $F0:0000
 
-* = $F80000
+* = $010000
 
 ;Kernel.asm
 ;Jump Table
@@ -58,7 +59,7 @@ CSRDOWN         JML ICSRDOWN
 CSRHOME         JML ICSRHOME
 SCROLLUP        JML ISCROLLUP
 
-* = $F80400
+* = $010400
 IBOOT           ; boot the system
                 CLC           ; clear the carry flag
                 XCE           ; move carry to emulation flag.
@@ -463,7 +464,7 @@ ICSRHOME        BRK ;
 ;
 ; Greeting message and other kernel boot data
 ;
-* = $F8F000                
+KERNEL_DATA     
 greet_msg       .text "  ///// FOENIX 256 DEVELOPMENT SYSTEM",$0D
 greet_msg1      .text " /////  OPEN SOURCE COMPUTER",$0D
 greet_msg2      .null "/////   8192KB SYSTEM 8128KB FREE"
