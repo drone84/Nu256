@@ -30,14 +30,16 @@
         {
             this.SuspendLayout();
             // 
-            // FrameBuffer
+            // Gpu
             // 
-            this.AutoScaleDimensions = new global::System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = global::System.Windows.Forms.AutoScaleMode.Font;
-            this.Name = "FrameBuffer";
-            this.Size = new global::System.Drawing.Size(793, 431);
-            this.SizeChanged += new global::System.EventHandler(this.FrameBuffer_SizeChanged);
-            this.KeyPress += new global::System.Windows.Forms.KeyPressEventHandler(this.FrameBuffer_KeyPress);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 19F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Font = new System.Drawing.Font("Consolas", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Name = "Gpu";
+            this.Size = new System.Drawing.Size(1190, 630);
+            this.SizeChanged += new System.EventHandler(this.FrameBuffer_SizeChanged);
+            this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.FrameBuffer_KeyPress);
             this.ResumeLayout(false);
 
         }

@@ -9,7 +9,7 @@
 //------------------------------------------------------------------------------
 
 namespace Nu64.Properties {
-    using System;
+    using global::System;
     
     
     /// <summary>

@@ -2,6 +2,8 @@
 ; Interrupt Handlers
 ;
 * = $FFFF00     ; HRESET
+                CLC
+                SCE
                 JML BOOT
 * = $FFFF10     ; HCOP  
                 JMP HBRK

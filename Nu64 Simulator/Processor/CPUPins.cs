@@ -13,7 +13,8 @@ namespace Nu64.Processor
         /// Pause the CPU to allow slow I/O or memory operations. When true, the CPU will not execute 
         /// the next instruction.
         /// </summary>
-        public bool Ready = false;
+        public bool Ready_ = false;
+
         /// <summary>
         /// When high, the CPU is being reset. The CPU will not execute
         /// instructions while reset is high. Once reset goes low (false),
@@ -22,14 +23,22 @@ namespace Nu64.Processor
         /// instructions
         /// </summary>
         public bool Reset = false;
+
         /// <summary>
-        /// When NMI is high, control will shift to the NMI vector. 
+        /// Execute a non-maskable interrupt
         /// </summary>
         public bool NMI = false;
+
+        /// <summary>
+        /// Execute an interrupt request
+        /// </summary>
+        public bool IRQ = false;
+
         /// <summary>
         /// When high, the CPU is reading interrupt/reset vectors
         /// </summary>
         public bool VectorPull = false;
+
         /// <summary>
         /// Aborts the current instruction. Control is shifted to the Abort vector.
         /// </summary>

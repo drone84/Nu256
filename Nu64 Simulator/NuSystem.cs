@@ -9,13 +9,14 @@ using Nu64.Monitor;
 using Nu64.Display;
 using Nu64.Common;
 using System.Threading;
+using Nu64.MemoryLocations;
 
 namespace Nu64
 {
-    public class Kernel
+    public class NuSystem
     {
         private const int TAB_WIDTH = 4;
-        public AddressDataBus Memory = null;
+        public MemoryManager Memory = null;
         public Processor.CPU CPU = null;
         public Gpu gpu = null;
         public MemoryBuffer KeyboardBuffer = null;
@@ -25,7 +26,7 @@ namespace Nu64
         public Basic.Immediate Basic = null;
         public Monitor.Monitor Monitor = null;
 
-        public System.Timers.Timer TickTimer = new System.Timers.Timer();
+        public global::System.Timers.Timer TickTimer = new global::System.Timers.Timer();
 
         public ReadyHandler ReadyHandler = null;
 
@@ -34,26 +35,30 @@ namespace Nu64
 
         public Thread CPUThread = null;
 
-        public Kernel(Gpu gpu)
+        public NuSystem(Gpu gpu)
         {
-            Memory = new AddressDataBus();
-            Memory.RAM = new MemoryRAM(0x800000); // 8MB RAM
-            Memory.GPU = gpu;
-            Memory.ROM = new MemoryRAM(0x100000); // 1MB ROM
+            Memory = new MemoryManager
+            {
+                CodeRAM = new MemoryRAM(MemoryMap.SRAM_START, MemoryMap.SRAM_SIZE), // 1MB SRAM
+                VRAM = new MemoryRAM(MemoryMap.DRAM_START, MemoryMap.DRAM_SIZE) // 8MB DRAM
+            };
             this.CPU = new CPU(Memory);
             this.CPU.SimulatorCommand += CPU_SimulatorCommand;
             this.gpu = gpu;
-            gpu.LoadCharacterData(Memory.RAM);
-            KeyboardBuffer = new MemoryBuffer(
-                Memory.RAM,
-                MemoryMap_DirectPage.KEY_BUFFER, 
-                MemoryMap_DirectPage.KEY_BUFFER_LEN,
-                MemoryMap_DirectPage.KEY_BUFFER_RPOS, 
-                MemoryMap_DirectPage.KEY_BUFFER_WPOS);
+            gpu.VRAM = Memory.VRAM;
+            gpu.CodeRAM = Memory.CodeRAM;
+            gpu.LoadCharacterData(Memory.VRAM, Memory.CodeRAM);
 
-            for(int i=MemoryMap_DirectPage.SCREEN_PAGE0; i< MemoryMap_DirectPage.SCREEN_PAGE1; i++)
+            KeyboardBuffer = new MemoryBuffer(
+                Memory.CodeRAM,
+                MemoryMap.KEY_BUFFER,
+                MemoryMap.KEY_BUFFER_SIZE,
+                MemoryMap.KEY_BUFFER_RPOS,
+                MemoryMap.KEY_BUFFER_WPOS);
+
+            for (int i = MemoryMap.SCREEN_PAGE0; i < MemoryMap.SCREEN_PAGE1; i++)
             {
-                this.Memory[i] = 0x40;
+                this.Memory[i] = 64;
             }
 
             this.Basic = new Basic.Immediate(this);
@@ -74,16 +79,18 @@ namespace Nu64
 
         public void Reset()
         {
+            CPU.Halt();
+
             Cls();
             gpu.Refresh();
 
+            // Load the ROM data from disk. On the real system, the ROMs are not accessible by the CPU
+            // and will be copied to RAM by VICKY
+            MemoryRAM flashROM = new MemoryRAM(0, 16 * 65536);
             this.ReadyHandler = Monitor;
-            HexFile h = new HexFile(Memory, @"ROMs\kernel.hex");
-
-            CopyVectors();
-
+            HexFile.Load(flashROM, @"ROMs\kernel.hex");
+            flashROM.Copy(0, Memory.CodeRAM, 0, 2 * 65536);
             CPU.Reset();
-            CPU.Halted = false; 
 
             //CPUTest test= new CPUTest(this);
             //test.BeginTest(0xf81000);
@@ -91,14 +98,6 @@ namespace Nu64
             this.TickTimer.Interval = 1000 / 60;
             this.TickTimer.Elapsed += TickTimer_Elapsed;
             this.TickTimer.Enabled = true;
-        }
-
-        private void CopyVectors()
-        {
-            for(int i=0xff00; i<=0xffff; i++)
-            {
-                Memory[i] = Memory[0xff0000 + i];
-            }
         }
 
         private void PrintCopyright()
@@ -110,7 +109,7 @@ namespace Nu64
             PrintLine("wilsontp@gmail.com");
         }
 
-        private void TickTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void TickTimer_Elapsed(object sender, global::System.Timers.ElapsedEventArgs e)
         {
             DoConsoleEcho();
         }
@@ -173,7 +172,7 @@ namespace Nu64
                     gpu.CurrentColor = gpu.CurrentColor & (int.MaxValue - ColorCodes.Reverse);
                     break;
                 default:
-                    Memory[MemoryMap_DirectPage.SCREEN_PAGE0 + gpu.CursorPos] = (byte)c;
+                    Memory[MemoryMap.SCREEN_PAGE0 + gpu.CursorPos] = (byte)c;
                     //gpu.ColorData[gpu.CursorPos] = CurrentColor;
                     AdvanceCursor();
                     break;
@@ -242,7 +241,7 @@ namespace Nu64
 
         public void Scroll1()
         {
-            int addr = MemoryMap_DirectPage.SCREEN_PAGE0;
+            int addr = MemoryMap.SCREEN_PAGE0;
             for (int c = 0; c < gpu.BufferSize - gpu.ColumnsVisible; c++)
             {
                 for (int col = 0; col < gpu.ColumnsVisible; col++)
@@ -356,7 +355,7 @@ namespace Nu64
         {
             for (int i = 0; i < gpu.BufferSize; i++)
             {
-                Memory[MemoryMap_DirectPage.SCREEN_PAGE0 + i] = c;
+                Memory[MemoryMap.SCREEN_PAGE0 + i] = c;
                 //gpu.ColorData[i] = _currentForeground;
             }
         }
@@ -417,13 +416,13 @@ namespace Nu64
             int c = KeyboardBuffer.Read(1);
             int shift = KeyboardBuffer.Read(1);
             int pos = GetStartOfLine();
-            switch ((char) c)
+            switch ((char)c)
             {
                 case '\r':
                     ReturnPressed(pos);
                     break;
                 default:
-                    PrintChar((char) c);
+                    PrintChar((char)c);
                     break;
             }
         }

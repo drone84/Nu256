@@ -4,20 +4,11 @@ namespace Nu64.Common
 {
     public class HexFile
     {
-        int bank = 0;
-        int address = 0;
-
-        public HexFile()
+        public static void Load(IMappable memory, string Filename)
         {
-        }
+            int bank = 0;
+            int address = 0;
 
-        public HexFile(IMappable memory, string HexFilename)
-        {
-            Load(memory, HexFilename);
-        }
-
-        public void Load(IMappable memory, string Filename)
-        {
             if (!System.IO.File.Exists(Filename))
                 throw new System.IO.FileNotFoundException("Could not find Hex file \"" + Filename + "\"");
 
@@ -66,7 +57,7 @@ namespace Nu64.Common
             }
         }
 
-        private int GetByte(string data, int startPos, int bytes)
+        static int GetByte(string data, int startPos, int bytes)
         {
             return Convert.ToInt32(data.Substring(startPos, bytes * 2), 16);
         }

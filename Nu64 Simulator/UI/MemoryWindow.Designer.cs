@@ -5,7 +5,7 @@
         /// <summary>
         /// Required designer variable.
         /// </summary>
-        private System.ComponentModel.IContainer components = null;
+        private global::System.ComponentModel.IContainer components = null;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -48,7 +48,7 @@
             this.panel1.ImeMode = System.Windows.Forms.ImeMode.Off;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(460, 20);
+            this.panel1.Size = new System.Drawing.Size(593, 20);
             this.panel1.TabIndex = 0;
             // 
             // ViewButton
@@ -92,7 +92,7 @@
             this.MemoryText.Multiline = true;
             this.MemoryText.Name = "MemoryText";
             this.MemoryText.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.MemoryText.Size = new System.Drawing.Size(460, 275);
+            this.MemoryText.Size = new System.Drawing.Size(593, 275);
             this.MemoryText.TabIndex = 0;
             this.MemoryText.Text = resources.GetString("MemoryText.Text");
             // 
@@ -104,12 +104,14 @@
             // 
             // MemoryWindow
             // 
+            this.AcceptButton = this.ViewButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(460, 295);
+            this.ClientSize = new System.Drawing.Size(593, 295);
             this.Controls.Add(this.MemoryText);
             this.Controls.Add(this.panel1);
             this.Name = "MemoryWindow";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.Text = "MemoryWindow";
             this.Load += new System.EventHandler(this.MemoryWindow_Load);
             this.panel1.ResumeLayout(false);
@@ -120,11 +122,11 @@
         }
 
         #endregion
-        private System.Windows.Forms.Button ViewButton;
-        private System.Windows.Forms.TextBox EndAddressText;
-        private System.Windows.Forms.TextBox StartAddressText;
-        private System.Windows.Forms.TextBox MemoryText;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.Timer timer1;
+        private global::System.Windows.Forms.Button ViewButton;
+        private global::System.Windows.Forms.TextBox EndAddressText;
+        private global::System.Windows.Forms.TextBox StartAddressText;
+        private global::System.Windows.Forms.TextBox MemoryText;
+        private global::System.Windows.Forms.Panel panel1;
+        private global::System.Windows.Forms.Timer timer1;
     }
 }

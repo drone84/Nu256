@@ -44,6 +44,12 @@ namespace Nu64.Processor
         /// Y Index Register
         /// </summary>
         public Register Y = new Register();
+        /// <summary>
+        /// Wait state. When Wait is true, the CPU will not exeucte instructions. It
+        /// will service the IRQ, NMI, and ABORT lines. A hardware interrupt is required 
+        /// to restart the CPU.
+        /// </summary>
+        public bool Waiting;
 
         // Aliases for long names:
         /// <summary>

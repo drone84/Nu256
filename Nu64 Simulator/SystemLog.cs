@@ -17,7 +17,7 @@ namespace Nu64
 
         public static void WriteLine(SeverityCodes Severity, string Message)
         {
-            System.Diagnostics.Debug.WriteLine("LOG: " + Message);
+            global::System.Diagnostics.Debug.WriteLine("LOG: " + Message);
         }
     }
 }

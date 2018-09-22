@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Nu64;
+using Nu64.MemoryLocations;
 
 namespace Nu64.Processor
 {
@@ -32,12 +33,6 @@ namespace Nu64.Processor
 
         public CPUPins Pins = new CPUPins();
 
-        // Simulator State management 
-        /// <summary>
-        /// Pause the CPU execution due to a STP instruction. The CPU may only be restarted
-        /// by the Reset pin. In the simulator, this will close the CPU execution thread.
-        /// </summary>
-        public bool Halted = true;
         /// <summary>
         /// When true, the CPU will not execute the next instruction. Used by the debugger
         /// to allow the user to analyze memory and the execution trace. 
@@ -70,7 +65,7 @@ namespace Nu64.Processor
         /// </summary>
         private DateTime checkStartTime = DateTime.Now;
 
-        public AddressDataBus Memory = null;
+        public MemoryManager Memory = null;
         public Thread CPUThread = null;
 
         public event Operations.SimulatorCommandEvent SimulatorCommand;
@@ -88,7 +83,7 @@ namespace Nu64.Processor
             }
         }
 
-        public CPU(AddressDataBus newMemory)
+        public CPU(MemoryManager newMemory)
         {
             this.Memory = newMemory;
             this.clockSpeed = 14000000;
@@ -118,7 +113,6 @@ namespace Nu64.Processor
         {
             this.DataBank.Value = newDataBank;
             SetLongPC(Address);
-            Halted = false;
         }
 
         /// <summary>
@@ -128,7 +122,8 @@ namespace Nu64.Processor
         public void ExecuteCycles(int Cycles)
         {
             ResetCounter(Cycles);
-            while (clockCyles < nextCycleCheck && !Halted && !DebugPause)
+            while (clockCyles < nextCycleCheck 
+                && !DebugPause)
             {
                 ExecuteNext();
             }
@@ -139,6 +134,11 @@ namespace Nu64.Processor
         /// </summary>
         public void ExecuteNext()
         {
+            if (Pins.Ready_)
+                return;
+            if (Waiting)
+                return;
+
             opcodeByte = GetNextInstruction();
             this.Opcode = Decode(opcodeByte);
             PC.Value += OpcodeLength;
@@ -151,30 +151,37 @@ namespace Nu64.Processor
         /// </summary>
         public void Run()
         {
-            if (CPUThread == null)
-                CPUThread = new Thread(new ThreadStart(this.RunLoop));
-            Reset();
-            Halted = false;
+            CPUThread = new Thread(new ThreadStart(this.RunLoop));
+
             StartTime = DateTime.Now;
             clockCyles = 0;
-            if (CPUThread.ThreadState != ThreadState.Running)
-                CPUThread.Start();
+            CPUThread.Start();
         }
 
         public void RunLoop()
         {
-            while (!DebugPause && !Halted)
+            while (!DebugPause && !Pins.Ready_)
             {
                 if (Pins.Reset)
                     Reset();
                 ExecuteNext();
             }
-            if (Halted)
+        }
+
+        // Simulator State management 
+        /// <summary>
+        /// Pause the CPU execution due to a STP instruction. The CPU may only be restarted
+        /// by the Reset pin. In the simulator, this will close the CPU execution thread.
+        /// Restart the CPU by executing Reset() and then Run()
+        /// </summary>
+        public void Halt()
+        {
+            StopTime = DateTime.Now;
+            global::System.Diagnostics.Debug.WriteLine("Elapsed time: " +
+                (this.StopTime - this.StartTime).TotalMilliseconds.ToString() + "ms" +
+                ", Cycles: " + this.CycleCounter.ToString());
+            if (CPUThread != null && CPUThread.ThreadState == ThreadState.Running)
             {
-                StopTime = DateTime.Now;
-                System.Diagnostics.Debug.WriteLine("Elapsed time: " +
-                    (StopTime - StartTime).TotalMilliseconds.ToString() + "ms" +
-                    ", Cycles: " + CycleCounter.ToString());
                 Thread tmp = CPUThread;
                 CPUThread = null;
                 tmp.Abort();
@@ -183,17 +190,23 @@ namespace Nu64.Processor
 
         public void Reset()
         {
+            Pins.VectorPull = true;
+            Memory.VectorPull = true;
+
             SetEmulationMode();
             Flags.Value = 0;
             A.Value = 0;
             X.Value = 0;
             Y.Value = 0;
             DataBank.Value = 0;
-            ProgramBank.Value = 0;
             DirectPage.Value = 0;
-            Pins.VectorPull = true;
-            PC.Value = Memory.ReadWord(MemoryMap_DirectPage.VECTOR_ERESET);
+            ProgramBank.Value = 0;
+
+            PC.Value = Memory.ReadWord(MemoryMap.VECTOR_ERESET);
+            //SetLongPC(0xF80000);
+
             Pins.VectorPull = false;
+            Memory.VectorPull = false;
         }
 
         /// <summary>
@@ -271,208 +284,6 @@ namespace Nu64.Processor
         public int CycleCounter
         {
             get { return this.clockCyles; }
-        }
-
-        /// <summary>
-        /// Execute the instruction specified by Opcode, retrieving additional bytes from the instruction
-        /// stream as necessary. opLength will be set to the number of bytes read. OpcodeCycles will be set
-        /// to the number of CPU cycles used. 
-        /// </summary>
-        /// <param name="Opcode">Opcode to execute</param>
-        private void Execute(byte opcodeByte)
-        {
-
-            #region old Opcode Implementation
-            //switch (Opcode)
-            //{
-            //    case 0x00: //BRK
-            //        operations.OpBRK();
-            //        break;
-            //    case 0x01: // ORA (d,x)
-            //        OpcodeLength = 2;
-            //        addr = GetPointerDirect(GetNextByte(0), X);
-            //        val = Memory[addr];
-            //        operations.OpORA(val);
-            //        break;
-            //    case 0x02: //COP d
-            //        OpcodeLength = 2;
-            //        OpcodeCycles = 7;
-            //        operations.OpBRK(true);
-            //        break;
-            //    case 0x03: // ORA d,s
-            //        OpcodeLength = 2;
-            //        addr = GetStackValue(GetNextByte(0));
-            //        val = Memory.ReadWord(addr);
-            //        operations.OpORA(val);
-            //        break;
-            //    case 0x04: // TSB,d
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x05: // ORA d
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x06: // ASL d
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x07: // ORA [d]
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x08: // PHP s
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x09: // ORA #
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x0a: // ASL A
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x0b: // PHD s
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x0c: // TSB a 
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x0d: // ORA a
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x0e: // ASL a
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x0f: // ORA al
-            //        operations.OpNotImplemented();
-            //        break;
-
-            //    case 0x10: // BPL r Branch Plus (Branch if Negative flag not set)
-            //        OpcodeLength = 2;
-            //        OpcodeCycles = 2;
-            //        if (!Flags.Negative)
-            //            operations.BranchNear(GetNextByte());
-            //        break;
-            //    case 0x11: // ORA (d,x)
-            //        OpcodeLength = 2;
-            //        addr = GetPointerDirect(GetNextByte(0), X);
-            //        val = Memory[addr];
-            //        operations.OpORA(val);
-            //        break;
-            //    case 0x12: //COP d
-            //        OpcodeLength = 2;
-            //        OpcodeCycles = 7;
-            //        operations.OpBRK(true);
-            //        break;
-            //    case 0x13: // ORA d,s
-            //        OpcodeLength = 2;
-            //        addr = GetStackValue(GetNextByte(0));
-            //        val = Memory.ReadWord(addr);
-            //        operations.OpORA(val);
-            //        break;
-            //    case 0x14: // TSB,d
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x15: // ORA d
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x16: // ASL d
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x17: // ORA [d]
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x18: //CLC clear carry
-            //        OpcodeLength = 1;
-            //        OpcodeCycles = 2;
-            //        Flags.Carry = false;
-            //        break;
-            //    case 0x19: // ORA #
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x1a: // ASL A
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x1b: // PHD s
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x1c: // TSB a 
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x1d: // ORA a
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x1e: // ASL a
-            //        operations.OpNotImplemented();
-            //        break;
-            //    case 0x1f: // ORA al
-            //        operations.OpNotImplemented();
-            //        break;
-
-            //    case 0x38: //SEC set carry
-            //        OpcodeLength = 1;
-            //        OpcodeCycles = 2;
-            //        Flags.Carry = true;
-            //        break;
-
-            //    case 0xa0: // LDY d
-            //        OpcodeLength = Y.Length == Register.BitLengthEnum.Bits8 ? 2 : 3;
-            //        OpcodeCycles = Y.Length == Register.BitLengthEnum.Bits8 ? 2 : 3;
-            //        val = GetNextWord(0);
-            //        operations.OpLoad(Y, val);
-            //        break;
-
-            //    case 0xa2: // LDX d
-            //        OpcodeLength = X.Length == Register.BitLengthEnum.Bits8 ? 2 : 3;
-            //        OpcodeCycles = X.Length == Register.BitLengthEnum.Bits8 ? 2 : 3;
-            //        val = GetNextWord(0);
-            //        operations.OpLoad(X, val);
-            //        break;
-
-            //    case 0xa9: // LDA d
-            //        OpcodeLength = A.Length == Register.BitLengthEnum.Bits8 ? 2 : 3;
-            //        OpcodeCycles = A.Length == Register.BitLengthEnum.Bits8 ? 2 : 3;
-            //        val = GetNextWord(0);
-            //        operations.OpLoad(A, val);
-            //        break;
-
-            //    case 0xc2: // REP d 
-            //        // reset the flags using the bit pattern in the operator
-            //        // ex: REP $01 turns OFF the carry flag (bit 0)
-            //        OpcodeLength = 2;
-            //        OpcodeCycles = 3;
-            //        val = GetNextByte(0);
-            //        Flags.Value = Flags.Value | val;
-            //        Flags.Value = Flags.Value ^ val;
-            //        SyncRegisterWidth();
-            //        break;
-
-            //    case 0xe2: // SEP d 
-            //        // set the flags using the bit pattern in the operator
-            //        // ex: SEP $01 turns ON the carry flag (bit 0)
-            //        OpcodeLength = 2;
-            //        OpcodeCycles = 3;
-            //        val = GetNextByte(0);
-            //        Flags.Value = Flags.Value | val;
-            //        SyncRegisterWidth();
-            //        break;
-
-            //    case 0xdb: // STP 
-            //        OpcodeLength = 1;
-            //        OpcodeCycles = 3;
-            //        Halted = true;
-            //        break;
-
-            //    case 0xfb: // XCE eXchange Carry and Emulation bits
-            //        OpcodeLength = 1;
-            //        OpcodeCycles = 2;
-            //        Flags.SwapCE();
-            //        SyncRegisterWidth();
-            //        break;
-
-            //    default:
-            //        operations.OpNotImplemented();
-            //        break;
-            //}
-            #endregion
-
-            if (OpcodeLength == 0)
-                throw new Exception("OpcodeLength must be >0, got " + OpcodeLength.ToString());
         }
 
         #region support routines
@@ -625,28 +436,28 @@ namespace Nu64.Processor
             switch (T)
             {
                 case InteruptTypes.BRK:
-                    addr = MemoryMap_DirectPage.VECTOR_BRK;
-                    eaddr = MemoryMap_DirectPage.VECTOR_EBRK;
+                    addr = MemoryMap.VECTOR_BRK;
+                    eaddr = MemoryMap.VECTOR_EBRK;
                     break;
                 case InteruptTypes.ABORT:
-                    eaddr = MemoryMap_DirectPage.VECTOR_EABORT;
-                    addr = MemoryMap_DirectPage.VECTOR_ABORT;
+                    eaddr = MemoryMap.VECTOR_EABORT;
+                    addr = MemoryMap.VECTOR_ABORT;
                     break;
                 case InteruptTypes.IRQ:
-                    eaddr = MemoryMap_DirectPage.VECTOR_EIRQ;
-                    addr = MemoryMap_DirectPage.VECTOR_IRQ;
+                    eaddr = MemoryMap.VECTOR_EIRQ;
+                    addr = MemoryMap.VECTOR_IRQ;
                     break;
                 case InteruptTypes.NMI:
-                    eaddr = MemoryMap_DirectPage.VECTOR_ENMI;
-                    addr = MemoryMap_DirectPage.VECTOR_NMI;
+                    eaddr = MemoryMap.VECTOR_ENMI;
+                    addr = MemoryMap.VECTOR_NMI;
                     break;
                 case InteruptTypes.RESET:
-                    eaddr = MemoryMap_DirectPage.VECTOR_ERESET;
-                    addr = MemoryMap_DirectPage.VECTOR_RESET;
+                    eaddr = MemoryMap.VECTOR_ERESET;
+                    addr = MemoryMap.VECTOR_RESET;
                     break;
                 case InteruptTypes.COP:
-                    eaddr = MemoryMap_DirectPage.VECTOR_ECOP;
-                    addr = MemoryMap_DirectPage.VECTOR_COP;
+                    eaddr = MemoryMap.VECTOR_ECOP;
+                    addr = MemoryMap.VECTOR_COP;
                     break;
                 default:
                     throw new Exception("Invalid interrupt type: " + T.ToString());

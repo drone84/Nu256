@@ -8,9 +8,9 @@ namespace Nu64.Basic
 {
     public class Immediate : ReadyHandler
     {
-        public Kernel kernel = null;
+        public NuSystem kernel = null;
 
-        public Immediate(Kernel NewKernel)
+        public Immediate(NuSystem NewKernel)
         {
             this.kernel = NewKernel;
         }

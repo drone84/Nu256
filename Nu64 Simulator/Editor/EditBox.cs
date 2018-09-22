@@ -41,8 +41,8 @@ namespace Nu64.Editor
             g.FillRectangle(LineNumberBackgroundBrush, 0, 0, lnSize.Width, ClientRectangle.Height);
             g.DrawLine(LineNumberBorderPen, lnSize.Width, 0, lnSize.Width, this.ClientRectangle.Height);
 
-            float y =0, x=0;
-            int row = 0, col = 0;
+            float y = 0, x = 0;
+            int row = 0;
             int lineNumber = TopLine;
 
             for (y = 0; y < this.ClientRectangle.Height; y++)

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Nu64;
+using Nu64.MemoryLocations;
 
 namespace Nu64.Processor
 {
@@ -38,7 +39,7 @@ namespace Nu64.Processor
             cpu.ProgramBank.Reset();
             cpu.PC.Reset();
 
-            cpu.PC.Value = cpu.Memory.ReadWord(MemoryMap_DirectPage.VECTOR_RESET);
+            cpu.PC.Value = cpu.Memory.ReadWord(MemoryMap.VECTOR_RESET);
         }
 
         /// <summary>
@@ -48,11 +49,8 @@ namespace Nu64.Processor
         {
             cpu.OpcodeLength = 1;
             cpu.OpcodeCycles = 1;
-            SystemLog.WriteLine(SystemLog.SeverityCodes.Recoverable, "Invalid Instruction (Not implemented.) Abort processed."
-                + "\r\nPC: " + cpu.ProgramBank.GetLongAddress(cpu.PC)
-                + "\r\ninstruction: " + cpu.Opcode.ToString());
 
-            cpu.Halted = true;
+            cpu.Interrupt(InteruptTypes.ABORT);
         }
 
         public void OpORA(int val)
@@ -848,7 +846,7 @@ namespace Nu64.Processor
                 case OpcodeList.NOP_Implied:
                     break;
                 case OpcodeList.STP_Implied: //stop
-                    cpu.Halted = true;
+                    cpu.Halt();
                     break;
                 default:
                     throw new NotImplementedException("ExecuteMisc() opcode not implemented: " + instruction.ToString("X2"));
@@ -938,7 +936,7 @@ namespace Nu64.Processor
         {
             int val = GetValue(addressMode, signature);
             if (addressMode == AddressModes.AbsoluteIndexedWithX && (val & 0xff) == 0)
-                System.Diagnostics.Debug.WriteLine("break");
+                global::System.Diagnostics.Debug.WriteLine("break");
             cpu.A.Value = val;
             cpu.Flags.SetNZ(cpu.A);
         }
@@ -975,11 +973,10 @@ namespace Nu64.Processor
         public void Compare(AddressModes addressMode, int signature, Register Reg)
         {
             int val = GetValue(addressMode, signature, Reg.Width);
-            int test = Reg.Value - val;
 
-            cpu.Flags.Zero = test == 0;
-            cpu.Flags.Carry = test >= 0;
-            cpu.Flags.SetN(val, Reg.Width);
+            cpu.Flags.Zero = Reg.Value == val;
+            cpu.Flags.Carry = Reg.Value >= val;
+            cpu.Flags.Negative = Reg.Value < val;
         }
 
         /// <summary>
@@ -1007,7 +1004,7 @@ namespace Nu64.Processor
 
         public void ExecuteWAI(byte Instruction, AddressModes AddressMode, int Signature)
         {
-            cpu.Halted = true;
+            cpu.Waiting = true;
         }
     }
 }

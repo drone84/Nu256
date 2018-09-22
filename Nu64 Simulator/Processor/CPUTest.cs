@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Nu64.MemoryLocations;
 
 namespace Nu64.Processor
 {
     class CPUTest : ReadyHandler
     {
-        Kernel kernel = null;
+        NuSystem kernel = null;
         Processor.CPU CPU = null;
 
         byte[] TestProg = {
@@ -42,7 +43,7 @@ namespace Nu64.Processor
             0xDB,             // STP          Stops the CPU
             };
 
-        public CPUTest(Kernel newKernel)
+        public CPUTest(NuSystem newKernel)
         {
             this.kernel = newKernel;
             this.CPU = kernel.CPU;
@@ -50,14 +51,13 @@ namespace Nu64.Processor
 
         public void BeginTest(int Address)
         {
-            kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_RESET, 0xc000);
-            kernel.Memory.WriteWord(MemoryMap_DirectPage.VECTOR_BRK, 0xc000);
-            kernel.CPU.Stack.Value = MemoryMap_DirectPage.STACK_END;
+            kernel.Memory.WriteWord(MemoryMap.VECTOR_RESET, 0xc000);
+            kernel.Memory.WriteWord(MemoryMap.VECTOR_BRK, 0xc000);
+            kernel.CPU.Stack.Value = MemoryMap.STACK_END;
             kernel.CPU.SetLongPC(Address);
 
             // Wind up the CPU and get it ready. The user will advance the PC
             // using the debug window. 
-            CPU.Halted = false;
             CPU.DebugPause = true;
 
             //kernel.OutputDevice = DeviceEnum.DebugWindow;

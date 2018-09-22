@@ -43,6 +43,7 @@ namespace Nu64.UI
                 for (int j = 0; j < 16; j++)
                 {
                     s.Append(Memory.ReadByte(i + j).ToString("X2"));
+                    s.Append(" ");
                     if (j == 7 || j == 15)
                         s.Append(" ");
                 }
@@ -77,14 +78,14 @@ namespace Nu64.UI
         {
             try
             {
-                int len = EndAddress - StartAddress;
-                StartAddress = Convert.ToInt32(StartAddressText.Text, 16);
-                EndAddress = StartAddress + len;
-                EndAddressText.Text = EndAddress.ToString("X6");
+                int len = this.EndAddress - this.StartAddress;
+                this.StartAddress = Convert.ToInt32(this.StartAddressText.Text, 16);
+                this.EndAddress = this.StartAddress + len;
+                this.EndAddressText.Text = this.EndAddress.ToString("X6");
             }
-            catch (System.FormatException ex)
+            catch (global::System.FormatException ex)
             {
-                System.Diagnostics.Debug.WriteLine(ex.Message);
+                global::System.Diagnostics.Debug.WriteLine(ex.Message);
             }
         }
 
@@ -92,11 +93,11 @@ namespace Nu64.UI
         {
             try
             {
-                StartAddress = Convert.ToInt32(StartAddressText.Text, 16);
+                this.StartAddress = Convert.ToInt32(this.StartAddressText.Text, 16);
             }
-            catch (System.FormatException ex)
+            catch (global::System.FormatException ex)
             {
-                System.Diagnostics.Debug.WriteLine(ex.Message);
+                global::System.Diagnostics.Debug.WriteLine(ex.Message);
             }
         }
     }

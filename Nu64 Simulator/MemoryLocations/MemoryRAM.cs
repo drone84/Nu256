@@ -11,9 +11,27 @@ namespace Nu64
     {
         // allocate 16MB of memory
         protected byte[] data = null;
+        private int startAddress;
 
-        public MemoryRAM(int Size)
+        public int StartAddress
         {
+            get
+            {
+                return this.startAddress;
+            }
+        }
+
+        public int Length
+        {
+            get
+            {
+                return data.Length;
+            }
+        }
+
+        public MemoryRAM(int StartAddress, int Size)
+        {
+            this.startAddress = StartAddress;
             data = new byte[Size];
         }
 
@@ -54,6 +72,14 @@ namespace Nu64
         internal int ReadLong(int Address)
         {
             return ReadByte(Address) + (ReadByte(Address + 1) << 8) + (ReadByte(Address + 1) << 16); 
+        }
+
+        internal void Copy(int SourceAddress, MemoryRAM Destination, int DestAddress, int Length)
+        {
+            for(int i=0; i<Length; ++i)
+            {
+                Destination.data[DestAddress + i] = data[SourceAddress + i];
+            }
         }
     }
 }

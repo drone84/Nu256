@@ -4,17 +4,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Nu64;
+using Nu64.MemoryLocations;
 
 namespace Nu64.Monitor
 {
     public class Monitor : ReadyHandler
     {
-        public Kernel kernel = null;
+        public NuSystem kernel = null;
 
         char commmand = ' ';
         int[] args = new int[5];
 
-        public Monitor(Kernel NewKernel)
+        public Monitor(NuSystem NewKernel)
         {
             this.kernel = NewKernel;
         }
@@ -72,22 +73,22 @@ namespace Nu64.Monitor
             // ;000000 0000 0000 0000 0000 00  0000 11111111
             PrintRegisterHeader();
             kernel.PrintChar(';');
-            kernel.PrintMemHex(3, MemoryMap_DirectPage.CPUPC);
+            kernel.PrintMemHex(3, MemoryMap.CPUPC);
             kernel.PrintChar(' ');
-            kernel.PrintMemHex(2, MemoryMap_DirectPage.CPUA);
+            kernel.PrintMemHex(2, MemoryMap.CPUA);
             kernel.PrintChar(' ');
-            kernel.PrintMemHex(2, MemoryMap_DirectPage.CPUX);
+            kernel.PrintMemHex(2, MemoryMap.CPUX);
             kernel.PrintChar(' ');
-            kernel.PrintMemHex(2, MemoryMap_DirectPage.CPUY);
+            kernel.PrintMemHex(2, MemoryMap.CPUY);
             kernel.PrintChar(' ');
-            kernel.PrintMemHex(2, MemoryMap_DirectPage.CPUSTACK);
+            kernel.PrintMemHex(2, MemoryMap.CPUSTACK);
             kernel.PrintChar(' ');
-            kernel.PrintMemHex(1, MemoryMap_DirectPage.CPUDBR);
+            kernel.PrintMemHex(1, MemoryMap.CPUDBR);
             kernel.PrintChar(' ');
             kernel.PrintChar(' ');
-            kernel.PrintMemHex(2, MemoryMap_DirectPage.CPUDP);
+            kernel.PrintMemHex(2, MemoryMap.CPUDP);
             kernel.PrintChar(' ');
-            kernel.PrintMemBinary(1, MemoryMap_DirectPage.CPUFLAGS);
+            kernel.PrintMemBinary(1, MemoryMap.CPUFLAGS);
             kernel.PrintChar(' ');
             kernel.PrintLine();
         }
@@ -121,7 +122,7 @@ namespace Nu64.Monitor
             {
                 case '?':
                     kernel.PrintLine();
-                    string s = System.IO.File.ReadAllText("Monitor\\Monitor Help.txt");
+                    string s = global::System.IO.File.ReadAllText("Monitor\\Monitor Help.txt");
                     kernel.PrintLine(s);
                     break;
                 case ' ':

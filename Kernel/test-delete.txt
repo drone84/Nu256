@@ -1,64 +1,15 @@
 .cpu "65816"
+.include "page_00_inc.asm"
+.include "page_00.asm"
+.include "dram_inc.asm"
 .include "macros_inc.asm"
 .include "simulator_inc.asm"
-.include "page_00_inc.asm"
-.include "page_00_data.asm"
-.include "page_00_code.asm"
-.include "dram_inc.asm"
-;.include "monitor.asm"
 
-; C256 Foenix / Nu64 Kernel
-; Loads to $F0:0000
 
-;Kernel.asm
-;Jump Table
+; C256 Foenix / Nu64 TEST CODE
+; Loads to $00:0000
 
-* = $010000
-
-BOOT            JML IBOOT
-RESTORE         JML IRESTORE
-BREAK           JML IBREAK
-READY           JML IREADY
-SCINIT          JML ISCINIT
-IOINIT          JML IIOINIT
-PUTC            JML IPUTC
-PUTS            JML IPUTS
-PUTB            JML IPUTB
-PUTBLOCK        JML IPUTBLOCK
-SETLFS          JML ISETLFS
-SETNAM          JML ISETNAM
-OPEN            JML IOPEN
-CLOSE           JML ICLOSE
-SETIN           JML ISETIN
-SETOUT          JML ISETOUT
-GETB            JML IGETB
-GETBLOCK        JML IGETBLOCK
-GETCH           JML IGETCH
-GETCHW          JML IGETCHW
-GETCHE          JML IGETCHE
-GETS            JML IGETS
-GETLINE         JML IGETLINE
-GETFIELD        JML IGETFIELD
-TRIM            JML ITRIM
-PRINTC          JML IPRINTC
-PRINTS          JML IPRINTS
-PRINTCR         JML IPRINTCR
-PRINTF          JML IPRINTF
-PRINTI          JML IPRINTI
-PRINTH          JML IPRINTH
-PRINTAI         JML IPRINTAI
-PRINTAH         JML IPRINTAH
-LOCATE          JML ILOCATE
-PUSHKEY         JML IPUSHKEY
-PUSHKEYS        JML IPUSHKEYS
-CSRRIGHT        JML ICSRRIGHT
-CSRLEFT         JML ICSRLEFT
-CSRUP           JML ICSRUP
-CSRDOWN         JML ICSRDOWN
-CSRHOME         JML ICSRHOME
-SCROLLUP        JML ISCROLLUP
-
-* = $010400
+* = TEST_BEGIN
 
 IBOOT           ; boot the system
                 CLC           ; clear the carry flag
@@ -67,16 +18,16 @@ IBOOT           ; boot the system
                 LDA #STACK_END   ; initialize stack pointer 
                 TAS 
                 setdp 0
-                LDA #<>SCREEN_PAGE0      ; store the initial screen buffer location
+                LDA #$0000      ; store the initial screen buffer location
                 STA SCREENBEGIN
                 setas
-                LDA #`SCREEN_PAGE0
+                LDA #$80
                 STA SCREENBEGIN+2
                 setaxl           
-                LDA #<>SCREEN_PAGE0      ; store the initial screen buffer location
+                LDA SCREENBEGIN ; store the initial cursor position
                 STA CURSORPOS
                 setas
-                LDA #`SCREEN_PAGE0
+                LDA SCREENBEGIN+2
                 STA CURSORPOS+2
                 setaxl           
                 
@@ -92,22 +43,13 @@ IBOOT           ; boot the system
                 LDY #64
                 STY LINES_MAX
                 setal
-                
                 ; set the location of the cursor (top left corner of screen)
                 LDX #$0
                 LDY #$0
                 JSL ILOCATE
-                
                 ; reset keyboard buffer
                 STZ KEY_BUFFER_RPOS
                 STZ KEY_BUFFER_WPOS
-                
-                ; ; Copy vectors from ROM to Direct Page
-                ; setaxl 
-                ; LDA #$FF
-                ; LDX #$FF00
-                ; LDY #$FF00
-                ; MVP $00, $FF 
                 
                 ; display boot message 
 greet           setdbr `greet_msg       ;Set data bank to ROM
@@ -151,7 +93,9 @@ IBREAK          setdp 0
                                 ;<> is "lower word"
                 TAS             
                 
-IREADY          setdbr `ready_msg
+IREADY          LDA #13
+                JSL IPUTC
+                setdbr `ready_msg
                 setas 
                 LDX #<>ready_msg
                 JSL IPRINT
@@ -474,24 +418,67 @@ ICSRHOME        BRK ;
 ;
 ; Greeting message and other kernel boot data
 ;
-KERNEL_DATA     
-greet_msg       .text "    ", $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,     " FOENIX 256 DEVELOPMENT SYSTEM",$0D
-                .text "   " , $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,    "  OPEN SOURCE COMPUTER",$0D
-                .text "  ", $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,     "   ",$0D
-                .text " ",  $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,    "    1024KB BASIC RAM  8192K MEDIA RAM",$0D
-                .text $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,         "     ",$00
-                
-ready_msg       .null $0D,"READY."
-;ready_msg       .null " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
-;                .null ";F81000 0000 0000 0000 D6FF F8  0000 ------Z-"
-hello_basic     .null "10 PRINT ""Hello World""",$0D
-                .null "RUN",$0D
-                .null "Hello World",$0D
-                .null $0D,"READY."
-hello_ml        .null "G 020000",$0D
-                .null "HELLO WORLD",$0D
-                .null $0D
-                .null " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
-                .null ";002112 0019 F0AA 0000 D6FF F8  0000 --M-----"
-error_01        .null "ABORT ERROR"
+greet_msg       .text "  ///// FOENIX 256 DEVELOPMENT SYSTEM",$0D
+greet_msg1      .text " /////  PROTOTYPE TEST CODE",$0D
+greet_msg2      .null "/////   512K SRAM 8192K DRAM"
+ready_msg       .null "READY."
+error_msg       .null "ERROR"
+error_abort     .null "ABORT ERROR"
 
+;
+; Interrupt Handlers
+;
+* = HRESET      ; HRESET
+                JML IBOOT
+* = HCOP        ; HCOP  
+                JMP HBRK
+* = HBRK        ; HBRK  - Handle BRK interrupt
+                setaxl
+                PHB 
+                PHD
+                PHA
+                PHX
+                PHY
+                JML IBREAK
+
+* = HABORT      ; HABORT
+                
+* = HNMI        ; HNMI  
+
+* = HIRQ        ; IRQ handler. 
+                setaxl
+                PHB
+                PHD
+                PHA
+                PHX
+                PHY
+                ;
+                ; todo: look up IRQ triggered and do stuff
+                ;
+                PLY
+                PLX
+                PLA
+                PLD
+                PLB
+                RTI
+
+* = VECTORS_BEGIN
+ROM_VECTORS     ; Initial CPU Vectors. These will be copied to the top of Direct Page
+                ; during system boot
+JUMP_READY      JML IREADY      ; FFE0
+KVECTOR_COP     .word $FF10     ; FFE4
+KVECTOR_BRK     .word $FF20     ; FFE6
+KVECTOR_ABORT   .word $FF30     ; FFE8
+KVECTOR_NMI     .word $FF40     ; FFEA
+                .word $0000     ; FFEC
+KVECTOR_IRQ     .word $FF50     ; FFEE
+
+                .word $0000     ; FFF0
+                .word $0000     ; FFF2
+
+RVECTOR_ECOP    .word $FF10     ; FFF4
+RVECTOR_EBRK    .word $FF20     ; FFF6
+RVECTOR_EABORT  .word $FF30     ; FFF8
+RVECTOR_ENMI    .word $FF40     ; FFFA
+RVECTOR_ERESET  .word $FF00     ; FFFC
+RVECTOR_EIRQ    .word $FF50     ; FFFE
