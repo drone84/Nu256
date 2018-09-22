@@ -121,6 +121,10 @@ namespace Nu64.UI
 
         private void performanceTimer_Tick(object sender, EventArgs e)
         {
+            TimeSpan s = DateTime.Now - kernel.CPU.StartTime;
+            int c = kernel.CPU.CycleCounter;
+            cps = c / s.TotalSeconds;
+
             timerStatus.Text = cps.ToString("N0") + " CPS";
         }
 

@@ -1,11 +1,9 @@
-;
-;Direct Page Addresses
+; page_00.asm
+; Direct Page Addresses
 ;
 ;* Addresses are the byte AFTER the block. Use this to confirm block locations and check for overlaps
 BANK0_BEGIN      = $000000 ;Start of bank 0 and Direct page
-RESET            = $000000 ;4 Bytes Jumps to the beginning of kernel ROM. ($F8:0000). 
-RETURN           = $000004 ;4 Bytes Called when the RETURN key is pressed in the immediate mode screen. This will process a command in MONITOR, execute a BASIC command, or add a BASIC program line.
-KEYDOWN          = $000008 ;4 Bytes Custom keyboard handler. This defaults to the kernel keypress handler, but you can redirect this to your own routines. Make sure to JML to the original address at the end of your custom routine. Use this to make F-Key macros or custom keyboard commands. 
+unused_0000      = $000000 ;12 Bytes unused
 SCREENBEGIN      = $00000C ;3 Bytes Start of screen in video RAM. This is the upper-left corrner of the current video page being written to. This may not be what's being displayed by VICKY. Update this if you change VICKY's display page. 
 COLS_VISIBLE     = $00000F ;2 Bytes Columns visible per screen line. A virtual line can be longer than displayed, up to COLS_PER_LINE long. Default = 80
 COLS_PER_LINE    = $000011 ;2 Bytes Columns in memory per screen line. A virtual line can be this long. Default=128
@@ -20,7 +18,6 @@ STACKBOT         = $000022 ;2 Bytes Lowest location the stack should be allowed 
 STACKTOP         = $000024 ;2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort. 
 KERNEL_TEMP      = $0000C0 ;32 Bytes Temp space for kernel
 USER_TEMP        = $0000E0 ;32 Bytes Temp space for user programs
-PAGE0_END_       = $000100 ; Byte  
 
 GAVIN_BLOCK      = $000100 ;256 Bytes Gavin reserved, overlaps debugging registers at $1F0
 MULTIPLIER_0     = $000100 ;0 Byte  Unsigned multiplier
@@ -82,11 +79,11 @@ BLOCK_ADDR       = $00030F ;2 Bytes (temp) Address of block being loaded
 BLOCK_BANK       = $000311 ;1 Byte  (temp) Bank of block being loaded
 BLOCK_COUNT      = $000312 ;2 Bytes (temp) Counter of bytes read as file is loaded
 
-KEY_BUFFER       = $00F00 ;64 Bytes KEY_BUFFER
-KEY_BUFFER_SIZE  = $40 ;64 Bytes KEY_BUFFER_SIZE
-KEY_BUFFER_END   = $000F3F ;1 Byte  KEY_BUFFER_END
-KEY_BUFFER_RPOS  = $000F40 ;2 Bytes KEY_BUFFER_RPOS
-KEY_BUFFER_WPOS  = $000F42 ;2 Bytes KEY_BUFFER_WPOS
+KEY_BUFFER       = $000F00 ;64 Bytes keyboard buffer
+KEY_BUFFER_SIZE  = $40 ;64 Bytes (constant) keyboard buffer length
+KEY_BUFFER_END   = $000F3F ;1 Byte  Last byte of keyboard buffer
+KEY_BUFFER_RPOS  = $000F40 ;2 Bytes keyboard buffer read position
+KEY_BUFFER_WPOS  = $000F42 ;2 Bytes keyboard buffer write position
 
 TEST_BEGIN       = $001000 ;28672 Bytes Test/diagnostic code for prototype.
 TEST_END         = $007FFF ;0 Byte  
@@ -101,9 +98,9 @@ HBRK             = $00FF20 ;16 Bytes Handle the BRK instruction. Returns to BASI
 HABORT           = $00FF30 ;16 Bytes Handle ABORT asserted. Return to Ready prompt with an error message.
 HNMI             = $00FF40 ;32 Bytes Handle NMI
 HIRQ             = $00FF60 ;32 Bytes Handle IRQ
-ISR_END          = $00FF80 ;End of direct page Interrrupt handlers
+Unused_FF80      = $00FF80 ;End of direct page Interrrupt handlers
 
-VECTORS_BEGIN    = $00FFE0 ;0 Byte  Jumps to ROM READY routine. Modified whenever alternate command interpreter is loaded. 
+VECTORS_BEGIN    = $00FFE0 ;0 Byte  Interrupt vectors
 JMP_READY        = $00FFE0 ;4 Bytes Jumps to ROM READY routine. Modified whenever alternate command interpreter is loaded. 
 VECTOR_COP       = $00FFE4 ;2 Bytes Native COP Interrupt vector
 VECTOR_BRK       = $00FFE6 ;2 Bytes Native BRK Interrupt vector

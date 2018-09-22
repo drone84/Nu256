@@ -2,20 +2,19 @@
 .include "macros_inc.asm"
 .include "simulator_inc.asm"
 .include "page_00_inc.asm"
+.include "page_00_data.asm"
+.include "page_00_code.asm"
 .include "dram_inc.asm"
-.include "monitor.asm"
-.include "kernel_bank_FF.asm"
-
+;.include "monitor.asm"
 
 ; C256 Foenix / Nu64 Kernel
 ; Loads to $F0:0000
 
+;Kernel.asm
+;Jump Table
+
 * = $010000
 
-;Kernel.asm
-;Jump Table
-;Kernel.asm
-;Jump Table
 BOOT            JML IBOOT
 RESTORE         JML IRESTORE
 BREAK           JML IBREAK
@@ -60,6 +59,7 @@ CSRHOME         JML ICSRHOME
 SCROLLUP        JML ISCROLLUP
 
 * = $010400
+
 IBOOT           ; boot the system
                 CLC           ; clear the carry flag
                 XCE           ; move carry to emulation flag.
@@ -67,12 +67,19 @@ IBOOT           ; boot the system
                 LDA #STACK_END   ; initialize stack pointer 
                 TAS 
                 setdp 0
-                LDA #$1000      ; store the initial screen buffer location
+                LDA #<>SCREEN_PAGE0      ; store the initial screen buffer location
                 STA SCREENBEGIN
                 setas
-                LDA #$00
+                LDA #`SCREEN_PAGE0
                 STA SCREENBEGIN+2
                 setaxl           
+                LDA #<>SCREEN_PAGE0      ; store the initial screen buffer location
+                STA CURSORPOS
+                setas
+                LDA #`SCREEN_PAGE0
+                STA CURSORPOS+2
+                setaxl           
+                
                 ; Set screen dimensions. There more columns in memory than 
                 ; are visible. A virtual line is 128 bytes, but 80 columns will be
                 ; visible on screen.
@@ -85,19 +92,22 @@ IBOOT           ; boot the system
                 LDY #64
                 STY LINES_MAX
                 setal
+                
                 ; set the location of the cursor (top left corner of screen)
                 LDX #$0
                 LDY #$0
                 JSL ILOCATE
+                
                 ; reset keyboard buffer
                 STZ KEY_BUFFER_RPOS
                 STZ KEY_BUFFER_WPOS
-                ; Copy vectors from ROM to Direct Page
-                setaxl 
-                LDA #$FF
-                LDX #$FF00
-                LDY #$FF00
-                MVP $00, $FF 
+                
+                ; ; Copy vectors from ROM to Direct Page
+                ; setaxl 
+                ; LDA #$FF
+                ; LDX #$FF00
+                ; LDY #$FF00
+                ; MVP $00, $FF 
                 
                 ; display boot message 
 greet           setdbr `greet_msg       ;Set data bank to ROM
@@ -465,9 +475,12 @@ ICSRHOME        BRK ;
 ; Greeting message and other kernel boot data
 ;
 KERNEL_DATA     
-greet_msg       .text "  ///// FOENIX 256 DEVELOPMENT SYSTEM",$0D
-greet_msg1      .text " /////  OPEN SOURCE COMPUTER",$0D
-greet_msg2      .null "/////   8192KB SYSTEM 8128KB FREE"
+greet_msg       .text "    ", $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,     " FOENIX 256 DEVELOPMENT SYSTEM",$0D
+                .text "   " , $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,    "  OPEN SOURCE COMPUTER",$0D
+                .text "  ", $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,     "   ",$0D
+                .text " ",  $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,    "    1024KB BASIC RAM  8192K MEDIA RAM",$0D
+                .text $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,         "     ",$00
+                
 ready_msg       .null $0D,"READY."
 ;ready_msg       .null " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
 ;                .null ";F81000 0000 0000 0000 D6FF F8  0000 ------Z-"

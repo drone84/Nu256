@@ -86,10 +86,10 @@ namespace Nu64
 
             // Load the ROM data from disk. On the real system, the ROMs are not accessible by the CPU
             // and will be copied to RAM by VICKY
-            MemoryRAM flashROM = new MemoryRAM(0, 512 * 1024);
+            MemoryRAM flashROM = new MemoryRAM(0, 16 * 65536);
             this.ReadyHandler = Monitor;
             HexFile.Load(flashROM, @"ROMs\kernel.hex");
-            flashROM.Copy(0, Memory.CodeRAM, 0, 65536);
+            flashROM.Copy(0, Memory.CodeRAM, 0, 2 * 65536);
             CPU.Reset();
 
             //CPUTest test= new CPUTest(this);
