@@ -719,7 +719,8 @@ namespace Nu64.Processor
                     addr = SignatureBytes + cpu.X.Value;
                     ptr = cpu.Memory.ReadWord(addr);
                     return cpu.ProgramBank.GetLongAddress(ptr);
-
+                case AddressModes.Accumulator:
+                    return 0; 
                 default:
                     throw new NotImplementedException("GetAddress() Address mode not implemented: " + addressMode.ToString());
             }

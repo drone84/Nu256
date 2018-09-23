@@ -5,16 +5,14 @@
 .include "page_00_data.asm"
 .include "page_00_code.asm"
 .include "dram_inc.asm"
-;.include "monitor.asm"
+.include "monitor.asm"
 
 ; C256 Foenix / Nu64 Kernel
 ; Loads to $F0:0000
 
 ;Kernel.asm
 ;Jump Table
-
-* = $010000
-
+                * = 010000
 BOOT            JML IBOOT
 RESTORE         JML IRESTORE
 BREAK           JML IBREAK
@@ -57,6 +55,9 @@ CSRUP           JML ICSRUP
 CSRDOWN         JML ICSRDOWN
 CSRHOME         JML ICSRHOME
 SCROLLUP        JML ISCROLLUP
+SCRREADLINE     JML ISCRREADLINE
+SCRGETWORD      JML ISCRGETWORD
+
 
 * = $010400
 
@@ -149,7 +150,8 @@ IBREAK          setdp 0
                 STA CPUSTACK    ; Store the stack at immediately before the interrupt was asserted
                 LDA #<>STACK_END   ; initialize stack pointer back to the bootup value 
                                 ;<> is "lower word"
-                TAS             
+                TAS  
+                JML JMP_READY   ; Run READY routine (usually BASIC or MONITOR)
                 
 IREADY          setdbr `ready_msg
                 setas 
@@ -437,7 +439,52 @@ ISCROLLUP       ; Scroll the screen up by one row
                 PLX
                 PLA 
                 RTL 
-                
+
+;
+; IPRINTH
+; Prints data from memory in hexadecimal format
+; Inputs:
+;   X: 16-bit address of the LAST BYTE of data to print. 
+;   Y: Length in bytes of data to print
+; Modifies:
+;   X,Y, results undefined
+IPRINTH         PHP
+                PHA
+iprinth1        setas
+                LDA #0,b,x      ; Read the value to be printed
+                LSR 
+                LSR
+                LSR 
+                LSR
+                JSL iprint_digit
+                LDA #0,b,x
+                JSL iprint_digit
+                DEX
+                DEY 
+                BNE iprinth1
+                PLA
+                PLP
+                RTL
+
+;
+; iprint_digit
+; This will print the low nibble in the A register. 
+; Inputs:
+;   A: digit to print
+;   x flag should be 0 (16-bit X)
+; Affects: 
+;   P: m flag will be set to 0               
+iprint_digit    PHX
+                setal
+                AND #$0F
+                TAX 
+                ; Use the value in AL to 
+                .databank ?
+                LDA hex_digits,X 
+                JSL IPUTC       ; Print the digit
+                PLX
+                RTL
+
 ;                
 ;Not-implemented routines
 ;
@@ -463,14 +510,15 @@ IPRINTC         BRK ; Print character to screen. Handles terminal commands
 IPRINTS         BRK ; Print string to screen. Handles terminal commands
 IPRINTF         BRK ; Print a float value
 IPRINTI         BRK ; Prints integer value in TEMP
-IPRINTH         BRK ; Print Hex value in DP variable
 IPRINTAI        BRK ; Prints integer value in A
 IPRINTAH        BRK ; Prints hex value in A. Printed value is 2 wide if M flag is 1, 4 wide if M=0
 IPUSHKEY        BRK ; 
 IPUSHKEYS       BRK ; 
 ICSRLEFT        BRK ; 
 ICSRHOME        BRK ; 
-                
+ISCRREADLINE    BRK ; Loads the MCMDADDR/BCMDADDR variable with the address of the current line on the screen. This is called when the RETURN key is pressed and is the first step in processing an immediate mode command.
+ISCRGETWORD     BRK ; Read a current word on the screen. A word ends with a space, punctuation (except _), or any control character (value < 32). Loads the address into CMPTEXT_VAL and length into CMPTEXT_LEN variables.                
+
 ;
 ; Greeting message and other kernel boot data
 ;
@@ -494,4 +542,4 @@ hello_ml        .null "G 020000",$0D
                 .null " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
                 .null ";002112 0019 F0AA 0000 D6FF F8  0000 --M-----"
 error_01        .null "ABORT ERROR"
-
+hex_digits      .text "0123456789ABCDEF",0

@@ -75,7 +75,7 @@ RHIRQ           setaxl
 ; Interrupt Vectors
 ;
 * = VECTORS_BEGIN                
-JUMP_READY      JML READY      ; Kernel READY routine. Rewrite this address to jump to a custom kernel.
+JUMP_READY      JML IMONITOR     ; Kernel READY routine. Rewrite this address to jump to a custom kernel.
 RVECTOR_COP     .word HCOP     ; FFE4
 RVECTOR_BRK     .word HBRK     ; FFE6
 RVECTOR_ABORT   .word HABORT   ; FFE8
@@ -83,8 +83,7 @@ RVECTOR_NMI     .word HNMI     ; FFEA
                 .word $0000    ; FFEC
 RVECTOR_IRQ     .word HIRQ     ; FFEE
 
-                .word $0000    ; FFF0
-                .word $0000    ; FFF2
+RRETURN         JML IRETURN
 
 RVECTOR_ECOP    .word HCOP     ; FFF4
 RVECTOR_EBRK    .word HBRK     ; FFF6
