@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.characterPanel = new System.Windows.Forms.Panel();
+            this.characterPanel = new System.Windows.Forms.PictureBox();
             this.SaveButton = new System.Windows.Forms.Button();
             this.RightButton = new System.Windows.Forms.Button();
             this.DownButton = new System.Windows.Forms.Button();
@@ -37,6 +37,7 @@
             this.ReloadButton = new System.Windows.Forms.Button();
             this.CopyButton = new System.Windows.Forms.Button();
             this.PasteButton = new System.Windows.Forms.Button();
+            this.ClearButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // characterPanel
@@ -47,6 +48,10 @@
             this.characterPanel.Name = "characterPanel";
             this.characterPanel.Size = new System.Drawing.Size(256, 256);
             this.characterPanel.TabIndex = 0;
+            this.characterPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.characterPanel_Paint);
+            this.characterPanel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.P_MouseDown);
+            this.characterPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.P_MouseMove);
+            this.characterPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.P_MouseUp);
             // 
             // SaveButton
             // 
@@ -76,6 +81,7 @@
             this.DownButton.TabIndex = 2;
             this.DownButton.Text = "Down";
             this.DownButton.UseVisualStyleBackColor = true;
+            this.DownButton.Click += new System.EventHandler(this.DownButton_Click);
             // 
             // UpButton
             // 
@@ -85,6 +91,7 @@
             this.UpButton.TabIndex = 3;
             this.UpButton.Text = "Up";
             this.UpButton.UseVisualStyleBackColor = true;
+            this.UpButton.Click += new System.EventHandler(this.UpButton_Click);
             // 
             // LeftButton
             // 
@@ -126,10 +133,21 @@
             this.PasteButton.UseVisualStyleBackColor = true;
             this.PasteButton.Click += new System.EventHandler(this.PasteButton_Click);
             // 
+            // ClearButton
+            // 
+            this.ClearButton.Location = new System.Drawing.Point(267, 179);
+            this.ClearButton.Name = "ClearButton";
+            this.ClearButton.Size = new System.Drawing.Size(75, 23);
+            this.ClearButton.TabIndex = 8;
+            this.ClearButton.Text = "Clear";
+            this.ClearButton.UseVisualStyleBackColor = true;
+            this.ClearButton.Click += new System.EventHandler(this.ClearButton_Click);
+            // 
             // EditControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.ClearButton);
             this.Controls.Add(this.PasteButton);
             this.Controls.Add(this.CopyButton);
             this.Controls.Add(this.ReloadButton);
@@ -148,7 +166,7 @@
 
         #endregion
 
-        private System.Windows.Forms.Panel characterPanel;
+        private System.Windows.Forms.PictureBox characterPanel;
         private System.Windows.Forms.Button SaveButton;
         private System.Windows.Forms.Button RightButton;
         private System.Windows.Forms.Button DownButton;
@@ -157,5 +175,6 @@
         private System.Windows.Forms.Button ReloadButton;
         private System.Windows.Forms.Button CopyButton;
         private System.Windows.Forms.Button PasteButton;
+        private System.Windows.Forms.Button ClearButton;
     }
 }

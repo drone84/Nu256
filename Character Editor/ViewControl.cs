@@ -41,7 +41,7 @@ namespace CharSet
             InitializeComponent();
         }
 
-        public byte[] CharacterData = null;
+        public byte[] FontData = new byte[8 * 256];
 
         public MouseButtons MouseButton { get; private set; }
 
@@ -104,33 +104,33 @@ namespace CharSet
         // useful for converting BIN to PNG or PNG to BIN
         public void CopyAll()
         {
-            CopyBlock(CharacterData, 0, 0, 256);
+            CopyBlock(FontData, 0, 0, 256);
             Refresh();
         }
 
         public void CopyNonPET()
         {
             // control characters (0-31)
-            CopyBlock(CharacterData, 0x0, 0x0, 32);
+            CopyBlock(FontData, 0x0, 0x0, 32);
             // 32 (space) to 63 (?)
             //CopyBlock(InputData, 32, 32, 32);
             // upper case letters
             //CopyBlock(InputData, 0, 64, 32);
 
             // grave (`)
-            CopyBlock(CharacterData, 0x140, 0x60, 1);
+            CopyBlock(FontData, 0x140, 0x60, 1);
             // lower case letters
             //CopyBlock(InputData, 0x101, 0x61, 26);
             // {|}~ and 127
-            CopyBlock(CharacterData, 0x15b, 0x7b, 5);
+            CopyBlock(FontData, 0x15b, 0x7b, 5);
             //solid block
-            CopyBlock(CharacterData, 0xe0, 0xa0, 1);
+            CopyBlock(FontData, 0xe0, 0xa0, 1);
             // C= PET symbols
             //CopyBlock(InputData, 0x61, 0xa1, 31);
             // Shifted PET symbols
             //CopyBlock(InputData, 0x40, 0xc0, 32);
             // new custom glyphs (last two rows)
-            CopyBlock(CharacterData, 0xe0, 0xe0, 32);
+            CopyBlock(FontData, 0xe0, 0xe0, 32);
             Refresh();
 
         }
@@ -141,12 +141,12 @@ namespace CharSet
 
         private void CharViewer_Paint(object sender, PaintEventArgs e)
         {
-            DrawCharSet(CharacterData, e.Graphics, 0, 0);
+            DrawCharSet(FontData, e.Graphics, 0, 0);
         }
 
         internal void Clear()
         {
-            CharacterData = new byte[CHARSET_SIZE];
+            FontData = new byte[CHARSET_SIZE];
             Refresh();
         }
 
@@ -247,22 +247,22 @@ namespace CharSet
         {
             //CopyBlock(CustomData, 0x0, 0x0, 32);
             // 32 (space) to 63 (?)
-            CopyBlock(CharacterData, 32, 32, 32);
+            CopyBlock(FontData, 32, 32, 32);
             // upper case letters
-            CopyBlock(CharacterData, 0, 64, 32);
+            CopyBlock(FontData, 0, 64, 32);
 
             // grave (`)
             // CopyBlock(InputData, 0x140, 0x60, 1);
             // lower case letters
-            CopyBlock(CharacterData, 0x101, 0x61, 26);
+            CopyBlock(FontData, 0x101, 0x61, 26);
             // {|}~ and 127
             //CopyBlock(InputData, 0x15b, 0x7b, 5);
             //solid block
-            CopyBlock(CharacterData, 0xe0, 0xa0, 1);
+            CopyBlock(FontData, 0xe0, 0xa0, 1);
             // C= PET symbols
-            CopyBlock(CharacterData, 0x61, 0xa1, 31);
+            CopyBlock(FontData, 0x61, 0xa1, 31);
             // Shifted PET symbols
-            CopyBlock(CharacterData, 0x40, 0xc0, 32);
+            CopyBlock(FontData, 0x40, 0xc0, 32);
             // new custom glyphs (last two rows)
             //CopyBlock(CustomData, 0xe0, 0xe0, 32);
             Refresh();
@@ -284,7 +284,7 @@ namespace CharSet
             int dp = destIndex * BytesPerCharacter;
             for (int i = 0; i < BytesPerCharacter; i++)
             {
-                CharacterData[dp + i] = CharacterData[sp + i];
+                FontData[dp + i] = FontData[sp + i];
             }
         }
 

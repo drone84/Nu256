@@ -47,17 +47,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CharEdWindow.cs">
+    <Compile Include="CharEditMain.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="CharEdWindow.Designer.cs">
-      <DependentUpon>CharEdWindow.cs</DependentUpon>
+    <Compile Include="CharEditMain.Designer.cs">
+      <DependentUpon>CharEditMain.cs</DependentUpon>
     </Compile>
-    <Compile Include="CharViewer.cs">
+    <Compile Include="ViewControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="CharViewer.designer.cs">
-      <DependentUpon>CharViewer.cs</DependentUpon>
+    <Compile Include="ViewControl.designer.cs">
+      <DependentUpon>ViewControl.cs</DependentUpon>
     </Compile>
     <Compile Include="EditControl.cs">
       <SubType>UserControl</SubType>
@@ -78,11 +78,11 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="CharEdWindow.resx">
-      <DependentUpon>CharEdWindow.cs</DependentUpon>
+    <EmbeddedResource Include="CharEditMain.resx">
+      <DependentUpon>CharEditMain.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="CharViewer.resx">
-      <DependentUpon>CharViewer.cs</DependentUpon>
+    <EmbeddedResource Include="ViewControl.resx">
+      <DependentUpon>ViewControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditControl.resx">
       <DependentUpon>EditControl.cs</DependentUpon>

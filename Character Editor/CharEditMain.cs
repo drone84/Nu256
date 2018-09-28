@@ -10,10 +10,10 @@ using System.Windows.Forms;
 
 namespace Nu64.CharEdit
 {
-    public partial class CharEdWindow : Form
+    public partial class CharEditMain : Form
     {
 
-        public CharEdWindow()
+        public CharEditMain()
         {
             InitializeComponent();
         }
@@ -33,7 +33,7 @@ namespace Nu64.CharEdit
                 switch (ext)
                 {
                     case ".bin":
-                        charViewer1.SaveBin(f.FileName, charViewer1.CharacterData);
+                        charViewer1.SaveBin(f.FileName, charViewer1.FontData);
                         break;
                     case ".png":
                     case ".bmp":
@@ -54,11 +54,11 @@ namespace Nu64.CharEdit
                 switch (ext)
                 {
                     case ".bin":
-                        charViewer1.CharacterData = charViewer1.LoadBin(f.FileName);
+                        charViewer1.FontData = charViewer1.LoadBin(f.FileName);
                         break;
                     case ".png":
                     case ".bmp":
-                        charViewer1.CharacterData = charViewer1.LoadPNG(f.FileName);
+                        charViewer1.FontData = charViewer1.LoadPNG(f.FileName);
                         break;
                 }
                 charViewer1.Refresh();
@@ -78,7 +78,7 @@ namespace Nu64.CharEdit
 
         private void CharViewer1_CharacterSelected(object sender, EventArgs e)
         {
-            editControl1.LoadCharacter(charViewer1.CharacterData, charViewer1.SelectedIndex, charViewer1.BytesPerCharacter);
+            editControl1.LoadCharacter(charViewer1.FontData, charViewer1.SelectedIndex, charViewer1.BytesPerCharacter);
         }
     }
 }

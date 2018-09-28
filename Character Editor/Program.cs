@@ -13,7 +13,7 @@ namespace Nu64.CharEdit
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new CharEdWindow());
+            Application.Run(new CharEditMain());
         }
     }
 }
