@@ -165,8 +165,8 @@ IREADY          setdbr `ready_msg
 ;  vector.
 IREADYWAIT      ; Check the keyboard buffer.
                 JSL IGETCHE
-                BCS IREADYWAIT
-                JSL IPUTC
+                ; BCS IREADYWAIT
+                ; JSL IPUTC
                 JMP IREADYWAIT
                 
 IKEYDOWN        STP             ; Keyboard key pressed
