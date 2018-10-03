@@ -371,7 +371,7 @@ namespace Nu256.UI
         {
             StepCounter = 0;
             messageText.Clear();
-            this.listing = global::System.IO.File.ReadAllLines(@"ROMs\kernel.lst");
+            //this.listing = global::System.IO.File.ReadAllLines(@"ROMs\kernel.lst");
         }
     }
 }

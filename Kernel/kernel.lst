@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.53.1515 listing file
 ; 64tass --long-address --intel-hex -o kernel.hex --list kernel.lst kernel.asm
-; Tue Oct 02 00:09:17 2018
+; Wed Oct 03 11:22:00 2018
 
 ;Offset	;Hex		;Monitor	;Source
 
@@ -156,7 +156,7 @@
 
 .ff00	18		clc		RHRESET         CLC
 .ff01	fb		xce		                XCE
-.ff02	5c 10 27 00	jmp $002710	                JML BOOT
+.ff02	5c 00 00 01	jmp $010000	                JML BOOT
 .ff10					RHCOP
 .ff10	c2 30		rep #$30	                REP #$30        ; set A&X long
 .ff12	8b		phb		                PHB
@@ -164,7 +164,7 @@
 .ff14	48		pha		                PHA
 .ff15	da		phx		                PHX
 .ff16	5a		phy		                PHY
-.ff17	5c 18 27 00	jmp $002718	                JML BREAK
+.ff17	5c 08 00 01	jmp $010008	                JML BREAK
 .ff20					RHBRK
 .ff20	c2 30		rep #$30	                REP #$30        ; set A&X long
 .ff22	8b		phb		                PHB
@@ -172,7 +172,7 @@
 .ff24	48		pha		                PHA
 .ff25	da		phx		                PHX
 .ff26	5a		phy		                PHY
-.ff27	5c 18 27 00	jmp $002718	                JML BREAK
+.ff27	5c 08 00 01	jmp $010008	                JML BREAK
 .ff30					RHABORT
 .ff30	c2 30		rep #$30	                REP #$30        ; set A&X long
 .ff32	8b		phb		                PHB
@@ -180,7 +180,7 @@
 .ff34	48		pha		                PHA
 .ff35	da		phx		                PHX
 .ff36	5a		phy		                PHY
-.ff37	5c 18 27 00	jmp $002718	                JML BREAK
+.ff37	5c 08 00 01	jmp $010008	                JML BREAK
 .ff40					 RHNMI
 .ff40	c2 30		rep #$30	                REP #$30        ; set A&X long
 .ff42	8b		phb		                PHB
@@ -207,7 +207,7 @@
 .ff6a	2b		pld		                PLD
 .ff6b	ab		plb		                PLB
 .ff6c	40		rti		                RTI
-.ffe0	5c 60 80 01	jmp $018060	JUMP_READY      JML IMONITOR     ; Kernel READY routine. Rewrite this address to jump to a custom kernel.
+.ffe0	5c 66 80 01	jmp $018066	JUMP_READY      JML IMREADY     ; Kernel READY routine. Rewrite this address to jump to a custom kernel.
 >ffe4	10 ff				RVECTOR_COP     .word HCOP     ; FFE4
 >ffe6	20 ff				RVECTOR_BRK     .word HBRK     ; FFE6
 >ffe8	30 ff				RVECTOR_ABORT   .word HABORT   ; FFE8
@@ -238,46 +238,47 @@
 
 ;******  Processing file: monitor.asm
 
-.018000	5c 60 80 01	jmp $018060	MONITOR         JML IMONITOR
-.018004	5c 33 81 01	jmp $018133	MBREAK          JML IMBREAK
-.018008	5c 88 80 01	jmp $018088	MSTATUS         JML IMSTATUS
-.01800c	5c 34 81 01	jmp $018134	MREADY          JML IMREADY
-.018010	5c 35 81 01	jmp $018135	MRETURN         JML IMRETURN
-.018014	5c 36 81 01	jmp $018136	MPARSE          JML IMPARSE
-.018018	5c 37 81 01	jmp $018137	MPARSE1         JML IMPARSE1
-.01801c	5c 38 81 01	jmp $018138	MEXECUTE        JML IMEXECUTE
-.018020	5c 39 81 01	jmp $018139	MASSEMBLE       JML IMASSEMBLE
-.018024	5c 3a 81 01	jmp $01813a	MASSEMBLEA      JML IMASSEMBLEA
-.018028	5c 3b 81 01	jmp $01813b	MCOMPARE        JML IMCOMPARE
-.01802c	5c 3c 81 01	jmp $01813c	MDISASSEMBLE    JML IMDISASSEMBLE
-.018030	5c 3d 81 01	jmp $01813d	MFILL           JML IMFILL
-.018034	5c 3f 81 01	jmp $01813f	MJUMP           JML IMJUMP
-.018038	5c 40 81 01	jmp $018140	MHUNT           JML IMHUNT
-.01803c	5c 41 81 01	jmp $018141	MLOAD           JML IMLOAD
-.018040	5c 42 81 01	jmp $018142	MMEMORY         JML IMMEMORY
-.018044	5c 43 81 01	jmp $018143	MREGISTERS      JML IMREGISTERS
-.018048	5c 44 81 01	jmp $018144	MSAVE           JML IMSAVE
-.01804c	5c 45 81 01	jmp $018145	MTRANSFER       JML IMTRANSFER
-.018050	5c 46 81 01	jmp $018146	MVERIFY         JML IMVERIFY
-.018054	5c 47 81 01	jmp $018147	MEXIT           JML IMEXIT
-.018058	5c 48 81 01	jmp $018148	MMODIFY         JML IMMODIFY
-.01805c	5c 49 81 01	jmp $018149	MDOS            JML IMDOS
-.018060	18		clc		IMONITOR        CLC           ; clear the carry flag
-.018061	fb		xce		                XCE           ; move carry to emulation flag.
-.018062	a9 ff fe	lda #$feff	                LDA #STACK_END ; Reset the stack
-.018065	1b		tcs		                TAS
-.018066	e2 20		sep #$20	                SEP #$20        ; set A short
-.018068	a5 01		lda $01		                LDA `IMONITOR
-.01806a	8d e3 ff	sta $ffe3	                STA JMP_READY+3
-.01806d	c2 20		rep #$20	                REP #$20        ; set A long
-.01806f	ad 60 80	lda $8060	                LDA <>IMONITOR
-.018072	8d e1 ff	sta $ffe1	                STA JMP_READY+1
-.018075	e2 20		sep #$20	                SEP #$20        ; set A short
-.018077	a5 01		lda $01		                LDA `IMRETURN
-.018079	8d f3 ff	sta $fff3	                STA RETURN+3
-.01807c	c2 20		rep #$20	                REP #$20        ; set A long
-.01807e	ad 35 81	lda $8135	                LDA <>IMRETURN
-.018081	8d f1 ff	sta $fff1	                STA RETURN+1
+.018000	5c 5c 80 01	jmp $01805c	MONITOR         JML IMONITOR
+.018004	5c 88 80 01	jmp $018088	MSTATUS         JML IMSTATUS
+.018008	5c 66 80 01	jmp $018066	MREADY          JML IMREADY
+.01800c	5c 33 81 01	jmp $018133	MRETURN         JML IMRETURN
+.018010	5c 34 81 01	jmp $018134	MPARSE          JML IMPARSE
+.018014	5c 35 81 01	jmp $018135	MPARSE1         JML IMPARSE1
+.018018	5c 36 81 01	jmp $018136	MEXECUTE        JML IMEXECUTE
+.01801c	5c 37 81 01	jmp $018137	MASSEMBLE       JML IMASSEMBLE
+.018020	5c 38 81 01	jmp $018138	MASSEMBLEA      JML IMASSEMBLEA
+.018024	5c 39 81 01	jmp $018139	MCOMPARE        JML IMCOMPARE
+.018028	5c 3a 81 01	jmp $01813a	MDISASSEMBLE    JML IMDISASSEMBLE
+.01802c	5c 3b 81 01	jmp $01813b	MFILL           JML IMFILL
+.018030	5c 3d 81 01	jmp $01813d	MJUMP           JML IMJUMP
+.018034	5c 3e 81 01	jmp $01813e	MHUNT           JML IMHUNT
+.018038	5c 3f 81 01	jmp $01813f	MLOAD           JML IMLOAD
+.01803c	5c 40 81 01	jmp $018140	MMEMORY         JML IMMEMORY
+.018040	5c 41 81 01	jmp $018141	MREGISTERS      JML IMREGISTERS
+.018044	5c 42 81 01	jmp $018142	MSAVE           JML IMSAVE
+.018048	5c 43 81 01	jmp $018143	MTRANSFER       JML IMTRANSFER
+.01804c	5c 44 81 01	jmp $018144	MVERIFY         JML IMVERIFY
+.018050	5c 45 81 01	jmp $018145	MEXIT           JML IMEXIT
+.018054	5c 46 81 01	jmp $018146	MMODIFY         JML IMMODIFY
+.018058	5c 47 81 01	jmp $018147	MDOS            JML IMDOS
+.01805c	18		clc		IMONITOR        CLC           ; clear the carry flag
+.01805d	fb		xce		                XCE           ; move carry to emulation flag.
+.01805e	a9 ff fe	lda #$feff	                LDA #STACK_END ; Reset the stack
+.018061	1b		tcs		                TAS
+.018062	5c 66 80 01	jmp $018066	                JML IMREADY
+.018066					IMREADY
+.018066	c2 30		rep #$30	                REP #$30        ; set A&X long
+.018068	a9 66 80	lda #$8066	                LDA #<>IMREADY
+.01806b	8d e1 ff	sta $ffe1	                STA JMP_READY+1
+.01806e	e2 20		sep #$20	                SEP #$20        ; set A short
+.018070	a9 01		lda #$01	                LDA #`IMREADY
+.018072	8d e3 ff	sta $ffe3	                STA JMP_READY+3
+.018075	c2 20		rep #$20	                REP #$20        ; set A long
+.018077	a9 33 81	lda #$8133	                LDA #<>IMRETURN
+.01807a	8d f1 ff	sta $fff1	                STA RETURN+1
+.01807d	e2 20		sep #$20	                SEP #$20        ; set A short
+.01807f	a9 01		lda #$01	                LDA #`IMRETURN
+.018081	8d f3 ff	sta $fff3	                STA RETURN+3
 .018084	5c 88 80 01	jmp $018088	                JML IMSTATUS
 .018088					IMSTATUS
 .018088	48		pha		                PHA             ; begin setdbr macro
@@ -288,7 +289,7 @@
 .01808f	ab		plb		                PLB
 .018090	28		plp		                PLP
 .018091	68		pla		                PLA             ; end setdbr macro
-.018092	a2 4a 81	ldx #$814a	                LDX #<>mregisters_msg
+.018092	a2 48 81	ldx #$8148	                LDX #<>mregisters_msg
 .018095	22 0c 05 01	jsl $01050c	                JSL IPRINT
 .018099	e2 20		sep #$20	                SEP #$20        ; set A short
 .01809b	a9 3b		lda #$3b	                LDA #';'
@@ -343,82 +344,84 @@
 .018127	22 ee 05 01	jsl $0105ee	                JSL IPRINTH
 .01812b	22 5a 05 01	jsl $01055a	                JSL IPRINTCR
 .01812f	5c ca 04 01	jmp $0104ca	                JML IREADYWAIT
-.018133	00		brk #		IMBREAK         BRK ; Warm boot routine
-.018134	00		brk #		IMREADY         BRK ; Prints status message and waits for input
-.018135	6b		rtl		IMRETURN        RTL ; Handle RETURN key (ie: execute command)
-.018136	00		brk #		IMPARSE         BRK ; Parse the current command line
-.018137	00		brk #		IMPARSE1        BRK ; Parse one word on the current command line
-.018138	00		brk #		IMEXECUTE       BRK ; Execute the current command line (requires MCMD and MARG1-MARG8 to be populated)
-.018139	00		brk #		IMASSEMBLE      BRK ; Assemble a line of text.
-.01813a	00		brk #		IMASSEMBLEA     BRK ; Assemble a line of text.
-.01813b	00		brk #		IMCOMPARE       BRK ; Compare memory. len=1
-.01813c	00		brk #		IMDISASSEMBLE   BRK ; Disassemble memory. end=1 instruction
-.01813d	00		brk #		IMFILL          BRK ; Fill memory with specified value. Start and end must be in the same bank.
-.01813e	00		brk #		IMGO            BRK ; Execute from specified address
-.01813f	00		brk #		IMJUMP          BRK ; Execute from spefified address
-.018140	00		brk #		IMHUNT          BRK ; Hunt (find) value in memory
-.018141	00		brk #		IMLOAD          BRK ; Load data from disk. Device=1 (internal floppy) Start=Address in file
-.018142	00		brk #		IMMEMORY        BRK ; View memory
-.018143	00		brk #		IMREGISTERS     BRK ; View/edit registers
-.018144	00		brk #		IMSAVE          BRK ; Save memory to disk
-.018145	00		brk #		IMTRANSFER      BRK ; Transfer (copy) data in memory
-.018146	00		brk #		IMVERIFY        BRK ; Verify memory and file on disk
-.018147	00		brk #		IMEXIT          BRK ; Exit monitor and return to BASIC command prompt
-.018148	00		brk #		IMMODIFY        BRK ; Modify memory
-.018149	00		brk #		IMDOS           BRK ; Execute DOS command
-.01814a					MMESSAGES
->01814a					MMERROR         .text
->01814a	0d 20 50 43 20 20 20 20		mregisters_msg  .null $0D," PC     A    X    Y    SP   DBR DP   NVMXDIZC"
->018152	20 41 20 20 20 20 58 20 20 20 20 59 20 20 20 20
->018162	53 50 20 20 20 44 42 52 20 44 50 20 20 20 4e 56
->018172	4d 58 44 49 5a 43 00
+.018133	6b		rtl		IMRETURN        RTL ; Handle RETURN key (ie: execute command)
+.018134	00		brk #		IMPARSE         BRK ; Parse the current command line
+.018135	00		brk #		IMPARSE1        BRK ; Parse one word on the current command line
+.018136	00		brk #		IMEXECUTE       BRK ; Execute the current command line (requires MCMD and MARG1-MARG8 to be populated)
+.018137	00		brk #		IMASSEMBLE      BRK ; Assemble a line of text.
+.018138	00		brk #		IMASSEMBLEA     BRK ; Assemble a line of text.
+.018139	00		brk #		IMCOMPARE       BRK ; Compare memory. len=1
+.01813a	00		brk #		IMDISASSEMBLE   BRK ; Disassemble memory. end=1 instruction
+.01813b	00		brk #		IMFILL          BRK ; Fill memory with specified value. Start and end must be in the same bank.
+.01813c	00		brk #		IMGO            BRK ; Execute from specified address
+.01813d	00		brk #		IMJUMP          BRK ; Execute from spefified address
+.01813e	00		brk #		IMHUNT          BRK ; Hunt (find) value in memory
+.01813f	00		brk #		IMLOAD          BRK ; Load data from disk. Device=1 (internal floppy) Start=Address in file
+.018140	00		brk #		IMMEMORY        BRK ; View memory
+.018141	00		brk #		IMREGISTERS     BRK ; View/edit registers
+.018142	00		brk #		IMSAVE          BRK ; Save memory to disk
+.018143	00		brk #		IMTRANSFER      BRK ; Transfer (copy) data in memory
+.018144	00		brk #		IMVERIFY        BRK ; Verify memory and file on disk
+.018145	00		brk #		IMEXIT          BRK ; Exit monitor and return to BASIC command prompt
+.018146	00		brk #		IMMODIFY        BRK ; Modify memory
+.018147	00		brk #		IMDOS           BRK ; Execute DOS command
+.018148					MMESSAGES
+>018148					MMERROR         .text
+>018148	0d 20 50 43 20 20 20 20		mregisters_msg  .null $0D," PC     A    X    Y    SP   DBR DP   NVMXDIZC"
+>018150	20 41 20 20 20 20 58 20 20 20 20 59 20 20 20 20
+>018160	53 50 20 20 20 44 42 52 20 44 50 20 20 20 4e 56
+>018170	4d 58 44 49 5a 43 00
 
 ;******  Return to file: kernel.asm
 
-.2710	5c 00 04 01	jmp $010400	BOOT            JML IBOOT
-.2714	5c 1c 06 01	jmp $01061c	RESTORE         JML IRESTORE
-.2718	5c 70 04 01	jmp $010470	BREAK           JML IBREAK
-.271c	5c b7 04 01	jmp $0104b7	READY           JML IREADY
-.2720	5c 1d 06 01	jmp $01061d	SCINIT          JML ISCINIT
-.2724	5c 1e 06 01	jmp $01061e	IOINIT          JML IIOINIT
-.2728	5c 2c 05 01	jmp $01052c	PUTC            JML IPUTC
-.272c	5c 15 05 01	jmp $010515	PUTS            JML IPUTS
-.2730	5c 59 05 01	jmp $010559	PUTB            JML IPUTB
-.2734	5c 1f 06 01	jmp $01061f	PUTBLOCK        JML IPUTBLOCK
-.2738	5c 20 06 01	jmp $010620	SETLFS          JML ISETLFS
-.273c	5c 21 06 01	jmp $010621	SETNAM          JML ISETNAM
-.2740	5c 22 06 01	jmp $010622	OPEN            JML IOPEN
-.2744	5c 23 06 01	jmp $010623	CLOSE           JML ICLOSE
-.2748	5c 24 06 01	jmp $010624	SETIN           JML ISETIN
-.274c	5c 25 06 01	jmp $010625	SETOUT          JML ISETOUT
-.2750	5c 26 06 01	jmp $010626	GETB            JML IGETB
-.2754	5c 27 06 01	jmp $010627	GETBLOCK        JML IGETBLOCK
-.2758	5c 28 06 01	jmp $010628	GETCH           JML IGETCH
-.275c	5c db 04 01	jmp $0104db	GETCHW          JML IGETCHW
-.2760	5c d2 04 01	jmp $0104d2	GETCHE          JML IGETCHE
-.2764	5c 29 06 01	jmp $010629	GETS            JML IGETS
-.2768	5c 2a 06 01	jmp $01062a	GETLINE         JML IGETLINE
-.276c	5c 2b 06 01	jmp $01062b	GETFIELD        JML IGETFIELD
-.2770	5c 2c 06 01	jmp $01062c	TRIM            JML ITRIM
-.2774	5c 2d 06 01	jmp $01062d	PRINTC          JML IPRINTC
-.2778	5c 2e 06 01	jmp $01062e	PRINTS          JML IPRINTS
-.277c	5c 5a 05 01	jmp $01055a	PRINTCR         JML IPRINTCR
-.2780	5c 2f 06 01	jmp $01062f	PRINTF          JML IPRINTF
-.2784	5c 30 06 01	jmp $010630	PRINTI          JML IPRINTI
-.2788	5c ee 05 01	jmp $0105ee	PRINTH          JML IPRINTH
-.278c	5c 31 06 01	jmp $010631	PRINTAI         JML IPRINTAI
-.2790	5c 32 06 01	jmp $010632	PRINTAH         JML IPRINTAH
-.2794	5c a8 05 01	jmp $0105a8	LOCATE          JML ILOCATE
-.2798	5c 33 06 01	jmp $010633	PUSHKEY         JML IPUSHKEY
-.279c	5c 34 06 01	jmp $010634	PUSHKEYS        JML IPUSHKEYS
-.27a0	5c 7b 05 01	jmp $01057b	CSRRIGHT        JML ICSRRIGHT
-.27a4	5c 35 06 01	jmp $010635	CSRLEFT         JML ICSRLEFT
-.27a8	5c a6 05 01	jmp $0105a6	CSRUP           JML ICSRUP
-.27ac	5c a7 05 01	jmp $0105a7	CSRDOWN         JML ICSRDOWN
-.27b0	5c 36 06 01	jmp $010636	CSRHOME         JML ICSRHOME
-.27b4	5c d4 05 01	jmp $0105d4	SCROLLUP        JML ISCROLLUP
-.27b8	5c 37 06 01	jmp $010637	SCRREADLINE     JML ISCRREADLINE
-.27bc	5c 38 06 01	jmp $010638	SCRGETWORD      JML ISCRGETWORD
+
+;******  Processing file: kernel_jumptable.asm
+
+.010000	5c 00 04 01	jmp $010400	BOOT            JML IBOOT
+.010004	5c 1c 06 01	jmp $01061c	RESTORE         JML IRESTORE
+.010008	5c 70 04 01	jmp $010470	BREAK           JML IBREAK
+.01000c	5c b7 04 01	jmp $0104b7	READY           JML IREADY
+.010010	5c 1d 06 01	jmp $01061d	SCINIT          JML ISCINIT
+.010014	5c 1e 06 01	jmp $01061e	IOINIT          JML IIOINIT
+.010018	5c 2c 05 01	jmp $01052c	PUTC            JML IPUTC
+.01001c	5c 15 05 01	jmp $010515	PUTS            JML IPUTS
+.010020	5c 59 05 01	jmp $010559	PUTB            JML IPUTB
+.010024	5c 1f 06 01	jmp $01061f	PUTBLOCK        JML IPUTBLOCK
+.010028	5c 20 06 01	jmp $010620	SETLFS          JML ISETLFS
+.01002c	5c 21 06 01	jmp $010621	SETNAM          JML ISETNAM
+.010030	5c 22 06 01	jmp $010622	OPEN            JML IOPEN
+.010034	5c 23 06 01	jmp $010623	CLOSE           JML ICLOSE
+.010038	5c 24 06 01	jmp $010624	SETIN           JML ISETIN
+.01003c	5c 25 06 01	jmp $010625	SETOUT          JML ISETOUT
+.010040	5c 26 06 01	jmp $010626	GETB            JML IGETB
+.010044	5c 27 06 01	jmp $010627	GETBLOCK        JML IGETBLOCK
+.010048	5c 28 06 01	jmp $010628	GETCH           JML IGETCH
+.01004c	5c db 04 01	jmp $0104db	GETCHW          JML IGETCHW
+.010050	5c d2 04 01	jmp $0104d2	GETCHE          JML IGETCHE
+.010054	5c 29 06 01	jmp $010629	GETS            JML IGETS
+.010058	5c 2a 06 01	jmp $01062a	GETLINE         JML IGETLINE
+.01005c	5c 2b 06 01	jmp $01062b	GETFIELD        JML IGETFIELD
+.010060	5c 2c 06 01	jmp $01062c	TRIM            JML ITRIM
+.010064	5c 2d 06 01	jmp $01062d	PRINTC          JML IPRINTC
+.010068	5c 2e 06 01	jmp $01062e	PRINTS          JML IPRINTS
+.01006c	5c 5a 05 01	jmp $01055a	PRINTCR         JML IPRINTCR
+.010070	5c 2f 06 01	jmp $01062f	PRINTF          JML IPRINTF
+.010074	5c 30 06 01	jmp $010630	PRINTI          JML IPRINTI
+.010078	5c ee 05 01	jmp $0105ee	PRINTH          JML IPRINTH
+.01007c	5c 31 06 01	jmp $010631	PRINTAI         JML IPRINTAI
+.010080	5c 32 06 01	jmp $010632	PRINTAH         JML IPRINTAH
+.010084	5c a8 05 01	jmp $0105a8	LOCATE          JML ILOCATE
+.010088	5c 33 06 01	jmp $010633	PUSHKEY         JML IPUSHKEY
+.01008c	5c 34 06 01	jmp $010634	PUSHKEYS        JML IPUSHKEYS
+.010090	5c 7b 05 01	jmp $01057b	CSRRIGHT        JML ICSRRIGHT
+.010094	5c 35 06 01	jmp $010635	CSRLEFT         JML ICSRLEFT
+.010098	5c a6 05 01	jmp $0105a6	CSRUP           JML ICSRUP
+.01009c	5c a7 05 01	jmp $0105a7	CSRDOWN         JML ICSRDOWN
+.0100a0	5c 36 06 01	jmp $010636	CSRHOME         JML ICSRHOME
+.0100a4	5c d4 05 01	jmp $0105d4	SCROLLUP        JML ISCROLLUP
+
+;******  Return to file: kernel.asm
+
 .010400					IBOOT
 .010400	18		clc		                CLC           ; clear the carry flag
 .010401	fb		xce		                XCE           ; move carry to emulation flag.

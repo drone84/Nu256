@@ -24,7 +24,6 @@
 ;Jump Table
 * = $018000
 MONITOR         JML IMONITOR
-MBREAK          JML IMBREAK
 MSTATUS         JML IMSTATUS
 MREADY          JML IMREADY
 MRETURN         JML IMRETURN
@@ -59,24 +58,30 @@ IMONITOR        CLC           ; clear the carry flag
                 XCE           ; move carry to emulation flag.
                 LDA #STACK_END ; Reset the stack
                 TAS 
-
-                ;set the READY handler to jump here instead of BASIC
-                setas
-                LDA `IMONITOR
-                STA JMP_READY+3
-                setal
-                LDA <>IMONITOR
+                JML IMREADY 
+                
+;
+; IMREADY
+; Print the status prompt, then wait for input
+;
+IMREADY         ;set the READY handler to jump here instead of BASIC
+                setaxl 
+                LDA #<>IMREADY
                 STA JMP_READY+1
+                setas
+                LDA #`IMREADY
+                STA JMP_READY+3
 
                 ;set the RETURN vector and then wait for keyboard input
-                setas
-                LDA `IMRETURN
-                STA RETURN+3
                 setal
-                LDA <>IMRETURN
+                LDA #<>IMRETURN
                 STA RETURN+1
+                setas
+                LDA #`IMRETURN
+                STA RETURN+3
 
                 JML IMSTATUS
+
 ;
 ; IMSTATUS
 ; Prints the regsiter status
@@ -157,12 +162,6 @@ IMSTATUS        ; Print the MONITOR prompt (registers header)
                 
                 JML IREADYWAIT
                 
-IMBREAK         BRK ; Warm boot routine
-;
-; IMSTATUS
-; Prints the MONITOR status message
-; 
-IMREADY         BRK ; Prints status message and waits for input
 IMRETURN        RTL ; Handle RETURN key (ie: execute command)
 IMPARSE         BRK ; Parse the current command line
 IMPARSE1        BRK ; Parse one word on the current command line

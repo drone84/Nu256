@@ -5,7 +5,7 @@
 .include "page_00_data.asm"
 .include "page_00_code.asm"
 .include "dram_inc.asm"
-;.include "monitor.asm"
+.include "monitor.asm"
 
 ; C256 Foenix / Nu64 Kernel
 ; Loads to $F0:0000
@@ -14,6 +14,8 @@
 ;Jump Table
 
 .include "kernel_jumptable.asm"
+
+* = $010400
 
 * = $010400
 
@@ -464,7 +466,6 @@ IPRINTC         BRK ; Print character to screen. Handles terminal commands
 IPRINTS         BRK ; Print string to screen. Handles terminal commands
 IPRINTF         BRK ; Print a float value
 IPRINTI         BRK ; Prints integer value in TEMP
-IPRINTH         BRK ; Print Hex value in DP variable
 IPRINTAI        BRK ; Prints integer value in A
 IPRINTAH        BRK ; Prints hex value in A. Printed value is 2 wide if M flag is 1, 4 wide if M=0
 IPUSHKEY        BRK ; 
