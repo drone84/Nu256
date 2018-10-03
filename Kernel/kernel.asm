@@ -5,59 +5,15 @@
 .include "page_00_data.asm"
 .include "page_00_code.asm"
 .include "dram_inc.asm"
-.include "monitor.asm"
+;.include "monitor.asm"
 
 ; C256 Foenix / Nu64 Kernel
 ; Loads to $F0:0000
 
 ;Kernel.asm
 ;Jump Table
-                * = 010000
-BOOT            JML IBOOT
-RESTORE         JML IRESTORE
-BREAK           JML IBREAK
-READY           JML IREADY
-SCINIT          JML ISCINIT
-IOINIT          JML IIOINIT
-PUTC            JML IPUTC
-PUTS            JML IPUTS
-PUTB            JML IPUTB
-PUTBLOCK        JML IPUTBLOCK
-SETLFS          JML ISETLFS
-SETNAM          JML ISETNAM
-OPEN            JML IOPEN
-CLOSE           JML ICLOSE
-SETIN           JML ISETIN
-SETOUT          JML ISETOUT
-GETB            JML IGETB
-GETBLOCK        JML IGETBLOCK
-GETCH           JML IGETCH
-GETCHW          JML IGETCHW
-GETCHE          JML IGETCHE
-GETS            JML IGETS
-GETLINE         JML IGETLINE
-GETFIELD        JML IGETFIELD
-TRIM            JML ITRIM
-PRINTC          JML IPRINTC
-PRINTS          JML IPRINTS
-PRINTCR         JML IPRINTCR
-PRINTF          JML IPRINTF
-PRINTI          JML IPRINTI
-PRINTH          JML IPRINTH
-PRINTAI         JML IPRINTAI
-PRINTAH         JML IPRINTAH
-LOCATE          JML ILOCATE
-PUSHKEY         JML IPUSHKEY
-PUSHKEYS        JML IPUSHKEYS
-CSRRIGHT        JML ICSRRIGHT
-CSRLEFT         JML ICSRLEFT
-CSRUP           JML ICSRUP
-CSRDOWN         JML ICSRDOWN
-CSRHOME         JML ICSRHOME
-SCROLLUP        JML ISCROLLUP
-SCRREADLINE     JML ISCRREADLINE
-SCRGETWORD      JML ISCRGETWORD
 
+.include "kernel_jumptable.asm"
 
 * = $010400
 
@@ -508,6 +464,7 @@ IPRINTC         BRK ; Print character to screen. Handles terminal commands
 IPRINTS         BRK ; Print string to screen. Handles terminal commands
 IPRINTF         BRK ; Print a float value
 IPRINTI         BRK ; Prints integer value in TEMP
+IPRINTH         BRK ; Print Hex value in DP variable
 IPRINTAI        BRK ; Prints integer value in A
 IPRINTAH        BRK ; Prints hex value in A. Printed value is 2 wide if M flag is 1, 4 wide if M=0
 IPUSHKEY        BRK ; 
