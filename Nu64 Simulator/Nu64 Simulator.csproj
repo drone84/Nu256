@@ -188,6 +188,9 @@
     <EmbeddedResource Include="Resources\CBM-ASCII_8x8.tom.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\CBM-ASCII_8x8.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
     <None Include="Resources\FOENIX-CHARACTER-ASCII.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
