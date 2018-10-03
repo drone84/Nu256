@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.53.1515 listing file
 ; 64tass --long-address --intel-hex -o kernel.hex --list kernel.lst kernel.asm
-; Thu Sep 27 18:20:21 2018
+; Wed Oct 03 10:36:28 2018
 
 ;Offset	;Hex		;Monitor	;Source
 
@@ -235,6 +235,9 @@
 
 ;******  Return to file: kernel.asm
 
+
+;******  Processing file: kernel_jumptable.asm
+
 .010000	5c 00 04 01	jmp $010400	BOOT            JML IBOOT
 .010004	5c f1 05 01	jmp $0105f1	RESTORE         JML IRESTORE
 .010008	5c 70 04 01	jmp $010470	BREAK           JML IBREAK
@@ -277,6 +280,9 @@
 .01009c	5c aa 05 01	jmp $0105aa	CSRDOWN         JML ICSRDOWN
 .0100a0	5c 0c 06 01	jmp $01060c	CSRHOME         JML ICSRHOME
 .0100a4	5c d7 05 01	jmp $0105d7	SCROLLUP        JML ISCROLLUP
+
+;******  Return to file: kernel.asm
+
 .010400					IBOOT
 .010400	18		clc		                CLC           ; clear the carry flag
 .010401	fb		xce		                XCE           ; move carry to emulation flag.
