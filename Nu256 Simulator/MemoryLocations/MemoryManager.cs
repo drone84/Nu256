@@ -150,6 +150,8 @@ namespace Nu256
         internal void Write(int Address, int Value, int Length)
         {
             GetDeviceAt(Address, out Nu256.Common.IMappable device, out int deviceAddress);
+            if (device == null)
+                throw new Exception("No device at " + Address.ToString("X6"));
             device.WriteByte(deviceAddress, (byte)(Value & 0xff));
             if (Length >= 2)
                 device.WriteByte(deviceAddress + 1, (byte)(Value >> 8 & 0xff));
