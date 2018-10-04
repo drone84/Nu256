@@ -45,3 +45,7 @@ CSRHOME          = $0100A0 ;
 SCROLLUP         = $0100A4 ; Scroll the screen up one line. Creates an empty line at the bottom.
 SCRREADLINE      = $0100A8 ; Loads the MCMDADDR/BCMDADDR variable with the address of the current line on the screen. This is called when the RETURN key is pressed and is the first step in processing an immediate mode command.
 SCRGETWORD       = $0100AC ; Read a current word on the screen. A word ends with a space, punctuation (except _), or any control character (value < 32). Loads the address into CMPTEXT_VAL and length into CMPTEXT_LEN variables.
+CLRSCREEN        = $0100B0 ; Clear the screen
+INITCHLUT        = $0100B4 ; Init character look-up table
+INITSUPERIO      = $0100B8 ; Init Super-IO chip
+INITKEYBOARD     = $0100BC ; Init keyboard
