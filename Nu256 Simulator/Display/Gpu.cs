@@ -24,13 +24,14 @@ namespace Nu256.Display
         const int SCREEN_PAGE_SIZE = 128 * 64;
 
         private int startAddress;
-        private int length;
+        private int length = 128 * 64 * 4; //Text mode uses 32K, 4 planes of 8K each.
+        private int endAddress;
 
         public int StartAddress
         {
             get
             {
-                return this.startAddress;
+                return characterMatrixStart;
             }
         }
 
@@ -39,6 +40,14 @@ namespace Nu256.Display
             get
             {
                 return length;
+            }
+        }
+
+        public int EndAddress
+        {
+            get
+            {
+                return startAddress + length - 1;
             }
         }
 
@@ -235,22 +244,11 @@ namespace Nu256.Display
             //TextFont = GetBestFont();
 
             this.SetScreenSize(25, 80);
-            //this.SetBufferSize(25, 40);
             this.Paint += new PaintEventHandler(Gpu_Paint);
             timer.Tick += new EventHandler(timer_Tick);
             timer.Interval = 1000 / 60;
             this.VisibleChanged += new EventHandler(FrameBufferControl_VisibleChanged);
             this.DoubleBuffered = true;
-
-            //var info = new Microsoft.VisualBasic.Devices.ComputerInfo();
-            //var tot = info.TotalPhysicalMemory;
-            //var fre = info.AvailablePhysicalMemory;
-
-            //tot = (tot / 1024 / 1024 / 1024);
-            //fre = (fre / 1024 / 1024);
-            //string line1 = "**** Nu64 BASIC TEST PLATFORM ****";
-            //string line2 = tot.ToString() + "GB RAM SYSTEM " + fre.ToString() + " MEGABYTES FREE";
-            //int adjust = columns / 2 - line1.Length / 2;
 
             X = 0;
             Y = 0;
@@ -379,7 +377,6 @@ namespace Nu256.Display
                 CodeRAM.WriteWord(MemoryMap.CURSORPOS, value);
             }
         }
-
 
         /// <summary>
         /// Draw the frame buffer to the screen.

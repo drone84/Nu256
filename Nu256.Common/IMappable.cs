@@ -19,5 +19,6 @@ namespace Nu256.Common
         byte ReadByte(int Address);
         int StartAddress { get; }
         int Length { get; }
+        int EndAddress { get; }
     }
 }

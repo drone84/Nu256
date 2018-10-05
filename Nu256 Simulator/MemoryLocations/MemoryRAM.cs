@@ -12,6 +12,8 @@ namespace Nu256
         // allocate 16MB of memory
         protected byte[] data = null;
         private int startAddress;
+        private int length;
+        private int endAddress;
 
         public int StartAddress
         {
@@ -25,14 +27,24 @@ namespace Nu256
         {
             get
             {
-                return data.Length;
+                return length;
             }
         }
 
-        public MemoryRAM(int StartAddress, int Size)
+        public int EndAddress
+        {
+            get
+            {
+                return endAddress;
+            }
+        }
+
+        public MemoryRAM(int StartAddress, int Length)
         {
             this.startAddress = StartAddress;
-            data = new byte[Size];
+            this.length = Length;
+            this.endAddress = StartAddress + Length - 1;
+            data = new byte[Length];
         }
 
         public virtual byte ReadByte(int Address)

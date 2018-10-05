@@ -14,6 +14,10 @@ namespace Nu256
     {
         private int startAddress;
         private int length;
+        private int endAddress;
+
+        private byte[] OutputData = null;
+        private byte[] InputData = null;
 
         public int StartAddress
         {
@@ -31,21 +35,31 @@ namespace Nu256
             }
         }
 
-        public IODevice(int Start, int Length)
+        public int EndAddress
         {
-            this.startAddress = Start;
+            get
+            {
+                return endAddress;
+            }
+        }
+
+        public IODevice(int StartAddress, int Length)
+        {
+            this.startAddress = StartAddress;
             this.length = Length;
+            this.endAddress = StartAddress + Length - 1;
+            this.OutputData = new byte[length];
+            this.InputData = new byte[length];
         }
 
         public byte ReadByte(int Address)
         {
-            throw new NotImplementedException("IODevice: Cannot read address " + Address.ToString("X4"));
-
+            return InputData[Address];
         }
 
         public void WriteByte(int Address, byte Data)
         {
-            throw new NotImplementedException("IODevice: Cannot write address " + Address.ToString("X4"));
+            OutputData[Address] = Data;
         }
     }
 }

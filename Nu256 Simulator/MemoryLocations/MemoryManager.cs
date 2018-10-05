@@ -19,8 +19,9 @@ namespace Nu256
         public const int MinAddress = 0x000000;
         public const int MaxAddress = 0xffffff;
 
-        public MemoryRAM VRAM = null;
-        public MemoryRAM CodeRAM = null;
+        public MemoryRAM DRAM = null;
+        public MemoryRAM SRAM = null;
+        public IODevice IOBuffer = null;
 
         public bool VectorPull = false;
 
@@ -42,6 +43,14 @@ namespace Nu256
             }
         }
 
+        public int EndAddress
+        {
+            get
+            {
+                return 0xFFFFFF;
+            }
+        }
+
         /// <summary>
         /// Determine whehter the address being read from or written to is an I/O device or a memory cell.
         /// If the location is an I/O device, return that device. Otherwise, return the memory being referenced.
@@ -53,15 +62,22 @@ namespace Nu256
         {
             if (Address >= MemoryMap.SRAM_START && Address <= MemoryMap.SRAM_END)
             {
-                Device = CodeRAM;
-                DeviceAddress = Address - CodeRAM.StartAddress;
+                Device = SRAM;
+                DeviceAddress = Address - SRAM.StartAddress;
                 return;
             }
 
             if(Address >= MemoryMap.DRAM_START && Address <= MemoryMap.DRAM_END)
             {
-                Device = VRAM;
-                DeviceAddress = Address - VRAM.StartAddress;
+                Device = DRAM;
+                DeviceAddress = Address - DRAM.StartAddress;
+                return;
+            }
+
+            if(Address >= MemoryMap.IO_START && Address <= MemoryMap.IO_END)
+            {
+                Device = IOBuffer;
+                DeviceAddress = Address - IOBuffer.StartAddress;
                 return;
             }
 

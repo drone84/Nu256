@@ -39,18 +39,19 @@ namespace Nu256
         {
             Memory = new MemoryManager
             {
-                CodeRAM = new MemoryRAM(MemoryMap.SRAM_START, MemoryMap.SRAM_SIZE), // 1MB SRAM
-                VRAM = new MemoryRAM(MemoryMap.DRAM_START, MemoryMap.DRAM_SIZE) // 8MB DRAM
+                SRAM = new MemoryRAM(MemoryMap.SRAM_START, MemoryMap.SRAM_SIZE), // 1MB SRAM
+                DRAM = new MemoryRAM(MemoryMap.DRAM_START, MemoryMap.DRAM_SIZE), // 8MB DRAM
+                IOBuffer = new IODevice(MemoryMap.IO_START, MemoryMap.IO_SIZE)   // 64K IO space in bank $7F
             };
             this.CPU = new CPU(Memory);
             this.CPU.SimulatorCommand += CPU_SimulatorCommand;
             this.gpu = gpu;
-            gpu.VRAM = Memory.VRAM;
-            gpu.CodeRAM = Memory.CodeRAM;
-            gpu.LoadCharacterData(Memory.VRAM, Memory.CodeRAM);
+            gpu.VRAM = Memory.DRAM;
+            gpu.CodeRAM = Memory.SRAM;
+            gpu.LoadCharacterData(Memory.DRAM, Memory.SRAM);
 
             KeyboardBuffer = new MemoryBuffer(
-                Memory.CodeRAM,
+                Memory.SRAM,
                 MemoryMap.KEY_BUFFER,
                 MemoryMap.KEY_BUFFER_SIZE,
                 MemoryMap.KEY_BUFFER_RPOS,
@@ -89,7 +90,7 @@ namespace Nu256
             MemoryRAM flashROM = new MemoryRAM(0, 16 * 65536);
             this.ReadyHandler = Monitor;
             HexFile.Load(flashROM, @"ROMs\kernel.hex");
-            flashROM.Copy(0, Memory.CodeRAM, 0, 2 * 65536);
+            flashROM.Copy(0, Memory.SRAM, 0, 2 * 65536);
             CPU.Reset();
 
             //CPUTest test= new CPUTest(this);
