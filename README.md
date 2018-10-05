@@ -19,12 +19,6 @@ The C256 system software is being developed on the [C256 Kernel](https://github.
 
 The C256 Foenix and its associated materials are owned by Stefany Allaire. 
 
-# Git Branches
-The Source code is divided into 3 levels of organization: 
-main is considered "release ready", and you should be able to download and use that on your computer.
-dev-main is code that compiles and runs, but may (and probably does) have bugs. Use this if you want to help find bugs and test code
-dev-<person> is a daily checkin branch. This code probably doesn't work. Developers check their code in here at the end of each working session, working or not.
-
 # License 
 Please see License.txt.
 

@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.53.1515 listing file
 ; 64tass --long-address --intel-hex -o kernel.hex --list kernel.lst kernel.asm
-; Wed Oct 03 10:36:28 2018
+; Thu Oct 04 17:51:49 2018
 
 ;Offset	;Hex		;Monitor	;Source
 
@@ -36,8 +36,8 @@
 =$000020				CURATTR          = $000020 ;2 Bytes Attribute of next character to be printed to the screen.
 =$000022				STACKBOT         = $000022 ;2 Bytes Lowest location the stack should be allowed to write to. If SP falls below this value, the runtime should generate STACK OVERFLOW error and abort.
 =$000024				STACKTOP         = $000024 ;2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort.
-=$0000c0				KERNEL_TEMP      = $0000C0 ;32 Bytes Temp space for kernel
-=$0000e0				USER_TEMP        = $0000E0 ;32 Bytes Temp space for user programs
+=$0000d0				KERNEL_TEMP      = $0000D0 ;32 Bytes Temp space for kernel
+=$0000f0				USER_TEMP        = $0000F0 ;32 Bytes Temp space for user programs
 =$000100				GAVIN_BLOCK      = $000100 ;256 Bytes Gavin reserved, overlaps debugging registers at $1F0
 =$000100				MULTIPLIER_0     = $000100 ;0 Byte  Unsigned multiplier
 =$000100				M0_OPERAND_A     = $000100 ;2 Bytes Operand A (ie: A x B)
@@ -59,15 +59,15 @@
 =$000116				D1_REMAINDER     = $000116 ;2 Bytes Signed remainder of A/B ex: 1 in 7/2=3 r 1
 =$0001ff				VECTOR_STATE     = $0001FF ;1 Byte  Interrupt Vector State. See VECTOR_STATE_ENUM
 =$000200				CPU_REGISTERS    = $000200 ; Byte
-=$000200				CPUPC            = $000200 ;2 Bytes Debug registers. When BRK is executed, Interrupt service routine will populate this block with the CPU registers.
-=$000202				CPUPBR           = $000202 ;1 Byte  Program Bank Register (K)
-=$000203				CPUDBR           = $000203 ;1 Byte  Data Bank Register (B)
-=$000204				CPUFLAGS         = $000204 ;1 Byte  Flags (P) (The second byte is ignored)
-=$000205				CPUA             = $000205 ;2 Bytes Accumulator (A)
-=$000207				CPUX             = $000207 ;2 Bytes X Register
-=$000209				CPUY             = $000209 ;2 Bytes Y Index Register
-=$00020b				CPUDP            = $00020B ;2 Bytes Direct Page Register (D)
-=$00020d				CPUSTACK         = $00020D ;2 Bytes Stack Pointer
+=$000200				CPUPC            = $000200 ;2 Bytes Program Counter (PC)
+=$000202				CPUPBR           = $000202 ;2 Bytes Program Bank Register (K)
+=$000204				CPUA             = $000204 ;2 Bytes Accumulator (A)
+=$000206				CPUX             = $000206 ;2 Bytes X Register (X)
+=$000208				CPUY             = $000208 ;2 Bytes Y Register (Y)
+=$00020a				CPUSTACK         = $00020A ;2 Bytes Stack Pointer (S)
+=$00020c				CPUDP            = $00020C ;2 Bytes Direct Page Register (D)
+=$00020e				CPUDBR           = $00020E ;1 Byte  Data Bank Register (B)
+=$00020f				CPUFLAGS         = $00020F ;1 Byte  Flags (P)
 =$000210				MONITOR_VARS     = $000210 ; Byte  MONITOR Variables. BASIC variables may overlap this space
 =$000210				MCMDADDR         = $000210 ;3 Bytes Address of the current line of text being processed by the command parser. Can be in display memory or a variable in memory. MONITOR will parse up to MTEXTLEN characters or to a null character.
 =$000213				MCMP_TEXT        = $000213 ;3 Bytes Address of symbol being evaluated for COMPARE routine
@@ -119,6 +119,7 @@
 =$00ffea				VECTOR_NMI       = $00FFEA ;2 Bytes Native NMI Interrupt vector
 =$00ffec				VECTOR_RESET     = $00FFEC ;2 Bytes Unused (Native RESET vector)
 =$00ffee				VECTOR_IRQ       = $00FFEE ;2 Bytes Native IRQ Vector
+=$00fff0				RETURN           = $00FFF0 ;4 Bytes RETURN key handler. Points to BASIC or MONITOR subroutine to execute when RETURN is pressed.
 =$00fff4				VECTOR_ECOP      = $00FFF4 ;2 Bytes Emulation mode interrupt handler
 =$00fff6				VECTOR_EBRK      = $00FFF6 ;2 Bytes Emulation mode interrupt handler
 =$00fff8				VECTOR_EABORT    = $00FFF8 ;2 Bytes Emulation mode interrupt handler
@@ -206,15 +207,14 @@
 .ff6a	2b		pld		                PLD
 .ff6b	ab		plb		                PLB
 .ff6c	40		rti		                RTI
-.ffe0	5c 0c 00 01	jmp $01000c	JUMP_READY      JML READY      ; Kernel READY routine. Rewrite this address to jump to a custom kernel.
+.ffe0	5c 66 80 01	jmp $018066	JUMP_READY      JML IMREADY     ; Kernel READY routine. Rewrite this address to jump to a custom kernel.
 >ffe4	10 ff				RVECTOR_COP     .word HCOP     ; FFE4
 >ffe6	20 ff				RVECTOR_BRK     .word HBRK     ; FFE6
 >ffe8	30 ff				RVECTOR_ABORT   .word HABORT   ; FFE8
 >ffea	40 ff				RVECTOR_NMI     .word HNMI     ; FFEA
 >ffec	00 00				                .word $0000    ; FFEC
 >ffee	60 ff				RVECTOR_IRQ     .word HIRQ     ; FFEE
->fff0	00 00				                .word $0000    ; FFF0
->fff2	00 00				                .word $0000    ; FFF2
+.fff0	5c dd 04 01	jmp $0104dd	RRETURN         JML IRETURN
 >fff4	10 ff				RVECTOR_ECOP    .word HCOP     ; FFF4
 >fff6	20 ff				RVECTOR_EBRK    .word HBRK     ; FFF6
 >fff8	30 ff				RVECTOR_EABORT  .word HABORT   ; FFF8
@@ -236,50 +236,344 @@
 ;******  Return to file: kernel.asm
 
 
+;******  Processing file: vicky_def.asm
+
+=$7f0000				MASTER_CTRL_REG_L	= $7F0000
+=$7f0001				MASTER_CTRL_REG_H	= $7F0001
+=$7f0008				TXT_CTRL_REG_L		= $7F0008
+=$7f0009				TXT_CTRL_REG_H		= $7F0009
+=$7f000a				TXT_CURSOR_CTRL		= $7F000A
+=$7f000b				TXT_CURSOR_COLOR	= $7F000B
+=$7f000c				TXT_CURSOR_X_REG_L	= $7F000C
+=$7f000d				TXT_CURSOR_X_REG_H	= $7F000D
+=$7f000e				TXT_CURSOR_Y_REG_L	= $7F000E
+=$7f000f				TXT_CURSOR_Y_REG_H	= $7F000F
+=$7f1f40				FG_CHAR_LUT_PTR		= $7F1F40
+=$7f1f80				BG_CHAR_LUT_PTR		= $7F1F80
+=$7f2000				GRPH_LUT0_PTR		= $7F2000
+=$7f2400				GRPH_LUT1_PTR		= $7F2400
+=$7f2800				GRPH_LUT2_PTR		= $7F2800
+=$7f2c00				GRPH_LUT3_PTR		= $7F2C00
+=$7f3000				GRPH_LUT4_PTR		= $7F3000
+=$7f3400				GRPH_LUT5_PTR		= $7F3400
+=$7f3800				GRPH_LUT6_PTR		= $7F3800
+=$7f3c00				GAMMA_LUT_PTR		= $7F3C00
+
+;******  Return to file: kernel.asm
+
+
+;******  Processing file: super_io_def.asm
+
+=$7f1100				PME_STS_REG		= $7F1100
+=$7f1102				PME_EN_REG		= $7F1102
+=$7f1104				PME_STS1_REG		= $7F1104
+=$7f1105				PME_STS2_REG		= $7F1105
+=$7f1106				PME_STS3_REG		= $7F1106
+=$7f1107				PME_STS4_REG		= $7F1107
+=$7f1108				PME_STS5_REG		= $7F1108
+=$7f110a				PME_EN1_REG		= $7F110A
+=$7f110b				PME_EN2_REG		= $7F110B
+=$7f110c				PME_EN3_REG		= $7F110C
+=$7f110d				PME_EN4_REG		= $7F110D
+=$7f110e				PME_EN5_REG		= $7F110E
+=$7f1110				SMI_STS1_REG		= $7F1110
+=$7f1111				SMI_STS2_REG		= $7F1111
+=$7f1112				SMI_STS3_REG		= $7F1112
+=$7f1113				SMI_STS4_REG		= $7F1113
+=$7f1114				SMI_STS5_REG		= $7F1114
+=$7f1116				SMI_EN1_REG		= $7F1116
+=$7f1117				SMI_EN2_REG		= $7F1117
+=$7f1118				SMI_EN3_REG		= $7F1118
+=$7f1119				SMI_EN4_REG		= $7F1119
+=$7f111a				SMI_EN5_REG		= $7F111A
+=$7f111c				MSC_ST_REG		= $7F111C
+=$7f111e				FORCE_DISK_CHANGE       = $7F111E
+=$7f111f				FLOPPY_DATA_RATE        = $7F111F
+=$7f1120				UART1_FIFO_CTRL_SHDW    = $7F1120
+=$7f1121				UART2_FIFO_CTRL_SHDW    = $7F1121
+=$7f1122				DEV_DISABLE_REG         = $7F1122
+=$7f1123				GP10_REG    		= $7F1123
+=$7f1124				GP11_REG    		= $7F1124
+=$7f1125				GP12_REG    		= $7F1125
+=$7f1126				GP13_REG    		= $7F1126
+=$7f1127				GP14_REG    		= $7F1127
+=$7f1128				GP15_REG    		= $7F1128
+=$7f1129				GP16_REG    		= $7F1129
+=$7f112a				GP17_REG    		= $7F112A
+=$7f112b				GP20_REG    		= $7F112B
+=$7f112c				GP21_REG    		= $7F112C
+=$7f112d				GP22_REG		= $7F112D
+=$7f112f				GP24_REG		= $7F112F
+=$7f1130				GP25_REG		= $7F1130
+=$7f1131				GP26_REG		= $7F1131
+=$7f1132				GP27_REG		= $7F1132
+=$7f1133				GP30_REG		= $7F1133
+=$7f1134				GP31_REG		= $7F1134
+=$7f1135				GP32_REG		= $7F1135
+=$7f1136				GP33_REG		= $7F1136
+=$7f1137				GP34_REG		= $7F1137
+=$7f1138				GP35_REG		= $7F1138
+=$7f1139				GP36_REG		= $7F1139
+=$7f113a				GP37_REG		= $7F113A
+=$7f113b				GP40_REG		= $7F113B
+=$7f113c				GP41_REG		= $7F113C
+=$7f113d				GP42_REG		= $7F113D
+=$7f113e				GP43_REG		= $7F113E
+=$7f113f				GP50_REG		= $7F113F
+=$7f1140				GP51_REG		= $7F1140
+=$7f1141				GP52_REG		= $7F1141
+=$7f1142				GP53_REG		= $7F1142
+=$7f1143				GP54_REG		= $7F1143
+=$7f1144				GP55_REG		= $7F1144
+=$7f1145				GP56_REG		= $7F1145
+=$7f1146				GP57_REG		= $7F1146
+=$7f1147				GP60_REG		= $7F1147
+=$7f1148				GP61_REG		= $7F1148
+=$7f114b				GP1_REG			= $7F114B
+=$7f114c				GP2_REG			= $7F114C
+=$7f114d				GP3_REG			= $7F114D
+=$7f114e				GP4_REG			= $7F114E
+=$7f114f				GP5_REG			= $7F114F
+=$7f1150				GP6_REG			= $7F1150
+=$7f1156				FAN1_REG		= $7F1156
+=$7f1157				FAN2_REG    		= $7F1157
+=$7f1158				FAN_CTRL_REG    	= $7F1158
+=$7f1159				FAN1_TACH_REG    	= $7F1159
+=$7f115a				FAN2_TACH_REG    	= $7F115A
+=$7f115b				FAN1_PRELOAD_REG        = $7F115B
+=$7f115c				FAN2_PRELOAD_REG        = $7F115C
+=$7f115d				LED1_REG    		= $7F115D
+=$7f115e				LED2_REG    		= $7F115E
+=$7f115f				KEYBOARD_SCAN_CODE	= $7F115F
+
+;******  Return to file: kernel.asm
+
+
+;******  Processing file: keyboard_def.asm
+
+=$7f1064				STATUS_PORT 	        =	$7F1064
+=$7f1060				KBD_OUT_BUF 	        =	$7F1060
+=$7f1060				KBD_INPT_BUF	        = 	$7F1060
+=$7f1064				KBD_CMD_BUF		= 	$7F1064
+=$7f1060				KBD_DATA_BUF	        = 	$7F1060
+=$7f1060				PORT_A			= 	$7F1060
+=$7f1061				PORT_B			= 	$7F1061
+=$01					OUT_BUF_FULL	        = 	$01
+=$02					INPT_BUF_FULL	        = 	$02
+=$04					SYS_FLAG		= 	$04
+=$08					CMD_DATA		=	$08
+=$10					KEYBD_INH		=	$10
+=$20					TRANS_TMOUT		=	$20
+=$40					RCV_TMOUT		=	$40
+=$80					PARITY_EVEN		=	$80
+=$10					INH_KEYBOARD	        =	$10
+=$ae					KBD_ENA			=	$AE
+=$ad					KBD_DIS			=	$AD
+=$f1					KB_MENU			=	$F1
+=$f4					KB_ENABLE		=	$F4
+=$f7					KB_MAKEBREAK	        =	$F7
+=$fe					KB_ECHO			=	$FE
+=$ff					KB_RESET		=	$FF
+=$ed					KB_LED_CMD		=	$ED
+=$aa					KB_OK			=	$AA
+=$fa					KB_ACK			=	$FA
+=$ff					KB_OVERRUN		=	$FF
+=$fe					KB_RESEND		=	$FE
+=$f0					KB_BREAK		=	$F0
+=$10					KB_FA			=	$10
+=$20					KB_FE			=	$20
+=$40					KB_PR_LED		=	$40
+
+;******  Return to file: kernel.asm
+
+
+;******  Processing file: monitor.asm
+
+.018000	5c 5c 80 01	jmp $01805c	MONITOR         JML IMONITOR
+.018004	5c 88 80 01	jmp $018088	MSTATUS         JML IMSTATUS
+.018008	5c 66 80 01	jmp $018066	MREADY          JML IMREADY
+.01800c	5c 33 81 01	jmp $018133	MRETURN         JML IMRETURN
+.018010	5c 34 81 01	jmp $018134	MPARSE          JML IMPARSE
+.018014	5c 35 81 01	jmp $018135	MPARSE1         JML IMPARSE1
+.018018	5c 36 81 01	jmp $018136	MEXECUTE        JML IMEXECUTE
+.01801c	5c 37 81 01	jmp $018137	MASSEMBLE       JML IMASSEMBLE
+.018020	5c 38 81 01	jmp $018138	MASSEMBLEA      JML IMASSEMBLEA
+.018024	5c 39 81 01	jmp $018139	MCOMPARE        JML IMCOMPARE
+.018028	5c 3a 81 01	jmp $01813a	MDISASSEMBLE    JML IMDISASSEMBLE
+.01802c	5c 3b 81 01	jmp $01813b	MFILL           JML IMFILL
+.018030	5c 3d 81 01	jmp $01813d	MJUMP           JML IMJUMP
+.018034	5c 3e 81 01	jmp $01813e	MHUNT           JML IMHUNT
+.018038	5c 3f 81 01	jmp $01813f	MLOAD           JML IMLOAD
+.01803c	5c 40 81 01	jmp $018140	MMEMORY         JML IMMEMORY
+.018040	5c 41 81 01	jmp $018141	MREGISTERS      JML IMREGISTERS
+.018044	5c 42 81 01	jmp $018142	MSAVE           JML IMSAVE
+.018048	5c 43 81 01	jmp $018143	MTRANSFER       JML IMTRANSFER
+.01804c	5c 44 81 01	jmp $018144	MVERIFY         JML IMVERIFY
+.018050	5c 45 81 01	jmp $018145	MEXIT           JML IMEXIT
+.018054	5c 46 81 01	jmp $018146	MMODIFY         JML IMMODIFY
+.018058	5c 47 81 01	jmp $018147	MDOS            JML IMDOS
+.01805c	18		clc		IMONITOR        CLC           ; clear the carry flag
+.01805d	fb		xce		                XCE           ; move carry to emulation flag.
+.01805e	a9 ff fe	lda #$feff	                LDA #STACK_END ; Reset the stack
+.018061	1b		tcs		                TAS
+.018062	5c 66 80 01	jmp $018066	                JML IMREADY
+.018066					IMREADY
+.018066	c2 30		rep #$30	                REP #$30        ; set A&X long
+.018068	a9 66 80	lda #$8066	                LDA #<>IMREADY
+.01806b	8d e1 ff	sta $ffe1	                STA JMP_READY+1
+.01806e	e2 20		sep #$20	                SEP #$20        ; set A short
+.018070	a9 01		lda #$01	                LDA #`IMREADY
+.018072	8d e3 ff	sta $ffe3	                STA JMP_READY+3
+.018075	c2 20		rep #$20	                REP #$20        ; set A long
+.018077	a9 33 81	lda #$8133	                LDA #<>IMRETURN
+.01807a	8d f1 ff	sta $fff1	                STA RETURN+1
+.01807d	e2 20		sep #$20	                SEP #$20        ; set A short
+.01807f	a9 01		lda #$01	                LDA #`IMRETURN
+.018081	8d f3 ff	sta $fff3	                STA RETURN+3
+.018084	5c 88 80 01	jmp $018088	                JML IMSTATUS
+.018088					IMSTATUS
+.018088	48		pha		                PHA             ; begin setdbr macro
+.018089	08		php		                PHP
+.01808a	e2 20		sep #$20	                SEP #$20        ; set A short
+.01808c	a9 01		lda #$01		LDA #`mregisters_msg
+.01808e	48		pha		                PHA
+.01808f	ab		plb		                PLB
+.018090	28		plp		                PLP
+.018091	68		pla		                PLA             ; end setdbr macro
+.018092	a2 48 81	ldx #$8148	                LDX #<>mregisters_msg
+.018095	22 18 05 01	jsl $010518	                JSL IPRINT
+.018099	e2 20		sep #$20	                SEP #$20        ; set A short
+.01809b	a9 3b		lda #$3b	                LDA #';'
+.01809d	22 38 05 01	jsl $010538	                JSL IPUTC
+.0180a1	c2 30		rep #$30	                REP #$30        ; set A&X long
+.0180a3	48		pha		                PHA             ; begin setdbr macro
+.0180a4	08		php		                PHP
+.0180a5	e2 20		sep #$20	                SEP #$20        ; set A short
+.0180a7	a9 00		lda #$00		LDA #$0
+.0180a9	48		pha		                PHA
+.0180aa	ab		plb		                PLB
+.0180ab	28		plp		                PLP
+.0180ac	68		pla		                PLA             ; end setdbr macro
+.0180ad	a0 03 00	ldy #$0003	                LDY #3
+.0180b0	a2 02 02	ldx #$0202	                LDX #CPUPC+2
+.0180b3	22 fa 05 01	jsl $0105fa	                JSL IPRINTH
+.0180b7	a5 20		lda $20		                LDA ' '
+.0180b9	22 38 05 01	jsl $010538	                JSL IPUTC
+.0180bd	a0 02 00	ldy #$0002	                LDY #2
+.0180c0	a2 05 02	ldx #$0205	                LDX #CPUA+1
+.0180c3	22 fa 05 01	jsl $0105fa	                JSL IPRINTH
+.0180c7	a5 20		lda $20		                LDA ' '
+.0180c9	22 38 05 01	jsl $010538	                JSL IPUTC
+.0180cd	a0 02 00	ldy #$0002	                LDY #2
+.0180d0	a2 07 02	ldx #$0207	                LDX #CPUX+1
+.0180d3	22 fa 05 01	jsl $0105fa	                JSL IPRINTH
+.0180d7	a5 20		lda $20		                LDA ' '
+.0180d9	22 38 05 01	jsl $010538	                JSL IPUTC
+.0180dd	a0 02 00	ldy #$0002	                LDY #2
+.0180e0	a2 09 02	ldx #$0209	                LDX #CPUY+1
+.0180e3	22 fa 05 01	jsl $0105fa	                JSL IPRINTH
+.0180e7	a5 20		lda $20		                LDA ' '
+.0180e9	22 38 05 01	jsl $010538	                JSL IPUTC
+.0180ed	a0 02 00	ldy #$0002	                LDY #2
+.0180f0	a2 0b 02	ldx #$020b	                LDX #CPUSTACK+1
+.0180f3	22 fa 05 01	jsl $0105fa	                JSL IPRINTH
+.0180f7	a5 20		lda $20		                LDA ' '
+.0180f9	22 38 05 01	jsl $010538	                JSL IPUTC
+.0180fd	a0 01 00	ldy #$0001	                LDY #1
+.018100	a2 0e 02	ldx #$020e	                LDX #CPUDBR
+.018103	22 fa 05 01	jsl $0105fa	                JSL IPRINTH
+.018107	a5 20		lda $20		                LDA ' '
+.018109	22 38 05 01	jsl $010538	                JSL IPUTC
+.01810d	22 38 05 01	jsl $010538	                JSL IPUTC
+.018111	a0 02 00	ldy #$0002	                LDY #2
+.018114	a2 0d 02	ldx #$020d	                LDX #CPUDP+1
+.018117	22 fa 05 01	jsl $0105fa	                JSL IPRINTH
+.01811b	a5 20		lda $20		                LDA ' '
+.01811d	22 38 05 01	jsl $010538	                JSL IPUTC
+.018121	a0 01 00	ldy #$0001	                LDY #1
+.018124	a2 0f 02	ldx #$020f	                LDX #CPUFLAGS
+.018127	22 fa 05 01	jsl $0105fa	                JSL IPRINTH
+.01812b	22 66 05 01	jsl $010566	                JSL IPRINTCR
+.01812f	5c d6 04 01	jmp $0104d6	                JML IREADYWAIT
+.018133	6b		rtl		IMRETURN        RTL ; Handle RETURN key (ie: execute command)
+.018134	00		brk #		IMPARSE         BRK ; Parse the current command line
+.018135	00		brk #		IMPARSE1        BRK ; Parse one word on the current command line
+.018136	00		brk #		IMEXECUTE       BRK ; Execute the current command line (requires MCMD and MARG1-MARG8 to be populated)
+.018137	00		brk #		IMASSEMBLE      BRK ; Assemble a line of text.
+.018138	00		brk #		IMASSEMBLEA     BRK ; Assemble a line of text.
+.018139	00		brk #		IMCOMPARE       BRK ; Compare memory. len=1
+.01813a	00		brk #		IMDISASSEMBLE   BRK ; Disassemble memory. end=1 instruction
+.01813b	00		brk #		IMFILL          BRK ; Fill memory with specified value. Start and end must be in the same bank.
+.01813c	00		brk #		IMGO            BRK ; Execute from specified address
+.01813d	00		brk #		IMJUMP          BRK ; Execute from spefified address
+.01813e	00		brk #		IMHUNT          BRK ; Hunt (find) value in memory
+.01813f	00		brk #		IMLOAD          BRK ; Load data from disk. Device=1 (internal floppy) Start=Address in file
+.018140	00		brk #		IMMEMORY        BRK ; View memory
+.018141	00		brk #		IMREGISTERS     BRK ; View/edit registers
+.018142	00		brk #		IMSAVE          BRK ; Save memory to disk
+.018143	00		brk #		IMTRANSFER      BRK ; Transfer (copy) data in memory
+.018144	00		brk #		IMVERIFY        BRK ; Verify memory and file on disk
+.018145	00		brk #		IMEXIT          BRK ; Exit monitor and return to BASIC command prompt
+.018146	00		brk #		IMMODIFY        BRK ; Modify memory
+.018147	00		brk #		IMDOS           BRK ; Execute DOS command
+.018148					MMESSAGES
+>018148					MMERROR         .text
+>018148	0d 20 50 43 20 20 20 20		mregisters_msg  .null $0D," PC     A    X    Y    SP   DBR DP   NVMXDIZC"
+>018150	20 41 20 20 20 20 58 20 20 20 20 59 20 20 20 20
+>018160	53 50 20 20 20 44 42 52 20 44 50 20 20 20 4e 56
+>018170	4d 58 44 49 5a 43 00
+
+;******  Return to file: kernel.asm
+
+
 ;******  Processing file: kernel_jumptable.asm
 
 .010000	5c 00 04 01	jmp $010400	BOOT            JML IBOOT
-.010004	5c f1 05 01	jmp $0105f1	RESTORE         JML IRESTORE
-.010008	5c 70 04 01	jmp $010470	BREAK           JML IBREAK
-.01000c	5c b3 04 01	jmp $0104b3	READY           JML IREADY
-.010010	5c f2 05 01	jmp $0105f2	SCINIT          JML ISCINIT
-.010014	5c f3 05 01	jmp $0105f3	IOINIT          JML IIOINIT
-.010018	5c 2f 05 01	jmp $01052f	PUTC            JML IPUTC
-.01001c	5c 18 05 01	jmp $010518	PUTS            JML IPUTS
-.010020	5c 5c 05 01	jmp $01055c	PUTB            JML IPUTB
-.010024	5c f4 05 01	jmp $0105f4	PUTBLOCK        JML IPUTBLOCK
-.010028	5c f5 05 01	jmp $0105f5	SETLFS          JML ISETLFS
-.01002c	5c f6 05 01	jmp $0105f6	SETNAM          JML ISETNAM
-.010030	5c f7 05 01	jmp $0105f7	OPEN            JML IOPEN
-.010034	5c f8 05 01	jmp $0105f8	CLOSE           JML ICLOSE
-.010038	5c f9 05 01	jmp $0105f9	SETIN           JML ISETIN
-.01003c	5c fa 05 01	jmp $0105fa	SETOUT          JML ISETOUT
-.010040	5c fb 05 01	jmp $0105fb	GETB            JML IGETB
-.010044	5c fc 05 01	jmp $0105fc	GETBLOCK        JML IGETBLOCK
-.010048	5c fd 05 01	jmp $0105fd	GETCH           JML IGETCH
-.01004c	5c de 04 01	jmp $0104de	GETCHW          JML IGETCHW
-.010050	5c d5 04 01	jmp $0104d5	GETCHE          JML IGETCHE
-.010054	5c fe 05 01	jmp $0105fe	GETS            JML IGETS
-.010058	5c ff 05 01	jmp $0105ff	GETLINE         JML IGETLINE
-.01005c	5c 00 06 01	jmp $010600	GETFIELD        JML IGETFIELD
-.010060	5c 01 06 01	jmp $010601	TRIM            JML ITRIM
-.010064	5c 02 06 01	jmp $010602	PRINTC          JML IPRINTC
-.010068	5c 03 06 01	jmp $010603	PRINTS          JML IPRINTS
-.01006c	5c 5d 05 01	jmp $01055d	PRINTCR         JML IPRINTCR
-.010070	5c 04 06 01	jmp $010604	PRINTF          JML IPRINTF
-.010074	5c 05 06 01	jmp $010605	PRINTI          JML IPRINTI
-.010078	5c 06 06 01	jmp $010606	PRINTH          JML IPRINTH
-.01007c	5c 07 06 01	jmp $010607	PRINTAI         JML IPRINTAI
-.010080	5c 08 06 01	jmp $010608	PRINTAH         JML IPRINTAH
-.010084	5c ab 05 01	jmp $0105ab	LOCATE          JML ILOCATE
-.010088	5c 09 06 01	jmp $010609	PUSHKEY         JML IPUSHKEY
-.01008c	5c 0a 06 01	jmp $01060a	PUSHKEYS        JML IPUSHKEYS
-.010090	5c 7e 05 01	jmp $01057e	CSRRIGHT        JML ICSRRIGHT
-.010094	5c 0b 06 01	jmp $01060b	CSRLEFT         JML ICSRLEFT
-.010098	5c a9 05 01	jmp $0105a9	CSRUP           JML ICSRUP
-.01009c	5c aa 05 01	jmp $0105aa	CSRDOWN         JML ICSRDOWN
-.0100a0	5c 0c 06 01	jmp $01060c	CSRHOME         JML ICSRHOME
-.0100a4	5c d7 05 01	jmp $0105d7	SCROLLUP        JML ISCROLLUP
+.010004	5c 64 08 01	jmp $010864	RESTORE         JML IRESTORE
+.010008	5c 7c 04 01	jmp $01047c	BREAK           JML IBREAK
+.01000c	5c c3 04 01	jmp $0104c3	READY           JML IREADY
+.010010	5c 65 08 01	jmp $010865	SCINIT          JML ISCINIT
+.010014	5c 66 08 01	jmp $010866	IOINIT          JML IIOINIT
+.010018	5c 38 05 01	jmp $010538	PUTC            JML IPUTC
+.01001c	5c 21 05 01	jmp $010521	PUTS            JML IPUTS
+.010020	5c 65 05 01	jmp $010565	PUTB            JML IPUTB
+.010024	5c 67 08 01	jmp $010867	PUTBLOCK        JML IPUTBLOCK
+.010028	5c 68 08 01	jmp $010868	SETLFS          JML ISETLFS
+.01002c	5c 69 08 01	jmp $010869	SETNAM          JML ISETNAM
+.010030	5c 6a 08 01	jmp $01086a	OPEN            JML IOPEN
+.010034	5c 6b 08 01	jmp $01086b	CLOSE           JML ICLOSE
+.010038	5c 6c 08 01	jmp $01086c	SETIN           JML ISETIN
+.01003c	5c 6d 08 01	jmp $01086d	SETOUT          JML ISETOUT
+.010040	5c 6e 08 01	jmp $01086e	GETB            JML IGETB
+.010044	5c 6f 08 01	jmp $01086f	GETBLOCK        JML IGETBLOCK
+.010048	5c 70 08 01	jmp $010870	GETCH           JML IGETCH
+.01004c	5c e7 04 01	jmp $0104e7	GETCHW          JML IGETCHW
+.010050	5c de 04 01	jmp $0104de	GETCHE          JML IGETCHE
+.010054	5c 71 08 01	jmp $010871	GETS            JML IGETS
+.010058	5c 72 08 01	jmp $010872	GETLINE         JML IGETLINE
+.01005c	5c 73 08 01	jmp $010873	GETFIELD        JML IGETFIELD
+.010060	5c 74 08 01	jmp $010874	TRIM            JML ITRIM
+.010064	5c 75 08 01	jmp $010875	PRINTC          JML IPRINTC
+.010068	5c 76 08 01	jmp $010876	PRINTS          JML IPRINTS
+.01006c	5c 66 05 01	jmp $010566	PRINTCR         JML IPRINTCR
+.010070	5c 77 08 01	jmp $010877	PRINTF          JML IPRINTF
+.010074	5c 78 08 01	jmp $010878	PRINTI          JML IPRINTI
+.010078	5c fa 05 01	jmp $0105fa	PRINTH          JML IPRINTH
+.01007c	5c 79 08 01	jmp $010879	PRINTAI         JML IPRINTAI
+.010080	5c 7a 08 01	jmp $01087a	PRINTAH         JML IPRINTAH
+.010084	5c b4 05 01	jmp $0105b4	LOCATE          JML ILOCATE
+.010088	5c 7b 08 01	jmp $01087b	PUSHKEY         JML IPUSHKEY
+.01008c	5c 7c 08 01	jmp $01087c	PUSHKEYS        JML IPUSHKEYS
+.010090	5c 87 05 01	jmp $010587	CSRRIGHT        JML ICSRRIGHT
+.010094	5c 7d 08 01	jmp $01087d	CSRLEFT         JML ICSRLEFT
+.010098	5c b2 05 01	jmp $0105b2	CSRUP           JML ICSRUP
+.01009c	5c b3 05 01	jmp $0105b3	CSRDOWN         JML ICSRDOWN
+.0100a0	5c 7e 08 01	jmp $01087e	CSRHOME         JML ICSRHOME
+.0100a4	5c e0 05 01	jmp $0105e0	SCROLLUP        JML ISCROLLUP
+.0100a8	5c 28 06 01	jmp $010628	CLRSCREEN       JML ICLRSCREEN
+.0100ac	5c 8f 06 01	jmp $01068f	INITCHLUT	JML IINITCHLUT
+.0100b0	5c be 06 01	jmp $0106be	INITSUPERIO	JML IINITSUPERIO
+.0100b4	5c bf 07 01	jmp $0107bf	INITKEYBOARD	JML IINITKEYBOARD
 
 ;******  Return to file: kernel.asm
 
@@ -316,325 +610,631 @@
 .010439	86 11		stx $11		                STX COLS_PER_LINE
 .01043b	a0 40 00	ldy #$0040	                LDY #64
 .01043e	84 15		sty $15		                STY LINES_MAX
-.010440	c2 20		rep #$20	                REP #$20        ; set A long
-.010442	a2 00 00	ldx #$0000	                LDX #$0
-.010445	a0 00 00	ldy #$0000	                LDY #$0
-.010448	22 ab 05 01	jsl $0105ab	                JSL ILOCATE
-.01044c	9c 40 0f	stz $0f40	                STZ KEY_BUFFER_RPOS
-.01044f	9c 42 0f	stz $0f42	                STZ KEY_BUFFER_WPOS
-.010452					greet
-.010452	48		pha		                PHA             ; begin setdbr macro
-.010453	08		php		                PHP
-.010454	e2 20		sep #$20	                SEP #$20        ; set A short
-.010456	a9 01		lda #$01		LDA #`greet_msg
-.010458	48		pha		                PHA
-.010459	ab		plb		                PLB
-.01045a	28		plp		                PLP
-.01045b	68		pla		                PLA             ; end setdbr macro
-.01045c	a2 0d 06	ldx #$060d	                LDX #<>greet_msg
-.01045f	22 0f 05 01	jsl $01050f	                JSL IPRINT       ; print the first line
-.010463	e2 20		sep #$20	                SEP #$20        ; set A short
-.010465	48		pha		                PHA             ; begin setdbr macro
-.010466	08		php		                PHP
-.010467	e2 20		sep #$20	                SEP #$20        ; set A short
-.010469	a9 01		lda #$01		LDA #$01
-.01046b	48		pha		                PHA
-.01046c	ab		plb		                PLB
-.01046d	28		plp		                PLP
-.01046e	68		pla		                PLA             ; end setdbr macro
-.01046f	00		brk #		greet_done      BRK             ;Terminate boot routine and go to Ready handler.
-.010470					IBREAK
-.010470	48		pha		                PHA             ; begin setdp macro
-.010471	08		php			PHP
-.010472	c2 20		rep #$20	                REP #$20        ; set A long
-.010474	a9 00 00	lda #$0000	                LDA #0         ; set DP to page 0
-.010477	5b		tcd		                TCD
-.010478	28		plp			PLP
-.010479	68		pla		                PLA             ; end setdp macro
-.01047a	68		pla		                PLA             ; Pull .Y and stuff it in the CPUY variable
-.01047b	8f 09 02 00	sta $000209	                STA CPUY
-.01047f	68		pla		                PLA             ; Pull .X and stuff it in the CPUY variable
-.010480	8f 07 02 00	sta $000207	                STA CPUX
-.010484	68		pla		                PLA             ; Pull .A and stuff it in the CPUY variable
-.010485	8f 05 02 00	sta $000205	                STA CPUA
-.010489	68		pla		                PLA
-.01048a	8f 0b 02 00	sta $00020b	                STA CPUDP       ; Pull Direct page
-.01048e	e2 20		sep #$20	                SEP #$20        ; set A short
-.010490	68		pla		                PLA             ; Pull Data Bank (8 bits)
-.010491	8f 03 02 00	sta $000203	                STA CPUDBR
-.010495	68		pla		                PLA             ; Pull Flags (8 bits)
-.010496	8f 04 02 00	sta $000204	                STA CPUFLAGS
-.01049a	c2 20		rep #$20	                REP #$20        ; set A long
-.01049c	68		pla		                PLA             ; Pull Program Counter (16 bits)
-.01049d	8f 00 02 00	sta $000200	                STA CPUPC
-.0104a1	e2 20		sep #$20	                SEP #$20        ; set A short
-.0104a3	68		pla		                PLA             ; Pull Program Bank (8 bits)
-.0104a4	8f 02 02 00	sta $000202	                STA CPUPBR
-.0104a8	c2 20		rep #$20	                REP #$20        ; set A long
-.0104aa	3b		tsc		                TSA             ; Get the stack
-.0104ab	8f 0d 02 00	sta $00020d	                STA CPUSTACK    ; Store the stack at immediately before the interrupt was asserted
-.0104af	a9 ff fe	lda #$feff	                LDA #<>STACK_END   ; initialize stack pointer back to the bootup value
-.0104b2	1b		tcs		                TAS
-.0104b3					IREADY
-.0104b3	48		pha		                PHA             ; begin setdbr macro
-.0104b4	08		php		                PHP
-.0104b5	e2 20		sep #$20	                SEP #$20        ; set A short
-.0104b7	a9 01		lda #$01		LDA #`ready_msg
-.0104b9	48		pha		                PHA
-.0104ba	ab		plb		                PLB
-.0104bb	28		plp		                PLP
-.0104bc	68		pla		                PLA             ; end setdbr macro
-.0104bd	e2 20		sep #$20	                SEP #$20        ; set A short
-.0104bf	a2 af 06	ldx #$06af	                LDX #<>ready_msg
-.0104c2	22 0f 05 01	jsl $01050f	                JSL IPRINT
-.0104c6					IREADYWAIT
-.0104c6	22 d5 04 01	jsl $0104d5	                JSL IGETCHE
-.0104ca	b0 fa		bcs $0104c6	                BCS IREADYWAIT
-.0104cc	22 2f 05 01	jsl $01052f	                JSL IPUTC
-.0104d0	4c c6 04	jmp $0104c6	                JMP IREADYWAIT
-.0104d3	db		stp		IKEYDOWN        STP             ; Keyboard key pressed
-.0104d4	db		stp		IRETURN         STP
-.0104d5	22 de 04 01	jsl $0104de	IGETCHE         JSL IGETCHW
-.0104d9	22 2f 05 01	jsl $01052f	                JSL IPUTC
-.0104dd	6b		rtl		                RTL
-.0104de	0b		phd		IGETCHW         PHD
-.0104df	da		phx		                PHX
-.0104e0	08		php		                PHP
-.0104e1	48		pha		                PHA             ; begin setdp macro
-.0104e2	08		php			PHP
-.0104e3	c2 20		rep #$20	                REP #$20        ; set A long
-.0104e5	a9 00 0f	lda #$0f00	                LDA #$0F00         ; set DP to page 0
-.0104e8	5b		tcd		                TCD
-.0104e9	28		plp			PLP
-.0104ea	68		pla		                PLA             ; end setdp macro
-.0104eb	c2 30		rep #$30	                REP #$30        ; set A&X long
-.0104ed	a6 40		ldx $0f40	igetchw1        LDX KEY_BUFFER_RPOS
-.0104ef	e4 42		cpx $0f42	                CPX KEY_BUFFER_WPOS
-.0104f1	d0 05		bne $0104f8	                BNE igetchw2
->0104f3	42 00				                .byte $42, $00
-.0104f5	4c ed 04	jmp $0104ed	                JMP igetchw1
-.0104f8	b5 00		lda $0f00,x	igetchw2        LDA $0,D,X  ; Read the value in the keyboard buffer
-.0104fa	48		pha		                PHA
-.0104fb	8a		txa		                TXA
-.0104fc	18		clc		                CLC
-.0104fd	69 02 00	adc #$0002	                ADC #$02
-.010500	c9 40 00	cmp #$0040	                CMP #KEY_BUFFER_SIZE
-.010503	90 03		bcc $010508	                BCC igetchw3
-.010505	a9 00 00	lda #$0000	                LDA #$0
-.010508	85 40		sta $0f40	igetchw3        STA KEY_BUFFER_RPOS
-.01050a	68		pla		                PLA
-.01050b	28		plp		igetchw_done    PLP
-.01050c	fa		plx		                PLX             ; Restore the saved registers and return
-.01050d	2b		pld		                PLD
-.01050e	6b		rtl		                RTL
-.01050f	22 18 05 01	jsl $010518	IPRINT          JSL IPUTS
-.010513	22 5d 05 01	jsl $01055d	                JSL IPRINTCR
+.010440	22 be 06 01	jsl $0106be	                JSL IINITSUPERIO
+.010444	22 8f 06 01	jsl $01068f	                JSL IINITCHLUT
+.010448	22 28 06 01	jsl $010628	                JSL ICLRSCREEN
+.01044c	c2 20		rep #$20	                REP #$20        ; set A long
+.01044e	a2 00 00	ldx #$0000	                LDX #$0
+.010451	a0 00 00	ldy #$0000	                LDY #$0
+.010454	22 b4 05 01	jsl $0105b4	                JSL ILOCATE
+.010458	9c 40 0f	stz $0f40	                STZ KEY_BUFFER_RPOS
+.01045b	9c 42 0f	stz $0f42	                STZ KEY_BUFFER_WPOS
+.01045e					greet
+.01045e	48		pha		                PHA             ; begin setdbr macro
+.01045f	08		php		                PHP
+.010460	e2 20		sep #$20	                SEP #$20        ; set A short
+.010462	a9 01		lda #$01		LDA #`greet_msg
+.010464	48		pha		                PHA
+.010465	ab		plb		                PLB
+.010466	28		plp		                PLP
+.010467	68		pla		                PLA             ; end setdbr macro
+.010468	a2 81 08	ldx #$0881	                LDX #<>greet_msg
+.01046b	22 18 05 01	jsl $010518	                JSL IPRINT       ; print the first line
+.01046f	e2 20		sep #$20	                SEP #$20        ; set A short
+.010471	48		pha		                PHA             ; begin setdbr macro
+.010472	08		php		                PHP
+.010473	e2 20		sep #$20	                SEP #$20        ; set A short
+.010475	a9 01		lda #$01		LDA #$01
+.010477	48		pha		                PHA
+.010478	ab		plb		                PLB
+.010479	28		plp		                PLP
+.01047a	68		pla		                PLA             ; end setdbr macro
+.01047b	00		brk #		greet_done      BRK             ;Terminate boot routine and go to Ready handler.
+.01047c					IBREAK
+.01047c	48		pha		                PHA             ; begin setdp macro
+.01047d	08		php			PHP
+.01047e	c2 20		rep #$20	                REP #$20        ; set A long
+.010480	a9 00 00	lda #$0000	                LDA #0         ; set DP to page 0
+.010483	5b		tcd		                TCD
+.010484	28		plp			PLP
+.010485	68		pla		                PLA             ; end setdp macro
+.010486	68		pla		                PLA             ; Pull .Y and stuff it in the CPUY variable
+.010487	8f 08 02 00	sta $000208	                STA CPUY
+.01048b	68		pla		                PLA             ; Pull .X and stuff it in the CPUY variable
+.01048c	8f 06 02 00	sta $000206	                STA CPUX
+.010490	68		pla		                PLA             ; Pull .A and stuff it in the CPUY variable
+.010491	8f 04 02 00	sta $000204	                STA CPUA
+.010495	68		pla		                PLA
+.010496	8f 0c 02 00	sta $00020c	                STA CPUDP       ; Pull Direct page
+.01049a	e2 20		sep #$20	                SEP #$20        ; set A short
+.01049c	68		pla		                PLA             ; Pull Data Bank (8 bits)
+.01049d	8f 0e 02 00	sta $00020e	                STA CPUDBR
+.0104a1	68		pla		                PLA             ; Pull Flags (8 bits)
+.0104a2	8f 0f 02 00	sta $00020f	                STA CPUFLAGS
+.0104a6	c2 20		rep #$20	                REP #$20        ; set A long
+.0104a8	68		pla		                PLA             ; Pull Program Counter (16 bits)
+.0104a9	8f 00 02 00	sta $000200	                STA CPUPC
+.0104ad	e2 20		sep #$20	                SEP #$20        ; set A short
+.0104af	68		pla		                PLA             ; Pull Program Bank (8 bits)
+.0104b0	8f 02 02 00	sta $000202	                STA CPUPBR
+.0104b4	c2 20		rep #$20	                REP #$20        ; set A long
+.0104b6	3b		tsc		                TSA             ; Get the stack
+.0104b7	8f 0a 02 00	sta $00020a	                STA CPUSTACK    ; Store the stack at immediately before the interrupt was asserted
+.0104bb	a9 ff fe	lda #$feff	                LDA #<>STACK_END   ; initialize stack pointer back to the bootup value
+.0104be	1b		tcs		                TAS
+.0104bf	5c e0 ff 00	jmp $00ffe0	                JML JMP_READY   ; Run READY routine (usually BASIC or MONITOR)
+.0104c3					IREADY
+.0104c3	48		pha		                PHA             ; begin setdbr macro
+.0104c4	08		php		                PHP
+.0104c5	e2 20		sep #$20	                SEP #$20        ; set A short
+.0104c7	a9 01		lda #$01		LDA #`ready_msg
+.0104c9	48		pha		                PHA
+.0104ca	ab		plb		                PLB
+.0104cb	28		plp		                PLP
+.0104cc	68		pla		                PLA             ; end setdbr macro
+.0104cd	e2 20		sep #$20	                SEP #$20        ; set A short
+.0104cf	a2 24 0a	ldx #$0a24	                LDX #<>ready_msg
+.0104d2	22 18 05 01	jsl $010518	                JSL IPRINT
+.0104d6					IREADYWAIT
+.0104d6	22 de 04 01	jsl $0104de	                JSL IGETCHE
+.0104da	80 fa		bra $0104d6	                BRA IREADYWAIT
+.0104dc	db		stp		IKEYDOWN        STP             ; Keyboard key pressed
+.0104dd	db		stp		IRETURN         STP
+.0104de	22 e7 04 01	jsl $0104e7	IGETCHE         JSL IGETCHW
+.0104e2	22 38 05 01	jsl $010538	                JSL IPUTC
+.0104e6	6b		rtl		                RTL
+.0104e7	0b		phd		IGETCHW         PHD
+.0104e8	da		phx		                PHX
+.0104e9	08		php		                PHP
+.0104ea	48		pha		                PHA             ; begin setdp macro
+.0104eb	08		php			PHP
+.0104ec	c2 20		rep #$20	                REP #$20        ; set A long
+.0104ee	a9 00 0f	lda #$0f00	                LDA #$0F00         ; set DP to page 0
+.0104f1	5b		tcd		                TCD
+.0104f2	28		plp			PLP
+.0104f3	68		pla		                PLA             ; end setdp macro
+.0104f4	c2 30		rep #$30	                REP #$30        ; set A&X long
+.0104f6	a6 40		ldx $0f40	igetchw1        LDX KEY_BUFFER_RPOS
+.0104f8	e4 42		cpx $0f42	                CPX KEY_BUFFER_WPOS
+.0104fa	d0 05		bne $010501	                BNE igetchw2
+>0104fc	42 00				                .byte $42, $00
+.0104fe	4c f6 04	jmp $0104f6	                JMP igetchw1
+.010501	b5 00		lda $0f00,x	igetchw2        LDA $0,D,X  ; Read the value in the keyboard buffer
+.010503	48		pha		                PHA
+.010504	8a		txa		                TXA
+.010505	18		clc		                CLC
+.010506	69 02 00	adc #$0002	                ADC #$02
+.010509	c9 40 00	cmp #$0040	                CMP #KEY_BUFFER_SIZE
+.01050c	90 03		bcc $010511	                BCC igetchw3
+.01050e	a9 00 00	lda #$0000	                LDA #$0
+.010511	85 40		sta $0f40	igetchw3        STA KEY_BUFFER_RPOS
+.010513	68		pla		                PLA
+.010514	28		plp		igetchw_done    PLP
+.010515	fa		plx		                PLX             ; Restore the saved registers and return
+.010516	2b		pld		                PLD
 .010517	6b		rtl		                RTL
-.010518	48		pha		IPUTS           PHA
-.010519	08		php		                PHP
-.01051a	e2 20		sep #$20	                SEP #$20        ; set A short
-.01051c	c2 10		rep #$10	                REP #$10        ; set X long
-.01051e	bd 00 00	lda $010000,x	iputs1          LDA $0,b,x      ; read from the string
-.010521	f0 08		beq $01052b	                BEQ iputs_done
-.010523	22 2f 05 01	jsl $01052f	iputs2          JSL IPUTC
-.010527	e8		inx		iputs3          INX
-.010528	4c 1e 05	jmp $01051e	                JMP iputs1
-.01052b	e8		inx		iputs_done      INX
-.01052c	28		plp		                PLP
-.01052d	68		pla		                PLA
-.01052e	6b		rtl		                RTL
-.01052f	0b		phd		IPUTC           PHD
-.010530	08		php		                PHP             ; stash the flags (we'll be changing M)
-.010531	48		pha		                PHA             ; begin setdp macro
-.010532	08		php			PHP
-.010533	c2 20		rep #$20	                REP #$20        ; set A long
-.010535	a9 00 00	lda #$0000	                LDA #0         ; set DP to page 0
-.010538	5b		tcd		                TCD
-.010539	28		plp			PLP
-.01053a	68		pla		                PLA             ; end setdp macro
-.01053b	e2 20		sep #$20	                SEP #$20        ; set A short
-.01053d	c9 0d		cmp #$0d	                CMP #$0D        ; handle CR
-.01053f	d0 06		bne $010547	                BNE iputc_bs
-.010541	22 5d 05 01	jsl $01055d	                JSL IPRINTCR
-.010545	80 10		bra $010557	                bra iputc_done
-.010547	c9 08		cmp #$08	iputc_bs        CMP #$08        ; backspace
-.010549	d0 06		bne $010551	                BNE iputc_print
-.01054b	22 6e 05 01	jsl $01056e	                JSL IPRINTBS
-.01054f	80 06		bra $010557	                BRA iputc_done
-.010551	87 17		sta [$17]	iputc_print     STA [CURSORPOS] ; Save the character on the screen
-.010553	22 7e 05 01	jsl $01057e	                JSL ICSRRIGHT
-.010557					iputc_done
->010557	42 01				                .byte $42, $01
-.010559	28		plp		                PLP
-.01055a	2b		pld		                PLD
-.01055b	6b		rtl		                RTL
-.01055c					IPUTB
-.01055c	6b		rtl		                RTL
-.01055d	da		phx		IPRINTCR	PHX
-.01055e	5a		phy		                PHY
-.01055f	08		php		                PHP
-.010560	a2 00 00	ldx #$0000	                LDX #0
-.010563	a4 1c		ldy $1c		                LDY CURSORY
-.010565	c8		iny		                INY
-.010566	22 ab 05 01	jsl $0105ab	                JSL ILOCATE
-.01056a	28		plp		                PLP
-.01056b	7a		ply		                PLY
-.01056c	fa		plx		                PLX
-.01056d	6b		rtl		                RTL
-.01056e	da		phx		IPRINTBS	PHX
-.01056f	5a		phy		                PHY
-.010570	08		php		                PHP
-.010571	a6 1a		ldx $1a		                LDX CURSORX
-.010573	a4 1c		ldy $1c		                LDY CURSORY
-.010575	ca		dex		                DEX
-.010576	22 ab 05 01	jsl $0105ab	                JSL ILOCATE
-.01057a	28		plp		                PLP
-.01057b	7a		ply		                PLY
-.01057c	fa		plx		                PLX
-.01057d	6b		rtl		                RTL
-.01057e					ICSRRIGHT
-.01057e	da		phx		                PHX
-.01057f	8b		phb		                PHB
-.010580	c2 20		rep #$20	                REP #$20        ; set A long
-.010582	c2 10		rep #$10	                REP #$10        ; set X long
-.010584	48		pha		                PHA             ; begin setdp macro
-.010585	08		php			PHP
-.010586	c2 20		rep #$20	                REP #$20        ; set A long
-.010588	a9 00 00	lda #$0000	                LDA #$0         ; set DP to page 0
-.01058b	5b		tcd		                TCD
-.01058c	28		plp			PLP
-.01058d	68		pla		                PLA             ; end setdp macro
-.01058e	e6 17		inc $17		                INC CURSORPOS
-.010590	a6 1a		ldx $1a		                LDX CURSORX
-.010592	e8		inx		                INX
-.010593	e4 0f		cpx $0f		                CPX COLS_VISIBLE
-.010595	90 0c		bcc $0105a3	                BCC icsr_nowrap  ; wrap if the cursor is at or past column 80
-.010597	a2 00 00	ldx #$0000	                LDX #0
-.01059a	5a		phy		                PHY
-.01059b	a4 1c		ldy $1c		                LDY CURSORY
-.01059d	c8		iny		                INY
-.01059e	22 ab 05 01	jsl $0105ab	                JSL ILOCATE
-.0105a2	7a		ply		                PLY
-.0105a3	86 1a		stx $1a		icsr_nowrap     STX CURSORX
-.0105a5	ab		plb		                PLB
-.0105a6	fa		plx		                PLX
-.0105a7	6b		rtl		                RTL
-.0105a8	6b		rtl		ISRLEFT	RTL
-.0105a9	6b		rtl		ICSRUP	RTL
-.0105aa	6b		rtl		ICSRDOWN	RTL
-.0105ab	48		pha		ILOCATE         PHA
-.0105ac	08		php		                PHP
-.0105ad	c2 30		rep #$30	                REP #$30        ; set A&X long
-.0105af					ilocate_scroll
-.0105af	c4 13		cpy $13		                CPY LINES_VISIBLE
-.0105b1	90 07		bcc $0105ba	                BCC ilocate_scrolldone
-.0105b3	22 d7 05 01	jsl $0105d7	                JSL ISCROLLUP
-.0105b7	88		dey		                DEY
-.0105b8	80 f5		bra $0105af	                BRA ilocate_scroll
-.0105ba					ilocate_scrolldone
-.0105ba	86 1a		stx $1a		                STX CURSORX
-.0105bc	84 1c		sty $1c		                STY CURSORY
-.0105be	a5 0c		lda $0c		                LDA SCREENBEGIN
-.0105c0					ilocate_row
-.0105c0	c0 00 00	cpy #$0000	                CPY #$0
-.0105c3	f0 08		beq $0105cd	                BEQ ilocate_right
-.0105c5	18		clc		ilocate_down    CLC
-.0105c6	65 11		adc $11		                ADC COLS_PER_LINE
-.0105c8	88		dey		                DEY
-.0105c9	f0 02		beq $0105cd	                BEQ ilocate_right
-.0105cb	80 f8		bra $0105c5	                BRA ilocate_down
-.0105cd	18		clc		ilocate_right   CLC
-.0105ce	65 1a		adc $1a		                ADC CURSORX             ; move the cursor right X columns
-.0105d0	85 17		sta $17		                STA CURSORPOS
-.0105d2	a4 1c		ldy $1c		                LDY CURSORY
-.0105d4	28		plp		ilocate_done    PLP
-.0105d5	68		pla		                PLA
-.0105d6	6b		rtl		                RTL
-.0105d7					ISCROLLUP
-.0105d7	48		pha		                PHA
-.0105d8	da		phx		                PHX
-.0105d9	5a		phy		                PHY
-.0105da	8b		phb		                PHB
-.0105db	08		php		                PHP
-.0105dc	c2 30		rep #$30	                REP #$30        ; set A&X long
-.0105de	18		clc		                CLC
-.0105df	a5 0c		lda $0c		                LDA SCREENBEGIN
-.0105e1	a8		tay		                TAY             ; Destination is first row
-.0105e2	65 11		adc $11		                ADC COLS_PER_LINE
-.0105e4	aa		tax		                TAX             ; Source is second row
-.0105e5	a9 ef 1f	lda #$1fef	                LDA #SCREEN_PAGE1-SCREEN_PAGE0-COLS_PER_LINE
-.0105e8	44 00 00	mvp $00,$00	                MVP $00,$00
-.0105eb	28		plp		                PLP
-.0105ec	ab		plb		                PLB
-.0105ed	7a		ply		                PLY
-.0105ee	fa		plx		                PLX
-.0105ef	68		pla		                PLA
-.0105f0	6b		rtl		                RTL
-.0105f1	00		brk #		IRESTORE        BRK ; Warm boot routine
-.0105f2	00		brk #		ISCINIT         BRK ;
-.0105f3	00		brk #		IIOINIT         BRK ;
-.0105f4	00		brk #		IPUTBLOCK       BRK ; Ouput a binary block to the currently selected channel
-.0105f5	00		brk #		ISETLFS         BRK ; Obsolete (done in OPEN)
-.0105f6	00		brk #		ISETNAM         BRK ; Obsolete (done in OPEN)
-.0105f7	00		brk #		IOPEN           BRK ; Open a channel for reading and/or writing. Use SETLFS and SETNAM to set the channels and filename first.
-.0105f8	00		brk #		ICLOSE          BRK ; Close a channel
-.0105f9	00		brk #		ISETIN          BRK ; Set the current input channel
-.0105fa	00		brk #		ISETOUT         BRK ; Set the current output channel
-.0105fb	00		brk #		IGETB           BRK ; Get a byte from input channel. Return 0 if no input. Carry is set if no input.
-.0105fc	00		brk #		IGETBLOCK       BRK ; Get a X byes from input channel. If Carry is set, wait. If Carry is clear, do not wait.
-.0105fd	00		brk #		IGETCH          BRK ; Get a character from the input channel. A=0 and Carry=1 if no data is wating
-.0105fe	00		brk #		IGETS           BRK ; Get a string from the input channel. NULL terminates
-.0105ff	00		brk #		IGETLINE        BRK ; Get a line of text from input channel. CR or NULL terminates.
-.010600	00		brk #		IGETFIELD       BRK ; Get a field from the input channel. Value in A, CR, or NULL terminates
-.010601	00		brk #		ITRIM           BRK ; Removes spaces at beginning and end of string.
-.010602	00		brk #		IPRINTC         BRK ; Print character to screen. Handles terminal commands
-.010603	00		brk #		IPRINTS         BRK ; Print string to screen. Handles terminal commands
-.010604	00		brk #		IPRINTF         BRK ; Print a float value
-.010605	00		brk #		IPRINTI         BRK ; Prints integer value in TEMP
-.010606	00		brk #		IPRINTH         BRK ; Print Hex value in DP variable
-.010607	00		brk #		IPRINTAI        BRK ; Prints integer value in A
-.010608	00		brk #		IPRINTAH        BRK ; Prints hex value in A. Printed value is 2 wide if M flag is 1, 4 wide if M=0
-.010609	00		brk #		IPUSHKEY        BRK ;
-.01060a	00		brk #		IPUSHKEYS       BRK ;
-.01060b	00		brk #		ICSRLEFT        BRK ;
-.01060c	00		brk #		ICSRHOME        BRK ;
-.01060d					KERNEL_DATA
->01060d	20 20 20 20 ec a9 ec a9		greet_msg       .text "    ", $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,     " FOENIX 256 DEVELOPMENT SYSTEM",$0D
->010615	ec a9 ec a9 ec a9 20 46 4f 45 4e 49 58 20 32 35
->010625	36 20 44 45 56 45 4c 4f 50 4d 45 4e 54 20 53 59
->010635	53 54 45 4d 0d
->01063a	20 20 20 ec a9 ec a9 ec		                .text "   " , $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,    "  OPEN SOURCE COMPUTER",$0D
->010642	a9 ec a9 ec a9 20 20 4f 50 45 4e 20 53 4f 55 52
->010652	43 45 20 43 4f 4d 50 55 54 45 52 0d
->01065e	20 20 ec a9 ec a9 ec a9		                .text "  ", $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,     "   ",$0D
->010666	ec a9 ec a9 20 20 20 0d
->01066e	20 ec a9 ec a9 ec a9 ec		                .text " ",  $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,    "    1024KB BASIC RAM  8192K MEDIA RAM",$0D
->010676	a9 ec a9 20 20 20 20 31 30 32 34 4b 42 20 42 41
->010686	53 49 43 20 52 41 4d 20 20 38 31 39 32 4b 20 4d
->010696	45 44 49 41 20 52 41 4d 0d
->01069f	ec a9 ec a9 ec a9 ec a9		                .text $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,         "     ",$00
->0106a7	ec a9 20 20 20 20 20 00
->0106af	0d 52 45 41 44 59 2e 00		ready_msg       .null $0D,"READY."
->0106b7	31 30 20 50 52 49 4e 54		hello_basic     .null "10 PRINT ""Hello World""",$0D
->0106bf	20 22 48 65 6c 6c 6f 20 57 6f 72 6c 64 22 0d 00
->0106cf	52 55 4e 0d 00			                .null "RUN",$0D
->0106d4	48 65 6c 6c 6f 20 57 6f		                .null "Hello World",$0D
->0106dc	72 6c 64 0d 00
->0106e1	0d 52 45 41 44 59 2e 00		                .null $0D,"READY."
->0106e9	47 20 30 32 30 30 30 30		hello_ml        .null "G 020000",$0D
->0106f1	0d 00
->0106f3	48 45 4c 4c 4f 20 57 4f		                .null "HELLO WORLD",$0D
->0106fb	52 4c 44 0d 00
->010700	0d 00				                .null $0D
->010702	20 50 43 20 20 20 20 20		                .null " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
->01070a	41 20 20 20 20 58 20 20 20 20 59 20 20 20 20 53
->01071a	50 20 20 20 44 42 52 20 44 50 20 20 20 4e 56 4d
->01072a	58 44 49 5a 43 0d 00
->010731	3b 30 30 32 31 31 32 20		                .null ";002112 0019 F0AA 0000 D6FF F8  0000 --M-----"
->010739	30 30 31 39 20 46 30 41 41 20 30 30 30 30 20 44
->010749	36 46 46 20 46 38 20 20 30 30 30 30 20 2d 2d 4d
->010759	2d 2d 2d 2d 2d 00
->01075f	41 42 4f 52 54 20 45 52		error_01        .null "ABORT ERROR"
->010767	52 4f 52 00
+.010518	22 21 05 01	jsl $010521	IPRINT          JSL IPUTS
+.01051c	22 66 05 01	jsl $010566	                JSL IPRINTCR
+.010520	6b		rtl		                RTL
+.010521	48		pha		IPUTS           PHA
+.010522	08		php		                PHP
+.010523	e2 20		sep #$20	                SEP #$20        ; set A short
+.010525	c2 10		rep #$10	                REP #$10        ; set X long
+.010527	bd 00 00	lda $010000,x	iputs1          LDA $0,b,x      ; read from the string
+.01052a	f0 08		beq $010534	                BEQ iputs_done
+.01052c	22 38 05 01	jsl $010538	iputs2          JSL IPUTC
+.010530	e8		inx		iputs3          INX
+.010531	4c 27 05	jmp $010527	                JMP iputs1
+.010534	e8		inx		iputs_done      INX
+.010535	28		plp		                PLP
+.010536	68		pla		                PLA
+.010537	6b		rtl		                RTL
+.010538	0b		phd		IPUTC           PHD
+.010539	08		php		                PHP             ; stash the flags (we'll be changing M)
+.01053a	48		pha		                PHA             ; begin setdp macro
+.01053b	08		php			PHP
+.01053c	c2 20		rep #$20	                REP #$20        ; set A long
+.01053e	a9 00 00	lda #$0000	                LDA #0         ; set DP to page 0
+.010541	5b		tcd		                TCD
+.010542	28		plp			PLP
+.010543	68		pla		                PLA             ; end setdp macro
+.010544	e2 20		sep #$20	                SEP #$20        ; set A short
+.010546	c9 0d		cmp #$0d	                CMP #$0D        ; handle CR
+.010548	d0 06		bne $010550	                BNE iputc_bs
+.01054a	22 66 05 01	jsl $010566	                JSL IPRINTCR
+.01054e	80 10		bra $010560	                bra iputc_done
+.010550	c9 08		cmp #$08	iputc_bs        CMP #$08        ; backspace
+.010552	d0 06		bne $01055a	                BNE iputc_print
+.010554	22 77 05 01	jsl $010577	                JSL IPRINTBS
+.010558	80 06		bra $010560	                BRA iputc_done
+.01055a	87 17		sta [$17]	iputc_print     STA [CURSORPOS] ; Save the character on the screen
+.01055c	22 87 05 01	jsl $010587	                JSL ICSRRIGHT
+.010560					iputc_done
+>010560	42 01				                .byte $42, $01
+.010562	28		plp		                PLP
+.010563	2b		pld		                PLD
+.010564	6b		rtl		                RTL
+.010565					IPUTB
+.010565	6b		rtl		                RTL
+.010566	da		phx		IPRINTCR	PHX
+.010567	5a		phy		                PHY
+.010568	08		php		                PHP
+.010569	a2 00 00	ldx #$0000	                LDX #0
+.01056c	a4 1c		ldy $1c		                LDY CURSORY
+.01056e	c8		iny		                INY
+.01056f	22 b4 05 01	jsl $0105b4	                JSL ILOCATE
+.010573	28		plp		                PLP
+.010574	7a		ply		                PLY
+.010575	fa		plx		                PLX
+.010576	6b		rtl		                RTL
+.010577	da		phx		IPRINTBS	PHX
+.010578	5a		phy		                PHY
+.010579	08		php		                PHP
+.01057a	a6 1a		ldx $1a		                LDX CURSORX
+.01057c	a4 1c		ldy $1c		                LDY CURSORY
+.01057e	ca		dex		                DEX
+.01057f	22 b4 05 01	jsl $0105b4	                JSL ILOCATE
+.010583	28		plp		                PLP
+.010584	7a		ply		                PLY
+.010585	fa		plx		                PLX
+.010586	6b		rtl		                RTL
+.010587					ICSRRIGHT
+.010587	da		phx		                PHX
+.010588	8b		phb		                PHB
+.010589	c2 20		rep #$20	                REP #$20        ; set A long
+.01058b	c2 10		rep #$10	                REP #$10        ; set X long
+.01058d	48		pha		                PHA             ; begin setdp macro
+.01058e	08		php			PHP
+.01058f	c2 20		rep #$20	                REP #$20        ; set A long
+.010591	a9 00 00	lda #$0000	                LDA #$0         ; set DP to page 0
+.010594	5b		tcd		                TCD
+.010595	28		plp			PLP
+.010596	68		pla		                PLA             ; end setdp macro
+.010597	e6 17		inc $17		                INC CURSORPOS
+.010599	a6 1a		ldx $1a		                LDX CURSORX
+.01059b	e8		inx		                INX
+.01059c	e4 0f		cpx $0f		                CPX COLS_VISIBLE
+.01059e	90 0c		bcc $0105ac	                BCC icsr_nowrap  ; wrap if the cursor is at or past column 80
+.0105a0	a2 00 00	ldx #$0000	                LDX #0
+.0105a3	5a		phy		                PHY
+.0105a4	a4 1c		ldy $1c		                LDY CURSORY
+.0105a6	c8		iny		                INY
+.0105a7	22 b4 05 01	jsl $0105b4	                JSL ILOCATE
+.0105ab	7a		ply		                PLY
+.0105ac	86 1a		stx $1a		icsr_nowrap     STX CURSORX
+.0105ae	ab		plb		                PLB
+.0105af	fa		plx		                PLX
+.0105b0	6b		rtl		                RTL
+.0105b1	6b		rtl		ISRLEFT	RTL
+.0105b2	6b		rtl		ICSRUP	RTL
+.0105b3	6b		rtl		ICSRDOWN	RTL
+.0105b4	48		pha		ILOCATE         PHA
+.0105b5	08		php		                PHP
+.0105b6	c2 30		rep #$30	                REP #$30        ; set A&X long
+.0105b8					ilocate_scroll
+.0105b8	c4 13		cpy $13		                CPY LINES_VISIBLE
+.0105ba	90 07		bcc $0105c3	                BCC ilocate_scrolldone
+.0105bc	22 e0 05 01	jsl $0105e0	                JSL ISCROLLUP
+.0105c0	88		dey		                DEY
+.0105c1	80 f5		bra $0105b8	                BRA ilocate_scroll
+.0105c3					ilocate_scrolldone
+.0105c3	86 1a		stx $1a		                STX CURSORX
+.0105c5	84 1c		sty $1c		                STY CURSORY
+.0105c7	a5 0c		lda $0c		                LDA SCREENBEGIN
+.0105c9					ilocate_row
+.0105c9	c0 00 00	cpy #$0000	                CPY #$0
+.0105cc	f0 08		beq $0105d6	                BEQ ilocate_right
+.0105ce	18		clc		ilocate_down    CLC
+.0105cf	65 11		adc $11		                ADC COLS_PER_LINE
+.0105d1	88		dey		                DEY
+.0105d2	f0 02		beq $0105d6	                BEQ ilocate_right
+.0105d4	80 f8		bra $0105ce	                BRA ilocate_down
+.0105d6	18		clc		ilocate_right   CLC
+.0105d7	65 1a		adc $1a		                ADC CURSORX             ; move the cursor right X columns
+.0105d9	85 17		sta $17		                STA CURSORPOS
+.0105db	a4 1c		ldy $1c		                LDY CURSORY
+.0105dd	28		plp		ilocate_done    PLP
+.0105de	68		pla		                PLA
+.0105df	6b		rtl		                RTL
+.0105e0					ISCROLLUP
+.0105e0	48		pha		                PHA
+.0105e1	da		phx		                PHX
+.0105e2	5a		phy		                PHY
+.0105e3	8b		phb		                PHB
+.0105e4	08		php		                PHP
+.0105e5	c2 30		rep #$30	                REP #$30        ; set A&X long
+.0105e7	18		clc		                CLC
+.0105e8	a5 0c		lda $0c		                LDA SCREENBEGIN
+.0105ea	a8		tay		                TAY             ; Destination is first row
+.0105eb	65 11		adc $11		                ADC COLS_PER_LINE
+.0105ed	aa		tax		                TAX             ; Source is second row
+.0105ee	a9 ef 1f	lda #$1fef	                LDA #SCREEN_PAGE1-SCREEN_PAGE0-COLS_PER_LINE
+.0105f1	44 00 00	mvp $00,$00	                MVP $00,$00
+.0105f4	28		plp		                PLP
+.0105f5	ab		plb		                PLB
+.0105f6	7a		ply		                PLY
+.0105f7	fa		plx		                PLX
+.0105f8	68		pla		                PLA
+.0105f9	6b		rtl		                RTL
+.0105fa	08		php		IPRINTH         PHP
+.0105fb	48		pha		                PHA
+.0105fc					iprinth1
+.0105fc	e2 20		sep #$20	                SEP #$20        ; set A short
+.0105fe	bd 00 00	lda $010000,x	                LDA #0,b,x      ; Read the value to be printed
+.010601	4a		lsr a		                LSR
+.010602	4a		lsr a		                LSR
+.010603	4a		lsr a		                LSR
+.010604	4a		lsr a		                LSR
+.010605	22 17 06 01	jsl $010617	                JSL iprint_digit
+.010609	bd 00 00	lda $010000,x	                LDA #0,b,x
+.01060c	22 17 06 01	jsl $010617	                JSL iprint_digit
+.010610	ca		dex		                DEX
+.010611	88		dey		                DEY
+.010612	d0 e8		bne $0105fc	                BNE iprinth1
+.010614	68		pla		                PLA
+.010615	28		plp		                PLP
+.010616	6b		rtl		                RTL
+.010617	da		phx		iprint_digit    PHX
+.010618	c2 20		rep #$20	                REP #$20        ; set A long
+.01061a	29 0f 00	and #$000f	                AND #$0F
+.01061d	aa		tax		                TAX
+.01061e	bf e0 0a 01	lda $010ae0,x	                LDA hex_digits,X
+.010622	22 38 05 01	jsl $010538	                JSL IPUTC       ; Print the digit
+.010626	fa		plx		                PLX
+.010627	6b		rtl		                RTL
+.010628	0b		phd		ICLRSCREEN	PHD
+.010629	08		php				PHP
+.01062a	48		pha				PHA
+.01062b	da		phx				PHX
+.01062c	e2 20		sep #$20	                SEP #$20        ; set A short
+.01062e	c2 10		rep #$10	                REP #$10        ; set X long
+.010630	a2 00 00	ldx #$0000			LDX #$0000		; Only Use One Pointer
+.010633	a9 20		lda #$20			LDA #$20		; Fill the Entire Screen with Space
+.010635	9f 00 00 80	sta $800000,x	iclearloop0	STA $800000,x	;
+.010639	e8		inx				inx
+.01063a	e0 00 20	cpx #$2000			cpx #$2000
+.01063d	d0 f6		bne $010635			bne iclearloop0
+.01063f	a2 00 00	ldx #$0000			LDX	#$0000		; Only Use One Pointer
+.010642	a9 ed		lda #$ed			LDA #$ED		; Fill the Color Memory with Foreground: 75% Purple, Background 12.5% White
+.010644	9f 00 20 80	sta $802000,x	iclearloop1	STA $802000,x	;
+.010648	e8		inx				inx
+.010649	e0 00 20	cpx #$2000			cpx #$2000
+.01064c	d0 f6		bne $010644			bne iclearloop1
+.01064e	c2 10		rep #$10	                REP #$10        ; set X long
+.010650	c2 20		rep #$20	                REP #$20        ; set A long
+.010652	fa		plx		                PLX
+.010653	68		pla		                PLA
+.010654	28		plp				PLP
+.010655	2b		pld		                PLD
+.010656	6b		rtl		                RTL
+.010657	48		pha		ICOLORFLAG      PHA
+.010658	da		phx		                PHX
+.010659	08		php		                PHP
+.01065a	e2 30		sep #$30	                SEP #$30        ; set A&X short
+.01065c	a2 00		ldx #$00			LDX #$00
+.01065e	bf 5e 09 01	lda $01095e,x	iclearloop2	LDA @lgreet_clr_line1,x
+.010662	9f 00 20 80	sta $802000,x			STA $802000,x
+.010666	bf 6c 09 01	lda $01096c,x			LDA @lgreet_clr_line2,x
+.01066a	9f 80 20 80	sta $802080,x			STA $802080,x
+.01066e	bf 7a 09 01	lda $01097a,x			LDA @lgreet_clr_line3,x
+.010672	9f 00 21 80	sta $802100,x			STA $802100,x
+.010676	bf 88 09 01	lda $010988,x			LDA @lgreet_clr_line4,x
+.01067a	9f 80 21 80	sta $802180,x			STA $802180,x
+.01067e	bf 96 09 01	lda $010996,x			LDA @lgreet_clr_line5,x
+.010682	9f 00 22 80	sta $802200,x			STA $802200,x
+.010686	e8		inx				inx
+.010687	e0 0e		cpx #$0e			cpx #$0E
+.010689	d0 d3		bne $01065e			bne iclearloop2
+.01068b	28		plp				PLP
+.01068c	fa		plx		                PLX
+.01068d	68		pla		                PLA
+.01068e	6b		rtl		                RTL
+.01068f	0b		phd		IINITCHLUT		PHD
+.010690	08		php						PHP
+.010691	48		pha						PHA
+.010692	da		phx						PHX
+.010693	e2 20		sep #$20	                SEP #$20        ; set A short
+.010695	e2 10		sep #$10	                SEP #$10        ; set X short
+.010697	a2 00		ldx #$00					LDX	#$00
+.010699	bf a4 09 01	lda $0109a4,x	lutinitloop0	LDA @lfg_color_lut,x		; get Local Data
+.01069d	9f 40 1f 7f	sta $7f1f40,x					STA FG_CHAR_LUT_PTR,x	; Write in LUT Memory
+.0106a1	e8		inx						inx
+.0106a2	e0 40		cpx #$40					cpx #$40
+.0106a4	d0 f3		bne $010699					bne lutinitloop0
+.0106a6	a2 00		ldx #$00					LDX	#$00
+.0106a8	bf e4 09 01	lda $0109e4,x	lutinitloop1	LDA @lbg_color_lut,x		; get Local Data
+.0106ac	9f 80 1f 7f	sta $7f1f80,x					STA BG_CHAR_LUT_PTR,x	; Write in LUT Memory
+.0106b0	e8		inx						inx
+.0106b1	e0 40		cpx #$40					cpx #$40
+.0106b3	d0 f3		bne $0106a8					bne lutinitloop1
+.0106b5	c2 20		rep #$20	                REP #$20        ; set A long
+.0106b7	c2 10		rep #$10	                REP #$10        ; set X long
+.0106b9	fa		plx		                PLX
+.0106ba	68		pla		                PLA
+.0106bb	28		plp						PLP
+.0106bc	2b		pld		                PLD
+.0106bd	6b		rtl		                RTL
+.0106be	0b		phd		IINITSUPERIO	PHD
+.0106bf	08		php						PHP
+.0106c0	48		pha						PHA
+.0106c1	e2 20		sep #$20	                SEP #$20        ; set A short
+.0106c3	a9 01		lda #$01					LDA #$01		;Default Value - C256 Doesn't use this IO Pin
+.0106c5	8f 23 11 7f	sta $7f1123					STA GP10_REG
+.0106c9	a9 01		lda #$01					LDA #$01		;Default Value - C256 Doesn't use this IO Pin
+.0106cb	8f 24 11 7f	sta $7f1124					STA GP11_REG
+.0106cf	a9 01		lda #$01					LDA #$01		;Default Value - C256 Doesn't use this IO Pin
+.0106d1	8f 25 11 7f	sta $7f1125					STA GP12_REG
+.0106d5	a9 01		lda #$01					LDA #$01		;Default Value - C256 Doesn't use this IO Pin
+.0106d7	8f 26 11 7f	sta $7f1126					STA GP13_REG
+.0106db	a9 05		lda #$05					LDA #$05		;(C256 - POT A Analog BX) Bit[0] = 1, Bit[2] = 1
+.0106dd	8f 27 11 7f	sta $7f1127					STA GP14_REG
+.0106e1	a9 05		lda #$05					LDA #$05		;(C256 - POT A Analog BY) Bit[0] = 1, Bit[2] = 1
+.0106e3	8f 28 11 7f	sta $7f1128					STA GP15_REG
+.0106e7	a9 05		lda #$05					LDA #$05		;(C256 - POT B Analog BX) Bit[0] = 1, Bit[2] = 1
+.0106e9	8f 29 11 7f	sta $7f1129					STA GP16_REG
+.0106ed	a9 05		lda #$05					LDA #$05		;(C256 - POT B Analog BY) Bit[0] = 1, Bit[2] = 1
+.0106ef	8f 2a 11 7f	sta $7f112a					STA GP17_REG
+.0106f3	a9 00		lda #$00					LDA #$00		;(C256 - HEADPHONE MUTE) - Output GPIO - Push-Pull (1 - Headphone On, 0 - HeadPhone Off)
+.0106f5	8f 2b 11 7f	sta $7f112b					STA GP20_REG
+.0106f9	a9 01		lda #$01					LDA #$01		;Default Value - C256 Doesn't use this IO Pin
+.0106fb	8f 2f 11 7f	sta $7f112f					STA GP24_REG
+.0106ff	a9 05		lda #$05					LDA #$05		;(C256 - MIDI IN) Bit[0] = 1, Bit[2] = 1 (Page 132 Manual)
+.010701	8f 30 11 7f	sta $7f1130					STA GP25_REG
+.010705	a9 84		lda #$84					LDA #$84		;(C256 - MIDI OUT) Bit[2] = 1, Bit[7] = 1 (Open Drain - To be Checked)
+.010707	8f 31 11 7f	sta $7f1131					STA GP26_REG
+.01070b	a9 01		lda #$01					LDA #$01		;Default Value - C256 Doesn't use this IO Pin
+.01070d	8f 2f 11 7f	sta $7f112f					STA GP24_REG
+.010711	a9 01		lda #$01					LDA #$01		;Default Value - (C256 - JP1 Fanout Pin 1) Setup as GPIO Input for now
+.010713	8f 33 11 7f	sta $7f1133					STA GP30_REG
+.010717	a9 01		lda #$01					LDA #$01		;Default Value - (C256 - JP1 Fanout Pin 4) Setup as GPIO Input for now
+.010719	8f 34 11 7f	sta $7f1134					STA GP31_REG
+.01071d	a9 01		lda #$01					LDA #$01		;Default Value - (C256 - JP1 Fanout Pin 3) Setup as GPIO Input for now
+.01071f	8f 35 11 7f	sta $7f1135					STA GP32_REG
+.010723	a9 01		lda #$01					LDA #$01		;Default Value - (C256 - JP1 Fanout Pin 6) Setup as GPIO Input for now
+.010725	8f 36 11 7f	sta $7f1136					STA GP33_REG
+.010729	a9 01		lda #$01					LDA #$01		;Default Value - (C256 - JP1 Fanout Pin 5) Setup as GPIO Input for now
+.01072b	8f 37 11 7f	sta $7f1137					STA GP34_REG
+.01072f	a9 01		lda #$01					LDA #$01		;Default Value - (C256 - JP1 Fanout Pin 8) Setup as GPIO Input for now
+.010731	8f 38 11 7f	sta $7f1138					STA GP35_REG
+.010735	a9 01		lda #$01					LDA #$01		;Default Value - (C256 - JP1 Fanout Pin 7) Setup as GPIO Input for now
+.010737	8f 39 11 7f	sta $7f1139					STA GP36_REG
+.01073b	a9 01		lda #$01					LDA #$01		;Default Value - (C256 - JP1 Fanout Pin 10) Setup as GPIO Input for now
+.01073d	8f 3a 11 7f	sta $7f113a					STA GP37_REG
+.010741	a9 01		lda #$01					LDA #$01		;Default Value - C256 Doesn't use this IO Pin
+.010743	8f 3d 11 7f	sta $7f113d					STA GP42_REG
+.010747	a9 01		lda #$01					LDA #$01		;(C256 - INPUT PLL CLK INTERRUPT) Default Value - Will keep it as an input for now, no real usage for now
+.010749	8f 3e 11 7f	sta $7f113e					STA GP43_REG
+.01074d	a9 05		lda #$05					LDA #$05		;(C256 - UART2 - RI2) - Input - Set Secondary Function
+.01074f	8f 3f 11 7f	sta $7f113f					STA GP50_REG
+.010753	a9 05		lda #$05					LDA #$05		;(C256 - UART2 - DCD2) - Input - Set Secondary Function
+.010755	8f 40 11 7f	sta $7f1140					STA GP51_REG
+.010759	a9 05		lda #$05					LDA #$05		;(C256 - UART2 - RXD2) - Input - Set Secondary Function
+.01075b	8f 41 11 7f	sta $7f1141					STA GP52_REG
+.01075f	a9 04		lda #$04					LDA #$04		;(C256 - UART2 - TXD2) - Output - Set Secondary Function
+.010761	8f 42 11 7f	sta $7f1142					STA GP53_REG
+.010765	a9 05		lda #$05					LDA #$05		;(C256 - UART2 - DSR2) - Input - Set Secondary Function
+.010767	8f 43 11 7f	sta $7f1143					STA GP54_REG
+.01076b	a9 04		lda #$04					LDA #$04		;(C256 - UART2 - RTS2) - Output - Set Secondary Function
+.01076d	8f 44 11 7f	sta $7f1144					STA GP55_REG
+.010771	a9 05		lda #$05					LDA #$05		;(C256 - UART2 - CTS2) - Input - Set Secondary Function
+.010773	8f 45 11 7f	sta $7f1145					STA GP56_REG
+.010777	a9 04		lda #$04					LDA #$04		;(C256 - UART2 - DTR2) - Output - Set Secondary Function
+.010779	8f 46 11 7f	sta $7f1146					STA GP57_REG
+.01077d	a9 84		lda #$84					LDA #$84		;(C256 - LED1) - Open Drain - Output
+.01077f	8f 47 11 7f	sta $7f1147					STA GP60_REG
+.010783	a9 84		lda #$84					LDA #$84		;(C256 - LED2) - Open Drain - Output
+.010785	8f 48 11 7f	sta $7f1148					STA GP61_REG
+.010789	a9 00		lda #$00					LDA #$00		;GPIO Data Register (GP10..GP17) - Not Used
+.01078b	8f 4b 11 7f	sta $7f114b					STA GP1_REG
+.01078f	a9 01		lda #$01					LDA #$01		;GPIO Data Register (GP20..GP27) - Bit[0] - Headphone Mute (Enabling it)
+.010791	8f 4c 11 7f	sta $7f114c					STA GP2_REG
+.010795	a9 00		lda #$00					LDA #$00		;GPIO Data Register (GP30..GP37) - Since it is in Output mode, nothing to write here.
+.010797	8f 4d 11 7f	sta $7f114d					STA GP3_REG
+.01079b	a9 00		lda #$00					LDA #$00		;GPIO Data Register (GP40..GP47)  - Not Used
+.01079d	8f 4e 11 7f	sta $7f114e					STA GP4_REG
+.0107a1	a9 00		lda #$00					LDA #$00		;GPIO Data Register (GP50..GP57)  - Not Used
+.0107a3	8f 4f 11 7f	sta $7f114f					STA GP5_REG
+.0107a7	a9 00		lda #$00					LDA #$00		;GPIO Data Register (GP60..GP61)  - Not Used
+.0107a9	8f 50 11 7f	sta $7f1150					STA GP6_REG
+.0107ad	a9 01		lda #$01					LDA #$01		;LED1 Output - Already setup by Vicky Init Phase, for now, I will leave it alone
+.0107af	8f 5d 11 7f	sta $7f115d					STA LED1_REG
+.0107b3	a9 02		lda #$02					LDA #$02		;LED2 Output - However, I will setup this one, to make sure the Code works (Full On, when Code was ran)
+.0107b5	8f 5e 11 7f	sta $7f115e					STA LED2_REG
+.0107b9	c2 20		rep #$20	                REP #$20        ; set A long
+.0107bb	68		pla		                PLA
+.0107bc	28		plp						PLP
+.0107bd	2b		pld						PLD
+.0107be	6b		rtl		                RTL
+.0107bf	0b		phd		IINITKEYBOARD	PHD
+.0107c0	08		php						PHP
+.0107c1	48		pha						PHA
+.0107c2	e2 20		sep #$20	                SEP #$20        ; set A short
+.0107c4	af 64 10 7f	lda $7f1064	initkb_loop1	LDA STATUS_PORT		; Load Status Byte
+.0107c8	29 02		and #$02					AND	#INPT_BUF_FULL	; Test bit $02 (if 0, Empty)
+.0107ca	c9 02		cmp #$02					CMP #INPT_BUF_FULL
+.0107cc	f0 f6		beq $0107c4					BEQ initkb_loop1
+.0107ce	a9 aa		lda #$aa					LDA #$0AA			;Send self test command
+.0107d0	8f 64 10 7f	sta $7f1064					STA KBD_CMD_BUF
+.0107d4	af 64 10 7f	lda $7f1064	initkb_loop2	LDA STATUS_PORT		; Wait for test to complete
+.0107d8	29 01		and #$01					AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
+.0107da	c9 01		cmp #$01					CMP #OUT_BUF_FULL
+.0107dc	f0 f6		beq $0107d4					BEQ initkb_loop2
+.0107de	af 60 10 7f	lda $7f1060					LDA KBD_OUT_BUF		;Check self test result
+.0107e2	c9 55		cmp #$55					CMP #$55
+.0107e4	d0 74		bne $01085a					BNE	initkb_loop_out
+.0107e6	a9 ab		lda #$ab					LDA #$AB			;Send test Interface command
+.0107e8	8f 60 10 7f	sta $7f1060					STA KBD_DATA_BUF
+.0107ec	af 64 10 7f	lda $7f1064	initkb_loop3	LDA STATUS_PORT		; Wait for test to complete
+.0107f0	29 01		and #$01					AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
+.0107f2	c9 01		cmp #$01					CMP #OUT_BUF_FULL
+.0107f4	f0 f6		beq $0107ec					BEQ initkb_loop3
+.0107f6	af 60 10 7f	lda $7f1060					LDA KBD_OUT_BUF		;Display Interface test results
+.0107fa	c9 00		cmp #$00					CMP #$00			;Should be 00
+.0107fc	d0 5c		bne $01085a					BNE	initkb_loop_out
+.0107fe	a9 60		lda #$60					LDA #$60			;Send command byte
+.010800	8f 64 10 7f	sta $7f1064					STA KBD_CMD_BUF
+.010804	af 64 10 7f	lda $7f1064	initkb_loop4	LDA STATUS_PORT		; Load Status Byte
+.010808	29 02		and #$02					AND	#INPT_BUF_FULL	; Test bit $02 (if 0, Empty)
+.01080a	c9 02		cmp #$02					CMP #INPT_BUF_FULL
+.01080c	f0 f6		beq $010804					BEQ initkb_loop4
+.01080e	a9 69		lda #$69					LDA #$69		;Send command byte
+.010810	8f 60 10 7f	sta $7f1060					STA KBD_DATA_BUF
+.010814	af 64 10 7f	lda $7f1064	initkb_loop5	LDA STATUS_PORT		; Load Status Byte
+.010818	29 02		and #$02					AND	#INPT_BUF_FULL	; Test bit $02 (if 0, Empty)
+.01081a	c9 02		cmp #$02					CMP #INPT_BUF_FULL
+.01081c	f0 f6		beq $010814					BEQ initkb_loop5
+.01081e	a9 ff		lda #$ff					LDA #$FF			; Send Keyboard Reset command
+.010820	8f 60 10 7f	sta $7f1060					STA KBD_DATA_BUF
+.010824	af 64 10 7f	lda $7f1064	initkb_loop6	LDA STATUS_PORT		; Wait for test to complete
+.010828	29 01		and #$01					AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
+.01082a	c9 01		cmp #$01					CMP #OUT_BUF_FULL
+.01082c	f0 f6		beq $010824					BEQ initkb_loop6
+.01082e	af 60 10 7f	lda $7f1060					LDA KBD_OUT_BUF
+.010832	a9 ee		lda #$ee					LDA #$EE			; Send Echo EE Command
+.010834	8f 60 10 7f	sta $7f1060					STA KBD_DATA_BUF
+.010838	af 64 10 7f	lda $7f1064	initkb_loop7	LDA STATUS_PORT		; Wait for test to complete
+.01083c	29 01		and #$01					AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
+.01083e	c9 01		cmp #$01					CMP #OUT_BUF_FULL
+.010840	f0 f6		beq $010838					BEQ initkb_loop7
+.010842	af 60 10 7f	lda $7f1060					LDA KBD_OUT_BUF		; Read Echo from Keyboard
+.010846	c9 ee		cmp #$ee					CMP #$EE
+.010848	d0 10		bne $01085a					BNE initkb_loop_out
+.01084a	a9 f4		lda #$f4					LDA #$F4			; Enable the Keyboard
+.01084c	8f 60 10 7f	sta $7f1060					STA KBD_DATA_BUF
+.010850	af 64 10 7f	lda $7f1064	initkb_loop8	LDA STATUS_PORT		; Wait for test to complete
+.010854	29 01		and #$01					AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
+.010856	c9 01		cmp #$01					CMP #OUT_BUF_FULL
+.010858	f0 f6		beq $010850					BEQ initkb_loop8
+.01085a	af 60 10 7f	lda $7f1060	initkb_loop_out	LDA KBD_OUT_BUF		; Clear the Output buffer
+.01085e	c2 20		rep #$20	                REP #$20        ; set A long
+.010860	68		pla		                PLA
+.010861	28		plp						PLP
+.010862	2b		pld						PLD
+.010863	6b		rtl		                RTL
+.010864	00		brk #		IRESTORE        BRK ; Warm boot routine
+.010865	00		brk #		ISCINIT         BRK ;
+.010866	00		brk #		IIOINIT         BRK ;
+.010867	00		brk #		IPUTBLOCK       BRK ; Ouput a binary block to the currently selected channel
+.010868	00		brk #		ISETLFS         BRK ; Obsolete (done in OPEN)
+.010869	00		brk #		ISETNAM         BRK ; Obsolete (done in OPEN)
+.01086a	00		brk #		IOPEN           BRK ; Open a channel for reading and/or writing. Use SETLFS and SETNAM to set the channels and filename first.
+.01086b	00		brk #		ICLOSE          BRK ; Close a channel
+.01086c	00		brk #		ISETIN          BRK ; Set the current input channel
+.01086d	00		brk #		ISETOUT         BRK ; Set the current output channel
+.01086e	00		brk #		IGETB           BRK ; Get a byte from input channel. Return 0 if no input. Carry is set if no input.
+.01086f	00		brk #		IGETBLOCK       BRK ; Get a X byes from input channel. If Carry is set, wait. If Carry is clear, do not wait.
+.010870	00		brk #		IGETCH          BRK ; Get a character from the input channel. A=0 and Carry=1 if no data is wating
+.010871	00		brk #		IGETS           BRK ; Get a string from the input channel. NULL terminates
+.010872	00		brk #		IGETLINE        BRK ; Get a line of text from input channel. CR or NULL terminates.
+.010873	00		brk #		IGETFIELD       BRK ; Get a field from the input channel. Value in A, CR, or NULL terminates
+.010874	00		brk #		ITRIM           BRK ; Removes spaces at beginning and end of string.
+.010875	00		brk #		IPRINTC         BRK ; Print character to screen. Handles terminal commands
+.010876	00		brk #		IPRINTS         BRK ; Print string to screen. Handles terminal commands
+.010877	00		brk #		IPRINTF         BRK ; Print a float value
+.010878	00		brk #		IPRINTI         BRK ; Prints integer value in TEMP
+.010879	00		brk #		IPRINTAI        BRK ; Prints integer value in A
+.01087a	00		brk #		IPRINTAH        BRK ; Prints hex value in A. Printed value is 2 wide if M flag is 1, 4 wide if M=0
+.01087b	00		brk #		IPUSHKEY        BRK ;
+.01087c	00		brk #		IPUSHKEYS       BRK ;
+.01087d	00		brk #		ICSRLEFT        BRK ;
+.01087e	00		brk #		ICSRHOME        BRK ;
+.01087f	00		brk #		ISCRREADLINE    BRK ; Loads the MCMDADDR/BCMDADDR variable with the address of the current line on the screen. This is called when the RETURN key is pressed and is the first step in processing an immediate mode command.
+.010880	00		brk #		ISCRGETWORD     BRK ; Read a current word on the screen. A word ends with a space, punctuation (except _), or any control character (value < 32). Loads the address into CMPTEXT_VAL and length into CMPTEXT_LEN variables.
+.010881					KERNEL_DATA
+>010881	20 20 20 20 ec a9 ec a9		greet_msg       .text $20, $20, $20, $20, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, "C256 FOENIX DEVELOPMENT SYSTEM",$0D
+>010889	ec a9 ec a9 ec a9 43 32 35 36 20 46 4f 45 4e 49
+>010899	58 20 44 45 56 45 4c 4f 50 4d 45 4e 54 20 53 59
+>0108a9	53 54 45 4d 0d
+>0108ae	20 20 20 ec a9 ec a9 ec		                .text $20, $20, $20, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $20, "OPEN SOURCE COMPUTER",$0D
+>0108b6	a9 ec a9 ec a9 20 4f 50 45 4e 20 53 4f 55 52 43
+>0108c6	45 20 43 4f 4d 50 55 54 45 52 0d
+>0108d1	20 20 ec a9 ec a9 ec a9		                .text $20, $20, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $20, $20, "HARDWARE DESIGNER: STEFANY ALLAIRE",$0D
+>0108d9	ec a9 ec a9 20 20 48 41 52 44 57 41 52 45 20 44
+>0108e9	45 53 49 47 4e 45 52 3a 20 53 54 45 46 41 4e 59
+>0108f9	20 41 4c 4c 41 49 52 45 0d
+>010902	20 ec a9 ec a9 ec a9 ec		                .text $20, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $20, $20, $20, "SOFTWARE DESIGNER: TOM WILSON",$0D
+>01090a	a9 ec a9 20 20 20 53 4f 46 54 57 41 52 45 20 44
+>01091a	45 53 49 47 4e 45 52 3a 20 54 4f 4d 20 57 49 4c
+>01092a	53 4f 4e 0d
+>01092e	ec a9 ec a9 ec a9 ec a9		                .text $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $20, $20, $20, $20, "1024KB BASIC RAM  8192K MEDIA RAM",$00
+>010936	ec a9 20 20 20 20 31 30 32 34 4b 42 20 42 41 53
+>010946	49 43 20 52 41 4d 20 20 38 31 39 32 4b 20 4d 45
+>010956	44 49 41 20 52 41 4d 00
+>01095e	1d 1d 1d 1d 1d 1d 8d 8d		greet_clr_line1 .text $1D, $1D, $1D, $1D, $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D
+>010966	4d 4d 2d 2d 5d 5d
+>01096c	1d 1d 1d 1d 1d 8d 8d 4d		greet_clr_line2 .text $1D, $1D, $1D, $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D, $5D
+>010974	4d 2d 2d 5d 5d 5d
+>01097a	1d 1d 1d 1d 8d 8d 4d 4d		greet_clr_line3 .text $1D, $1D, $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D, $5D, $5D
+>010982	2d 2d 5d 5d 5d 5d
+>010988	1d 1d 1d 8d 8d 4d 4d 2d		greet_clr_line4 .text $1D, $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D, $5D, $5D, $5D
+>010990	2d 5d 5d 5d 5d 5d
+>010996	1d 1d 8d 8d 4d 4d 2d 2d		greet_clr_line5 .text $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D, $5D, $5D, $5D, $5D
+>01099e	5d 5d 5d 5d 5d 5d
+>0109a4	00 00 00 ff			fg_color_lut	.text $00, $00, $00, $FF
+>0109a8	00 00 c0 ff			                .text $00, $00, $C0, $FF
+>0109ac	00 c0 00 ff			                .text $00, $C0, $00, $FF
+>0109b0	c0 00 00 ff			                .text $C0, $00, $00, $FF
+>0109b4	00 c0 c0 ff			                .text $00, $C0, $C0, $FF
+>0109b8	c0 c0 00 ff			                .text $C0, $C0, $00, $FF
+>0109bc	c0 00 c0 ff			                .text $C0, $00, $C0, $FF
+>0109c0	c0 c0 c0 ff			                .text $C0, $C0, $C0, $FF
+>0109c4	00 7f ff ff			                .text $00, $7F, $FF, $FF
+>0109c8	13 45 8b ff			                .text $13, $45, $8B, $FF
+>0109cc	00 00 40 ff			                .text $00, $00, $40, $FF
+>0109d0	00 40 00 ff			                .text $00, $40, $00, $FF
+>0109d4	40 00 00 ff			                .text $40, $00, $00, $FF
+>0109d8	40 40 40 ff			                .text $40, $40, $40, $FF
+>0109dc	80 80 80 ff			                .text $80, $80, $80, $FF
+>0109e0	ff ff ff ff			                .text $FF, $FF, $FF, $FF
+>0109e4	00 00 00 ff			bg_color_lut	.text $00, $00, $00, $FF
+>0109e8	00 00 c0 ff			                .text $00, $00, $C0, $FF
+>0109ec	00 c0 00 ff			                .text $00, $C0, $00, $FF
+>0109f0	c0 00 00 ff			                .text $C0, $00, $00, $FF
+>0109f4	00 40 40 ff			                .text $00, $40, $40, $FF
+>0109f8	40 40 00 ff			                .text $40, $40, $00, $FF
+>0109fc	40 00 40 ff			                .text $40, $00, $40, $FF
+>010a00	40 40 40 ff			                .text $40, $40, $40, $FF
+>010a04	1e 69 d2 ff			                .text $1E, $69, $D2, $FF
+>010a08	13 45 8b ff			                .text $13, $45, $8B, $FF
+>010a0c	00 00 40 ff			                .text $00, $00, $40, $FF
+>010a10	00 40 00 ff			                .text $00, $40, $00, $FF
+>010a14	40 00 00 ff			                .text $40, $00, $00, $FF
+>010a18	20 20 20 ff			                .text $20, $20, $20, $FF
+>010a1c	80 80 80 ff			                .text $80, $80, $80, $FF
+>010a20	ff ff ff ff			                .text $FF, $FF, $FF, $FF
+>010a24	0d 52 45 41 44 59 2e 00		ready_msg       .null $0D,"READY."
+>010a2c	31 30 20 50 52 49 4e 54		hello_basic     .null "10 PRINT ""Hello World""",$0D
+>010a34	20 22 48 65 6c 6c 6f 20 57 6f 72 6c 64 22 0d 00
+>010a44	52 55 4e 0d 00			                .null "RUN",$0D
+>010a49	48 65 6c 6c 6f 20 57 6f		                .null "Hello World",$0D
+>010a51	72 6c 64 0d 00
+>010a56	0d 52 45 41 44 59 2e 00		                .null $0D,"READY."
+>010a5e	47 20 30 32 30 30 30 30		hello_ml        .null "G 020000",$0D
+>010a66	0d 00
+>010a68	48 45 4c 4c 4f 20 57 4f		                .null "HELLO WORLD",$0D
+>010a70	52 4c 44 0d 00
+>010a75	0d 00				                .null $0D
+>010a77	20 50 43 20 20 20 20 20		                .null " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
+>010a7f	41 20 20 20 20 58 20 20 20 20 59 20 20 20 20 53
+>010a8f	50 20 20 20 44 42 52 20 44 50 20 20 20 4e 56 4d
+>010a9f	58 44 49 5a 43 0d 00
+>010aa6	3b 30 30 32 31 31 32 20		                .null ";002112 0019 F0AA 0000 D6FF F8  0000 --M-----"
+>010aae	30 30 31 39 20 46 30 41 41 20 30 30 30 30 20 44
+>010abe	36 46 46 20 46 38 20 20 30 30 30 30 20 2d 2d 4d
+>010ace	2d 2d 2d 2d 2d 00
+>010ad4	41 42 4f 52 54 20 45 52		error_01        .null "ABORT ERROR"
+>010adc	52 4f 52 00
+>010ae0	30 31 32 33 34 35 36 37		hex_digits      .text "0123456789ABCDEF",0
+>010ae8	38 39 41 42 43 44 45 46 00
 
 ;******  End of listing

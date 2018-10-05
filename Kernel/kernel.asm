@@ -5,7 +5,10 @@
 .include "page_00_data.asm"
 .include "page_00_code.asm"
 .include "dram_inc.asm"
-;.include "monitor.asm"
+.include "vicky_def.asm"
+.include "super_io_def.asm"
+.include "keyboard_def.asm"
+.include "monitor.asm"
 
 ; C256 Foenix / Nu64 Kernel
 ; Loads to $F0:0000
@@ -14,6 +17,8 @@
 ;Jump Table
 
 .include "kernel_jumptable.asm"
+
+* = $010400
 
 * = $010400
 
@@ -48,9 +53,15 @@ IBOOT           ; boot the system
                 STX COLS_PER_LINE
                 LDY #64
                 STY LINES_MAX
-                setal
                 
+		; Initialize Super IO Chip
+                JSL IINITSUPERIO
+                ; Initialize the Character Color Foreground/Background LUT First
+                JSL IINITCHLUT
+                ; Now, clear the screen and Setup Foreground/Background Bytes, so we can see the Text on screen
+                JSL ICLRSCREEN
                 ; set the location of the cursor (top left corner of screen)
+                setal
                 LDX #$0
                 LDY #$0
                 JSL ILOCATE
@@ -106,7 +117,8 @@ IBREAK          setdp 0
                 STA CPUSTACK    ; Store the stack at immediately before the interrupt was asserted
                 LDA #<>STACK_END   ; initialize stack pointer back to the bootup value 
                                 ;<> is "lower word"
-                TAS             
+                TAS  
+                JML JMP_READY   ; Run READY routine (usually BASIC or MONITOR)
                 
 IREADY          setdbr `ready_msg
                 setas 
@@ -122,9 +134,7 @@ IREADY          setdbr `ready_msg
 ;  vector.
 IREADYWAIT      ; Check the keyboard buffer.
                 JSL IGETCHE
-                ; BCS IREADYWAIT
-                ; JSL IPUTC
-                JMP IREADYWAIT
+                BRA IREADYWAIT
                 
 IKEYDOWN        STP             ; Keyboard key pressed
 IRETURN         STP
@@ -394,11 +404,373 @@ ISCROLLUP       ; Scroll the screen up by one row
                 PLX
                 PLA 
                 RTL 
-                
+
+;
+; IPRINTH
+; Prints data from memory in hexadecimal format
+; Inputs:
+;   X: 16-bit address of the LAST BYTE of data to print. 
+;   Y: Length in bytes of data to print
+; Modifies:
+;   X,Y, results undefined
+IPRINTH         PHP
+                PHA
+iprinth1        setas
+                LDA #0,b,x      ; Read the value to be printed
+                LSR 
+                LSR
+                LSR 
+                LSR
+                JSL iprint_digit
+                LDA #0,b,x
+                JSL iprint_digit
+                DEX
+                DEY 
+                BNE iprinth1
+                PLA
+                PLP
+                RTL
+
+;
+; iprint_digit
+; This will print the low nibble in the A register. 
+; Inputs:
+;   A: digit to print
+;   x flag should be 0 (16-bit X)
+; Affects: 
+;   P: m flag will be set to 0               
+iprint_digit    PHX
+                setal
+                AND #$0F
+                TAX 
+                ; Use the value in AL to 
+                .databank ?
+                LDA hex_digits,X 
+                JSL IPUTC       ; Print the digit
+                PLX
+                RTL
+;
+; ICLRSCREEN
+; Clear the screen and set the background and foreground colors to the
+; currently selected colors. 
+ICLRSCREEN	PHD
+		PHP
+		PHA
+		PHX
+                setas
+                setxl 			; Set 16bits
+		LDX #$0000		; Only Use One Pointer
+		LDA #$20		; Fill the Entire Screen with Space
+iclearloop0	STA $800000,x	;
+		inx
+		cpx #$2000
+		bne iclearloop0
+		; Now Set the Colors so we can see the text
+		LDX	#$0000		; Only Use One Pointer
+		LDA #$ED		; Fill the Color Memory with Foreground: 75% Purple, Background 12.5% White
+iclearloop1	STA $802000,x	;
+		inx
+		cpx #$2000
+		bne iclearloop1
+
+                setxl 				
+		setal
+                PLX
+                PLA 
+		PLP
+                PLD
+                RTL
+
+;
+; ICOLORFLAG
+; Set the colors of the flag on the welcome screen
+;               
+ICOLORFLAG      PHA 
+                PHX 
+                PHP 
+
+                setaxs 				
+		LDX #$00
+iclearloop2	LDA @lgreet_clr_line1,x
+		STA $802000,x
+		LDA @lgreet_clr_line2,x
+		STA $802080,x
+		LDA @lgreet_clr_line3,x
+		STA $802100,x
+		LDA @lgreet_clr_line4,x
+		STA $802180,x
+		LDA @lgreet_clr_line5,x
+		STA $802200,x
+		inx
+		cpx #$0E
+		bne iclearloop2
+				
+		PLP
+                PLX
+                PLA 
+                RTL
+;
+; IINITCHLUT
+; Author: Stefany
+; Note: We assume that A & X are 16Bits Wide when entering here.
+; Initialize VICKY's Character Color Look-Up Table;
+; Inputs: 
+;   None 
+; Affects:
+;   None 	
+IINITCHLUT		PHD
+				PHP
+				PHA
+				PHX
+                setas
+                setxs 					; Set 8bits
+				; Setup Foreground LUT First
+				LDX	#$00
+lutinitloop0	LDA @lfg_color_lut,x		; get Local Data
+				STA FG_CHAR_LUT_PTR,x	; Write in LUT Memory
+				inx
+				cpx #$40
+				bne lutinitloop0
+				; Set Background LUT Second
+				LDX	#$00
+lutinitloop1	LDA @lbg_color_lut,x		; get Local Data
+				STA BG_CHAR_LUT_PTR,x	; Write in LUT Memory
+				inx
+				cpx #$40
+				bne lutinitloop1
+                setal
+                setxl 					; Set 8bits
+                PLX
+                PLA 
+				PLP
+                PLD
+                RTL
+				
+;
+; IINITSUPERIO
+; Author: Stefany
+; Note: We assume that A & X are 16Bits Wide when entering here.
+; Initialize SuperIO PME Registers
+; Inputs: 
+;   None 
+; Affects:
+;   None 					
+IINITSUPERIO	PHD
+				PHP
+				PHA
+                setas			;just make sure we are in 8bit mode
+
+				LDA #$01		;Default Value - C256 Doesn't use this IO Pin
+				STA GP10_REG
+				LDA #$01		;Default Value - C256 Doesn't use this IO Pin
+				STA GP11_REG				
+				LDA #$01		;Default Value - C256 Doesn't use this IO Pin
+				STA GP12_REG				
+				LDA #$01		;Default Value - C256 Doesn't use this IO Pin
+				STA GP13_REG				
+				LDA #$05		;(C256 - POT A Analog BX) Bit[0] = 1, Bit[2] = 1
+				STA GP14_REG	
+				LDA #$05		;(C256 - POT A Analog BY) Bit[0] = 1, Bit[2] = 1
+				STA GP15_REG
+				LDA #$05		;(C256 - POT B Analog BX) Bit[0] = 1, Bit[2] = 1
+				STA GP16_REG	
+				LDA #$05		;(C256 - POT B Analog BY) Bit[0] = 1, Bit[2] = 1
+				STA GP17_REG
+				LDA #$00		;(C256 - HEADPHONE MUTE) - Output GPIO - Push-Pull (1 - Headphone On, 0 - HeadPhone Off)
+				STA GP20_REG
+
+				;LDA #$00		;(C256 - FLOPPY - DS1) - TBD Later, Floppy Stuff (JIM DREW)
+				;STA GP21_REG
+				;LDA #$00		;(C256 - FLOPPY - DMTR1) - TBD Later, Floppy Stuff (JIM DREW)
+				;STA GP22_REG
+
+				LDA #$01		;Default Value - C256 Doesn't use this IO Pin
+				STA GP24_REG
+
+				LDA #$05		;(C256 - MIDI IN) Bit[0] = 1, Bit[2] = 1 (Page 132 Manual)
+				STA GP25_REG
+				LDA #$84		;(C256 - MIDI OUT) Bit[2] = 1, Bit[7] = 1 (Open Drain - To be Checked)
+				STA GP26_REG
+
+				LDA #$01		;Default Value - C256 Doesn't use this IO Pin
+				STA GP24_REG
+
+				LDA #$01		;Default Value - (C256 - JP1 Fanout Pin 1) Setup as GPIO Input for now
+				STA GP30_REG
+				LDA #$01		;Default Value - (C256 - JP1 Fanout Pin 4) Setup as GPIO Input for now
+				STA GP31_REG
+				LDA #$01		;Default Value - (C256 - JP1 Fanout Pin 3) Setup as GPIO Input for now
+				STA GP32_REG
+				LDA #$01		;Default Value - (C256 - JP1 Fanout Pin 6) Setup as GPIO Input for now
+				STA GP33_REG
+				LDA #$01		;Default Value - (C256 - JP1 Fanout Pin 5) Setup as GPIO Input for now
+				STA GP34_REG
+				LDA #$01		;Default Value - (C256 - JP1 Fanout Pin 8) Setup as GPIO Input for now
+				STA GP35_REG
+				LDA #$01		;Default Value - (C256 - JP1 Fanout Pin 7) Setup as GPIO Input for now
+				STA GP36_REG
+				LDA #$01		;Default Value - (C256 - JP1 Fanout Pin 10) Setup as GPIO Input for now
+				STA GP37_REG
+
+				;LDA #$01		;(C256 - FLOPPY - DRVDEN0) - TBD Later, Floppy Stuff (JIM DREW)
+				;STA GP40_REG
+				;LDA #$01		;(C256 - FLOPPY - DRVDEN1) - TBD Later, Floppy Stuff (JIM DREW)
+				;STA GP41_REG
+
+				LDA #$01		;Default Value - C256 Doesn't use this IO Pin
+				STA GP42_REG				
+
+				LDA #$01		;(C256 - INPUT PLL CLK INTERRUPT) Default Value - Will keep it as an input for now, no real usage for now
+				STA GP43_REG	
+				
+				LDA #$05		;(C256 - UART2 - RI2) - Input - Set Secondary Function
+				STA GP50_REG
+				LDA #$05		;(C256 - UART2 - DCD2) - Input - Set Secondary Function
+				STA GP51_REG
+				LDA #$05		;(C256 - UART2 - RXD2) - Input - Set Secondary Function
+				STA GP52_REG
+				LDA #$04		;(C256 - UART2 - TXD2) - Output - Set Secondary Function
+				STA GP53_REG
+				LDA #$05		;(C256 - UART2 - DSR2) - Input - Set Secondary Function
+				STA GP54_REG
+				LDA #$04		;(C256 - UART2 - RTS2) - Output - Set Secondary Function
+				STA GP55_REG
+				LDA #$05		;(C256 - UART2 - CTS2) - Input - Set Secondary Function
+				STA GP56_REG
+				LDA #$04		;(C256 - UART2 - DTR2) - Output - Set Secondary Function
+				STA GP57_REG
+
+				LDA #$84		;(C256 - LED1) - Open Drain - Output
+				STA GP60_REG
+				LDA #$84		;(C256 - LED2) - Open Drain - Output
+				STA GP61_REG				
+
+				LDA #$00		;GPIO Data Register (GP10..GP17) - Not Used
+				STA GP1_REG
+				LDA #$01		;GPIO Data Register (GP20..GP27) - Bit[0] - Headphone Mute (Enabling it)
+				STA GP2_REG
+				LDA #$00		;GPIO Data Register (GP30..GP37) - Since it is in Output mode, nothing to write here.
+				STA GP3_REG
+				LDA #$00		;GPIO Data Register (GP40..GP47)  - Not Used
+				STA GP4_REG
+				LDA #$00		;GPIO Data Register (GP50..GP57)  - Not Used
+				STA GP5_REG
+				LDA #$00		;GPIO Data Register (GP60..GP61)  - Not Used
+				STA GP6_REG
+
+				LDA #$01		;LED1 Output - Already setup by Vicky Init Phase, for now, I will leave it alone
+				STA LED1_REG
+				LDA #$02		;LED2 Output - However, I will setup this one, to make sure the Code works (Full On, when Code was ran)
+				STA LED2_REG
+				setal
+                PLA
+				PLP
+				PLD
+                RTL
+
+
+
+;
+; IINITKEYBOARD
+; Author: Stefany
+; Note: We assume that A & X are 16Bits Wide when entering here.
+; Initialize the Keyboard Controler (8042) in the SuperIO. 
+; Inputs: 
+;   None 
+; Affects:
+;   None 
+IINITKEYBOARD	PHD
+				PHP
+				PHA
+                setas				;just make sure we are in 8bit mode
+initkb_loop1	LDA STATUS_PORT		; Load Status Byte 
+				AND	#INPT_BUF_FULL	; Test bit $02 (if 0, Empty)
+				CMP #INPT_BUF_FULL
+				BEQ initkb_loop1
+				
+				LDA #$0AA			;Send self test command
+				STA KBD_CMD_BUF
+				
+initkb_loop2	LDA STATUS_PORT		; Wait for test to complete
+				AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
+				CMP #OUT_BUF_FULL
+				BEQ initkb_loop2
+
+				LDA KBD_OUT_BUF		;Check self test result
+				CMP #$55
+				BNE	initkb_loop_out
+				
+				LDA #$AB			;Send test Interface command
+				STA KBD_DATA_BUF
+
+initkb_loop3	LDA STATUS_PORT		; Wait for test to complete
+				AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
+				CMP #OUT_BUF_FULL
+				BEQ initkb_loop3
+				
+				LDA KBD_OUT_BUF		;Display Interface test results
+				CMP #$00			;Should be 00
+				BNE	initkb_loop_out
+				
+				LDA #$60			;Send command byte
+				STA KBD_CMD_BUF
+
+initkb_loop4	LDA STATUS_PORT		; Load Status Byte 
+				AND	#INPT_BUF_FULL	; Test bit $02 (if 0, Empty)
+				CMP #INPT_BUF_FULL
+				BEQ initkb_loop4
+				
+				LDA #$69		;Send command byte
+				STA KBD_DATA_BUF
+				
+initkb_loop5	LDA STATUS_PORT		; Load Status Byte 
+				AND	#INPT_BUF_FULL	; Test bit $02 (if 0, Empty)
+				CMP #INPT_BUF_FULL
+				BEQ initkb_loop5
+
+				LDA #$FF			; Send Keyboard Reset command
+				STA KBD_DATA_BUF
+				; Call DLY1
+
+initkb_loop6	LDA STATUS_PORT		; Wait for test to complete
+				AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
+				CMP #OUT_BUF_FULL
+				BEQ initkb_loop6
+				
+				LDA KBD_OUT_BUF
+				
+				LDA #$EE			; Send Echo EE Command
+				STA KBD_DATA_BUF
+				; Call DLY1
+
+initkb_loop7	LDA STATUS_PORT		; Wait for test to complete
+				AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
+				CMP #OUT_BUF_FULL
+				BEQ initkb_loop7
+				
+				LDA KBD_OUT_BUF		; Read Echo from Keyboard
+				; Call DLY1
+				CMP #$EE
+				BNE initkb_loop_out
+				
+				LDA #$F4			; Enable the Keyboard
+				STA KBD_DATA_BUF
+
+initkb_loop8	LDA STATUS_PORT		; Wait for test to complete
+				AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
+				CMP #OUT_BUF_FULL
+				BEQ initkb_loop8
+				
+initkb_loop_out	LDA KBD_OUT_BUF		; Clear the Output buffer
+
+				setal
+                PLA
+				PLP
+				PLD
+                RTL
 ;                
 ;Not-implemented routines
 ;
-
 IRESTORE        BRK ; Warm boot routine
 ISCINIT         BRK ; 
 IIOINIT         BRK ; 
@@ -420,27 +792,66 @@ IPRINTC         BRK ; Print character to screen. Handles terminal commands
 IPRINTS         BRK ; Print string to screen. Handles terminal commands
 IPRINTF         BRK ; Print a float value
 IPRINTI         BRK ; Prints integer value in TEMP
-IPRINTH         BRK ; Print Hex value in DP variable
 IPRINTAI        BRK ; Prints integer value in A
 IPRINTAH        BRK ; Prints hex value in A. Printed value is 2 wide if M flag is 1, 4 wide if M=0
 IPUSHKEY        BRK ; 
 IPUSHKEYS       BRK ; 
 ICSRLEFT        BRK ; 
 ICSRHOME        BRK ; 
-                
+ISCRREADLINE    BRK ; Loads the MCMDADDR/BCMDADDR variable with the address of the current line on the screen. This is called when the RETURN key is pressed and is the first step in processing an immediate mode command.
+ISCRGETWORD     BRK ; Read a current word on the screen. A word ends with a space, punctuation (except _), or any control character (value < 32). Loads the address into CMPTEXT_VAL and length into CMPTEXT_LEN variables.                
+
 ;
 ; Greeting message and other kernel boot data
 ;
 KERNEL_DATA     
-greet_msg       .text "    ", $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,     " FOENIX 256 DEVELOPMENT SYSTEM",$0D
-                .text "   " , $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,    "  OPEN SOURCE COMPUTER",$0D
-                .text "  ", $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,     "   ",$0D
-                .text " ",  $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,    "    1024KB BASIC RAM  8192K MEDIA RAM",$0D
-                .text $EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,$EC,$A9,         "     ",$00
+greet_msg       .text $20, $20, $20, $20, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, "C256 FOENIX DEVELOPMENT SYSTEM",$0D
+                .text $20, $20, $20, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $20, "OPEN SOURCE COMPUTER",$0D
+                .text $20, $20, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $20, $20, "HARDWARE DESIGNER: STEFANY ALLAIRE",$0D
+                .text $20, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $20, $20, $20, "SOFTWARE DESIGNER: TOM WILSON",$0D
+                .text $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $20, $20, $20, $20, "1024KB BASIC RAM  8192K MEDIA RAM",$00
+
+greet_clr_line1 .text $1D, $1D, $1D, $1D, $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D
+greet_clr_line2 .text $1D, $1D, $1D, $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D, $5D
+greet_clr_line3 .text $1D, $1D, $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D, $5D, $5D
+greet_clr_line4 .text $1D, $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D, $5D, $5D, $5D
+greet_clr_line5 .text $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D, $5D, $5D, $5D, $5D
+
+fg_color_lut	.text $00, $00, $00, $FF
+                .text $00, $00, $C0, $FF
+                .text $00, $C0, $00, $FF
+                .text $C0, $00, $00, $FF
+                .text $00, $C0, $C0, $FF
+                .text $C0, $C0, $00, $FF
+                .text $C0, $00, $C0, $FF
+                .text $C0, $C0, $C0, $FF
+                .text $00, $7F, $FF, $FF
+                .text $13, $45, $8B, $FF
+                .text $00, $00, $40, $FF
+                .text $00, $40, $00, $FF
+                .text $40, $00, $00, $FF
+                .text $40, $40, $40, $FF
+                .text $80, $80, $80, $FF
+                .text $FF, $FF, $FF, $FF
+				
+bg_color_lut	.text $00, $00, $00, $FF
+                .text $00, $00, $C0, $FF
+                .text $00, $C0, $00, $FF
+                .text $C0, $00, $00, $FF
+                .text $00, $40, $40, $FF
+                .text $40, $40, $00, $FF
+                .text $40, $00, $40, $FF
+                .text $40, $40, $40, $FF
+                .text $1E, $69, $D2, $FF
+                .text $13, $45, $8B, $FF
+                .text $00, $00, $40, $FF
+                .text $00, $40, $00, $FF
+                .text $40, $00, $00, $FF
+                .text $20, $20, $20, $FF
+                .text $80, $80, $80, $FF
+                .text $FF, $FF, $FF, $FF	
                 
 ready_msg       .null $0D,"READY."
-;ready_msg       .null " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
-;                .null ";F81000 0000 0000 0000 D6FF F8  0000 ------Z-"
 hello_basic     .null "10 PRINT ""Hello World""",$0D
                 .null "RUN",$0D
                 .null "Hello World",$0D
@@ -451,4 +862,4 @@ hello_ml        .null "G 020000",$0D
                 .null " PC     A    X    Y    SP   DBR DP   NVMXDIZC",$0D
                 .null ";002112 0019 F0AA 0000 D6FF F8  0000 --M-----"
 error_01        .null "ABORT ERROR"
-
+hex_digits      .text "0123456789ABCDEF",0

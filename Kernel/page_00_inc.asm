@@ -16,8 +16,8 @@ CURCOLOR         = $00001E ;2 Bytes Color of next character to be printed to the
 CURATTR          = $000020 ;2 Bytes Attribute of next character to be printed to the screen.
 STACKBOT         = $000022 ;2 Bytes Lowest location the stack should be allowed to write to. If SP falls below this value, the runtime should generate STACK OVERFLOW error and abort.
 STACKTOP         = $000024 ;2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort. 
-KERNEL_TEMP      = $0000C0 ;32 Bytes Temp space for kernel
-USER_TEMP        = $0000E0 ;32 Bytes Temp space for user programs
+KERNEL_TEMP      = $0000D0 ;32 Bytes Temp space for kernel
+USER_TEMP        = $0000F0 ;32 Bytes Temp space for user programs
 
 GAVIN_BLOCK      = $000100 ;256 Bytes Gavin reserved, overlaps debugging registers at $1F0
 MULTIPLIER_0     = $000100 ;0 Byte  Unsigned multiplier
@@ -41,15 +41,15 @@ D1_REMAINDER     = $000116 ;2 Bytes Signed remainder of A/B ex: 1 in 7/2=3 r 1
 VECTOR_STATE     = $0001FF ;1 Byte  Interrupt Vector State. See VECTOR_STATE_ENUM
 
 CPU_REGISTERS    = $000200 ; Byte  
-CPUPC            = $000200 ;2 Bytes Debug registers. When BRK is executed, Interrupt service routine will populate this block with the CPU registers. 
-CPUPBR           = $000202 ;1 Byte  Program Bank Register (K)
-CPUDBR           = $000203 ;1 Byte  Data Bank Register (B)
-CPUFLAGS         = $000204 ;1 Byte  Flags (P) (The second byte is ignored)
-CPUA             = $000205 ;2 Bytes Accumulator (A)
-CPUX             = $000207 ;2 Bytes X Register
-CPUY             = $000209 ;2 Bytes Y Index Register
-CPUDP            = $00020B ;2 Bytes Direct Page Register (D)
-CPUSTACK         = $00020D ;2 Bytes Stack Pointer
+CPUPC            = $000200 ;2 Bytes Program Counter (PC)
+CPUPBR           = $000202 ;2 Bytes Program Bank Register (K)
+CPUA             = $000204 ;2 Bytes Accumulator (A)
+CPUX             = $000206 ;2 Bytes X Register (X)
+CPUY             = $000208 ;2 Bytes Y Register (Y)
+CPUSTACK         = $00020A ;2 Bytes Stack Pointer (S)
+CPUDP            = $00020C ;2 Bytes Direct Page Register (D)
+CPUDBR           = $00020E ;1 Byte  Data Bank Register (B)
+CPUFLAGS         = $00020F ;1 Byte  Flags (P)
 
 MONITOR_VARS     = $000210 ; Byte  MONITOR Variables. BASIC variables may overlap this space
 MCMDADDR         = $000210 ;3 Bytes Address of the current line of text being processed by the command parser. Can be in display memory or a variable in memory. MONITOR will parse up to MTEXTLEN characters or to a null character.
@@ -108,8 +108,7 @@ VECTOR_ABORT     = $00FFE8 ;2 Bytes Native ABORT Interrupt vector
 VECTOR_NMI       = $00FFEA ;2 Bytes Native NMI Interrupt vector
 VECTOR_RESET     = $00FFEC ;2 Bytes Unused (Native RESET vector)
 VECTOR_IRQ       = $00FFEE ;2 Bytes Native IRQ Vector
-
-
+RETURN           = $00FFF0 ;4 Bytes RETURN key handler. Points to BASIC or MONITOR subroutine to execute when RETURN is pressed.
 VECTOR_ECOP      = $00FFF4 ;2 Bytes Emulation mode interrupt handler
 VECTOR_EBRK      = $00FFF6 ;2 Bytes Emulation mode interrupt handler
 VECTOR_EABORT    = $00FFF8 ;2 Bytes Emulation mode interrupt handler

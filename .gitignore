@@ -1,6 +1,7 @@
 Tools/WDCTools Version 2.1.zip
 Obj
-*.suo
+CharSet Manager/.vs/CharSet Manager/v15/.suo
 /.vs/Nu64/v15
 *.pdb
 bin/
+*.suo

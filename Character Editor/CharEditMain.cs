@@ -47,7 +47,7 @@ namespace Nu64.CharEdit
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog f = new OpenFileDialog();
-            f.Filter = "ROM BIN file|*.bin|PNG Image|*.png|BMP Image|*.bmp|All Files|*.*";
+            f.Filter = "PNG Image|*.png|BMP Image|*.bmp|ROM BIN file|*.bin|All Files|*.*";
             if (f.ShowDialog() == DialogResult.OK)
             {
                 string ext = System.IO.Path.GetExtension(f.FileName).ToLower();
