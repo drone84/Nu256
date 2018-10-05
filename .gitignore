@@ -1,12 +1,6 @@
 Tools/WDCTools Version 2.1.zip
 Obj
-CharSet Manager/.vs/CharSet Manager/v15/.suo
+*.suo
 /.vs/Nu64/v15
 *.pdb
-bin/*
-bin/Debug/Nu64.Common.dll
-bin/Debug/Nu64.Common.dll
-bin/Debug/Nu64.Common.pdb
-bin/Debug/Nu64.Common.dll
-bin/Debug/Nu64.exe
-bin/Debug/Nu64.pdb
+bin/
