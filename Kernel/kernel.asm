@@ -779,11 +779,16 @@ IINITVIAS       PHA
                 LDA #$E0
                 STA VIA0_DDR_REG_B ; Set Dir ( JOYA )- PA0..4 In, PA5..7 output
                 STA VIA0_DDR_REG_A ; Set Dir ( JOYB )- PA0..4 In, PA5..7 output
+                LDA #$A0
+                STA VIA0_IO_REG_A
+                LDA #$C0
+                STA VIA0_IO_REG_B
                 ; Init Second VIA
+                ; Port B init Only - Port A for IEC (to be defined by Jim Drew)
                 LDA #$FF
                 STA VIA1_DDR_REG_B ; Set Dir( USER Port ) - PA0..7 Output
                 LDA #$55
-                STA VIA1_IO_REG_A ; THis is to Test if Code Worked Fine (check Value on the USER Port Connector)
+                STA VIA1_IO_REG_B ; THis is to Test if Code Worked Fine (check Value on the USER Port Connector)
 
                 ; The Main Clock Runs @ 14.418M and with a 16Bits Counter, It can't reach 60Hz
                 ; So, I will set it to get 240Hz Output. - This is just a TEST - To be removed Later
