@@ -11,6 +11,7 @@
 .include "VIA_def.asm"
 .include "SID_def.asm"
 .include "RTC_def.asm"
+.include "Math_def.asm"
 .include "monitor.asm"
 
 ; C256 Foenix / Nu64 Kernel
@@ -20,8 +21,6 @@
 ;Jump Table
 
 .include "kernel_jumptable.asm"
-
-* = $010400
 
 * = $010400
 
@@ -66,16 +65,13 @@ IBOOT           ; boot the system
 greet           setdbr `greet_msg       ;Set data bank to ROM
                 LDX #<>greet_msg
                 JSL IPRINT       ; print the first line
-
+                JSL ICOLORFLAG   ; Let's go put some Colors
+                LDX #<>version_msg
+                JSL IPRINT       ; print the first line
                 ; Initialize Super IO Chip
                 JSL IINITSUPERIO
                 LDX #<>init_lpc_msg
                 JSL IPRINT       ; print the Init
-
-                ; Init KeyBoard
-                JSL IINITKEYBOARD
-                LDX #<>init_kbrd_msg
-                JSL IPRINT       ; print the Keybaord Init Message
 
                 ; Init the VIAs (to do some Test)
                 JSL IINITVIAS
@@ -92,15 +88,23 @@ greet           setdbr `greet_msg       ;Set data bank to ROM
                 LDX #<>test_SID_msg
                 JSL IPRINT       ; print the SID Test Message
 
+                setdp 0
+                JSL ITESTMATH
+
+                ; Init KeyBoard
+                JSL IINITKEYBOARD
+                LDX #<>init_kbrd_msg
+                JSL IPRINT       ; print the Keybaord Init Message
                 ; set the location of the cursor (top left corner of screen)
+                setdp 0
                 setal
                 LDX #$0
                 LDY #$0
                 JSL ILOCATE
 
                 ; reset keyboard buffer
-                STZ KEY_BUFFER_RPOS
-                STZ KEY_BUFFER_WPOS
+                ;STZ KEY_BUFFER_RPOS
+                ;STZ KEY_BUFFER_WPOS
 
                 ; ; Copy vectors from ROM to Direct Page
                 ; setaxl
@@ -924,6 +928,30 @@ ITESTSID        PHA
                 setal 					; Set 16bits
                 PLA
                 RTL
+;
+; ITESTMATH
+; Author: Stefany
+; Note: We assume that A & X are 16Bits Wide when entering here.
+; Verify that the Math Block Works
+; Inputs:
+; None
+ITESTMATH       PHA
+                setal 					; Set 16bits
+                LDA #$1234
+                STA UNSIGNED_MULT_A_LO
+                LDA #$55AA
+                STA UNSIGNED_MULT_B_LO
+                ; Results Ought to be : $06175A88
+                LDA UNSIGNED_MULT_AL_LO
+                STA STEF_BLOB_BEGIN
+
+                LDA UNSIGNED_MULT_AH_LO
+                STA STEF_BLOB_BEGIN + 2
+                setxl 					; Set 16bits
+                setal 					; Set 16bits
+                PLA
+                RTL
+
 
 ;
 ;Not-implemented routines
@@ -1008,6 +1036,7 @@ bg_color_lut	  .text $00, $00, $00, $FF
                 .text $80, $80, $80, $FF
                 .text $FF, $FF, $FF, $FF
 
+version_msg     .text "Degug Code Version 0.0.1 - Oct 8th, 2018", $0D, $00
 init_lpc_msg    .text "Init SuperIO...", $0D, $00
 init_kbrd_msg   .text "Init Keyboard...", $0D, $00
 init_via_msg    .text "Init VIAs...", $0D, $00

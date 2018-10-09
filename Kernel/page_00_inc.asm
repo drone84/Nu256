@@ -4,18 +4,18 @@
 ;* Addresses are the byte AFTER the block. Use this to confirm block locations and check for overlaps
 BANK0_BEGIN      = $000000 ;Start of bank 0 and Direct page
 unused_0000      = $000000 ;12 Bytes unused
-SCREENBEGIN      = $00000C ;3 Bytes Start of screen in video RAM. This is the upper-left corrner of the current video page being written to. This may not be what's being displayed by VICKY. Update this if you change VICKY's display page. 
+SCREENBEGIN      = $00000C ;3 Bytes Start of screen in video RAM. This is the upper-left corrner of the current video page being written to. This may not be what's being displayed by VICKY. Update this if you change VICKY's display page.
 COLS_VISIBLE     = $00000F ;2 Bytes Columns visible per screen line. A virtual line can be longer than displayed, up to COLS_PER_LINE long. Default = 80
 COLS_PER_LINE    = $000011 ;2 Bytes Columns in memory per screen line. A virtual line can be this long. Default=128
 LINES_VISIBLE    = $000013 ;2 Bytes The number of rows visible on the screen. Default=25
 LINES_MAX        = $000015 ;2 Bytes The number of rows in memory for the screen. Default=64
-CURSORPOS        = $000017 ;3 Bytes The next character written to the screen will be written in this location. 
-CURSORX          = $00001A ;2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly. 
-CURSORY          = $00001C ;2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly. 
-CURCOLOR         = $00001E ;2 Bytes Color of next character to be printed to the screen. 
+CURSORPOS        = $000017 ;3 Bytes The next character written to the screen will be written in this location.
+CURSORX          = $00001A ;2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly.
+CURSORY          = $00001C ;2 Bytes This is where the blinking cursor sits. Do not edit this direectly. Call LOCATE to update the location and handle moving the cursor correctly.
+CURCOLOR         = $00001E ;2 Bytes Color of next character to be printed to the screen.
 CURATTR          = $000020 ;2 Bytes Attribute of next character to be printed to the screen.
 STACKBOT         = $000022 ;2 Bytes Lowest location the stack should be allowed to write to. If SP falls below this value, the runtime should generate STACK OVERFLOW error and abort.
-STACKTOP         = $000024 ;2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort. 
+STACKTOP         = $000024 ;2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort.
 KERNEL_TEMP      = $0000D0 ;32 Bytes Temp space for kernel
 USER_TEMP        = $0000F0 ;32 Bytes Temp space for user programs
 
@@ -29,18 +29,18 @@ M1_OPERAND_A     = $000108 ;2 Bytes Operand A (ie: A x B)
 M1_OPERAND_B     = $00010A ;2 Bytes Operand B (ie: A x B)
 M1_RESULT        = $00010C ;4 Bytes Result of A x B
 DIVIDER_0        = $000108 ;0 Byte  Unsigned divider
-D0_OPERAND_A     = $000108 ;2 Bytes Divider 0 Dividend ex: A in  A/B 
+D0_OPERAND_A     = $000108 ;2 Bytes Divider 0 Dividend ex: A in  A/B
 D0_OPERAND_B     = $00010A ;2 Bytes Divider 0 Divisor ex B in A/B
 D0_RESULT        = $00010C ;2 Bytes Quotient result of A/B ex: 7/2 = 3 r 1
 D0_REMAINDER     = $00010E ;2 Bytes Remainder of A/B ex: 1 in 7/2=3 r 1
 DIVIDER_1        = $000110 ;0 Byte  Signed divider
-D1_OPERAND_A     = $000110 ;2 Bytes Divider 1 Dividend ex: A in  A/B 
+D1_OPERAND_A     = $000110 ;2 Bytes Divider 1 Dividend ex: A in  A/B
 D1_OPERAND_B     = $000112 ;2 Bytes Divider 1 Divisor ex B in A/B
 D1_RESULT        = $000114 ;2 Bytes Signed quotient result of A/B ex: 7/2 = 3 r 1
 D1_REMAINDER     = $000116 ;2 Bytes Signed remainder of A/B ex: 1 in 7/2=3 r 1
 VECTOR_STATE     = $0001FF ;1 Byte  Interrupt Vector State. See VECTOR_STATE_ENUM
 
-CPU_REGISTERS    = $000200 ; Byte  
+CPU_REGISTERS    = $000200 ; Byte
 CPUPC            = $000200 ;2 Bytes Program Counter (PC)
 CPUPBR           = $000202 ;2 Bytes Program Bank Register (K)
 CPUA             = $000204 ;2 Bytes Accumulator (A)
@@ -66,7 +66,7 @@ MARG6            = $000231 ;4 Bytes First command argument. May be data or addre
 MARG7            = $000235 ;4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
 MARG8            = $000239 ;4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
 
-LOADFILE_VARS    = $000300 ; Byte  
+LOADFILE_VARS    = $000300 ; Byte
 LOADFILE_NAME    = $000300 ;3 Bytes (addr) Name of file to load. Address in Data Page
 LOADFILE_LEN     = $000303 ;1 Byte  Length of filename. 0=Null Terminated
 LOADPBR          = $000304 ;1 Byte  First Program Bank of loaded file ($05 segment)
@@ -79,6 +79,9 @@ BLOCK_ADDR       = $00030F ;2 Bytes (temp) Address of block being loaded
 BLOCK_BANK       = $000311 ;1 Byte  (temp) Bank of block being loaded
 BLOCK_COUNT      = $000312 ;2 Bytes (temp) Counter of bytes read as file is loaded
 
+STEF_BLOB_BEGIN  = $000400 ; Temp Buffer for Testing
+STEF_BLOB_END    = $0004FF ;
+
 KEY_BUFFER       = $000F00 ;64 Bytes keyboard buffer
 KEY_BUFFER_SIZE  = $40 ;64 Bytes (constant) keyboard buffer length
 KEY_BUFFER_END   = $000F3F ;1 Byte  Last byte of keyboard buffer
@@ -86,7 +89,7 @@ KEY_BUFFER_RPOS  = $000F40 ;2 Bytes keyboard buffer read position
 KEY_BUFFER_WPOS  = $000F42 ;2 Bytes keyboard buffer write position
 
 TEST_BEGIN       = $001000 ;28672 Bytes Test/diagnostic code for prototype.
-TEST_END         = $007FFF ;0 Byte  
+TEST_END         = $007FFF ;0 Byte
 
 STACK_BEGIN      = $008000 ;32512 Bytes The default beginning of stack space
 STACK_END        = $00FEFF ;0 Byte  End of stack space. Everything below this is I/O space
@@ -101,7 +104,7 @@ HIRQ             = $00FF60 ;32 Bytes Handle IRQ
 Unused_FF80      = $00FF80 ;End of direct page Interrrupt handlers
 
 VECTORS_BEGIN    = $00FFE0 ;0 Byte  Interrupt vectors
-JMP_READY        = $00FFE0 ;4 Bytes Jumps to ROM READY routine. Modified whenever alternate command interpreter is loaded. 
+JMP_READY        = $00FFE0 ;4 Bytes Jumps to ROM READY routine. Modified whenever alternate command interpreter is loaded.
 VECTOR_COP       = $00FFE4 ;2 Bytes Native COP Interrupt vector
 VECTOR_BRK       = $00FFE6 ;2 Bytes Native BRK Interrupt vector
 VECTOR_ABORT     = $00FFE8 ;2 Bytes Native ABORT Interrupt vector
@@ -117,4 +120,4 @@ VECTOR_ERESET    = $00FFFC ;2 Bytes Emulation mode interrupt handler
 VECTOR_EIRQ      = $00FFFE ;2 Bytes Emulation mode interrupt handler
 VECTORS_END      = $010000 ;*End of vector space
 BANK0_END        = $00FFFF ;End of Bank 00 and Direct page
-; 
+;
