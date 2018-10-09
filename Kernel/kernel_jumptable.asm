@@ -1,20 +1,20 @@
 ;
 ; Kernel jump table
-; This includes all of the externally callable routines and forwards those to their internal 
-; addresses in the Foenix ROM. 
-; 
-; As new routines are added, please add a reference here. The correct procedure is to 
-; update the memory map spreadsheet, then copy and paste the ;Kernel.asm columns here
-; and ;Kernel_INC.asm column to that file. 
+; This includes all of the externally callable routines and forwards those to their internal
+; addresses in the Foenix ROM.
 ;
-; Naming convention: 
+; As new routines are added, please add a reference here. The correct procedure is to
+; update the memory map spreadsheet, then copy and paste the ;Kernel.asm columns here
+; and ;Kernel_INC.asm column to that file.
+;
+; Naming convention:
 ; Common kernel I/O routines do NOT get a prefix
-; BASIC routines start with B 
-; MONITOR routines start with M 
+; BASIC routines start with B
+; MONITOR routines start with M
 ; The actual routine in ROM should have I in front.
-; 
-; So the BASIC PRINT routine would be labeled "BPRINT" on the jump table and "IBPRINT" in the BASIC.ASM 
-; source file. 
+;
+; So the BASIC PRINT routine would be labeled "BPRINT" on the jump table and "IBPRINT" in the BASIC.ASM
+; source file.
 ;
 
 * = $010000
@@ -62,9 +62,12 @@ CSRDOWN         JML ICSRDOWN
 CSRHOME         JML ICSRHOME
 SCROLLUP        JML ISCROLLUP
 CLRSCREEN       JML ICLRSCREEN
-INITCHLUT	JML IINITCHLUT
-INITSUPERIO	JML IINITSUPERIO
-INITKEYBOARD	JML IINITKEYBOARD
+INITCHLUT	      JML IINITCHLUT
+INITSUPERIO	    JML IINITSUPERIO
+INITKEYBOARD    JML IINITKEYBOARD
+INITVIAS        JML IINITVIAS
+INITRTC         JML IINITRTC
+TESTSID         JML ITESTSID
 ;
 ; End of jump table
 ;

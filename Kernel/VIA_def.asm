@@ -1,0 +1,34 @@
+;$7F:0C00 - $7F:0CFF - CIA1 (see WDC65C22 Datasheets for more details) (C64 KeyBoard)
+VIA0_IO_REG_B     = $7F0C00
+VIA0_IO_REG_A     = $7F0C01
+VIA0_DDR_REG_B    = $7F0C02
+VIA0_DDR_REG_A    = $7F0C03
+VIA0_T1C_L        = $7F0C04
+VIA0_T1C_H        = $7F0C05
+VIA0_T1L_L        = $7F0C06
+VIA0_T1L_H        = $7F0C07
+VIA0_T2C_L        = $7F0C08
+VIA0_T2C_H        = $7F0C09
+VIA0_SR           = $7F0C0A
+VIA0_ACR          = $7F0C0B
+VIA0_PCR          = $7F0C0C
+VIA0_IFR          = $7F0C0D
+VIA0_IER          = $7F0C0E
+VIA0_ORA_IRA      = $7F0C0F
+;$7F:0D00 - $7F:0DFF - CIA2 (see WDC65C22 Datasheets for more details) (IEC & User IO)
+VIA1_IO_REG_B     = $7F0D00
+VIA1_IO_REG_A     = $7F0D01
+VIA1_DDR_REG_B    = $7F0D02
+VIA1_DDR_REG_A    = $7F0D03
+VIA1_T1C_L        = $7F0D04
+VIA1_T1C_H        = $7F0D05
+VIA1_T1L_L        = $7F0D06
+VIA1_T1L_H        = $7F0D07
+VIA1_T2C_L        = $7F0D08
+VIA1_T2C_H        = $7F0D09
+VIA1_SR           = $7F0D0A
+VIA1_ACR          = $7F0D0B
+VIA1_PCR          = $7F0D0C
+VIA1_IFR          = $7F0D0D
+VIA1_IER          = $7F0D0E
+VIA1_ORA_IRA      = $7F0D0F

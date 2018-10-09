@@ -1,0 +1,16 @@
+RTC_SEC       = $7F0800 ;Seconds Register
+RTC_SEC_ALARM = $7F0801 ;Seconds Alarm Register
+RTC_MIN       = $7F0802 ;Minutes Register
+RTC_MIN_ALARM = $7F0803 ;Minutes Alarm Register
+RTC_HRS       = $7F0804 ;Hours Register
+RTC_HRS_ALARM = $7F0805 ;Hours Alarm Register
+RTC_DAY       = $7F0806 ;Day Register
+RTC_DAY_ALARM = $7F0807 ;Day Alarm Register
+RTC_DOW       = $7F0808 ;Day of Week Register
+RTC_MONTH     = $7F0809 ;Month Register
+RTC_YEAR      = $7F080A ;Year Register
+RTC_RATES     = $7F080B ;Rates Register
+RTC_ENABLE    = $7F080C ;Enables Register
+RTC_FLAGS     = $7F080D ;Flags Register
+RTC_CTRL      = $7F080E ;Control Register
+RTC_CENTURY   = $7F080F ;Century Register
