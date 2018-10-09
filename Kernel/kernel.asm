@@ -57,18 +57,41 @@ IBOOT           ; boot the system
                 LDY #64
                 STY LINES_MAX
 
-		; Initialize Super IO Chip
-                JSL IINITSUPERIO
                 ; Initialize the Character Color Foreground/Background LUT First
                 JSL IINITCHLUT
                 ; Now, clear the screen and Setup Foreground/Background Bytes, so we can see the Text on screen
                 JSL ICLRSCREEN
+                ; Write the Greeting Message Here, after Screen Cleared and Colored
+
+greet           setdbr `greet_msg       ;Set data bank to ROM
+                LDX #<>greet_msg
+                JSL IPRINT       ; print the first line
+
+                ; Initialize Super IO Chip
+                JSL IINITSUPERIO
+                LDX #<>init_lpc_msg
+                JSL IPRINT       ; print the Init
+
+                ; Init KeyBoard
+                JSL IINITKEYBOARD
+                LDX #<>init_kbrd_msg
+                JSL IPRINT       ; print the Keybaord Init Message
+
                 ; Init the VIAs (to do some Test)
                 JSL IINITVIAS
+                LDX #<>init_via_msg
+                JSL IPRINT       ; print the VIAs Init Message
+
                 ; Init the RTC (Test the Interface)
                 JSL IINITRTC
+                LDX #<>init_rtc_msg
+                JSL IPRINT       ; print the RTC Init Message
+
                 ; Test SID (writing a bunch a Registers, so we can hear shit!)
                 JSL ITESTSID
+                LDX #<>test_SID_msg
+                JSL IPRINT       ; print the SID Test Message
+
                 ; set the location of the cursor (top left corner of screen)
                 setal
                 LDX #$0
@@ -87,9 +110,9 @@ IBOOT           ; boot the system
                 ; MVP $00, $FF
 
                 ; display boot message
-greet           setdbr `greet_msg       ;Set data bank to ROM
-                LDX #<>greet_msg
-                JSL IPRINT       ; print the first line
+;greet           setdbr `greet_msg       ;Set data bank to ROM
+;                LDX #<>greet_msg
+;                JSL IPRINT       ; print the first line
 ;                JSL IPRINT       ; print the second line
 ;                JSL IPRINT       ; print the third line
 ;                JSL IPRINTCR     ; print a blank line. Just because
@@ -984,6 +1007,12 @@ bg_color_lut	  .text $00, $00, $00, $FF
                 .text $20, $20, $20, $FF
                 .text $80, $80, $80, $FF
                 .text $FF, $FF, $FF, $FF
+
+init_lpc_msg    .text "Init SuperIO...", $0D, $00
+init_kbrd_msg   .text "Init Keyboard...", $0D, $00
+init_via_msg    .text "Init VIAs...", $0D, $00
+init_rtc_msg    .text "Init RTC...", $0D, $00
+test_SID_msg    .text "Testing Right & Left SID", $0D, $00
 
 ready_msg       .null $0D,"READY."
 hello_basic     .null "10 PRINT ""Hello World""",$0D
