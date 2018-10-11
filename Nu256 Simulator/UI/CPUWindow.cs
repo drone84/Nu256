@@ -113,6 +113,9 @@ namespace Nu256.UI
             UpdateStackDisplay();
             Kernel.gpu.Refresh();
 
+            if (messageText.Text.Length > 32000)
+                messageText.Text = messageText.Text.Substring(0, 20000);
+
             if (PrintQueue.Count > 5)
             {
                 string[] lines = new string[messageText.Lines.Length + PrintQueue.Count];

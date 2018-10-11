@@ -19,8 +19,7 @@ namespace Nu256
         public const int MinAddress = 0x000000;
         public const int MaxAddress = 0xffffff;
 
-        public MemoryRAM DRAM = null;
-        public MemoryRAM SRAM = null;
+        public MemoryRAM RAM = null;
         public IODevice IOBuffer = null;
 
         public bool VectorPull = false;
@@ -62,15 +61,15 @@ namespace Nu256
         {
             if (Address >= MemoryMap.SRAM_START && Address <= MemoryMap.SRAM_END)
             {
-                Device = SRAM;
-                DeviceAddress = Address - SRAM.StartAddress;
+                Device = RAM;
+                DeviceAddress = Address - RAM.StartAddress;
                 return;
             }
 
             if(Address >= MemoryMap.DRAM_START && Address <= MemoryMap.DRAM_END)
             {
-                Device = DRAM;
-                DeviceAddress = Address - DRAM.StartAddress;
+                Device = RAM;
+                DeviceAddress = Address - RAM.StartAddress;
                 return;
             }
 

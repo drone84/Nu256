@@ -83,7 +83,7 @@ namespace Nu256
 
         internal int ReadLong(int Address)
         {
-            return ReadByte(Address) + (ReadByte(Address + 1) << 8) + (ReadByte(Address + 1) << 16); 
+            return ReadByte(Address) + (ReadByte(Address + 1) << 8) + (ReadByte(Address + 2) << 16); 
         }
 
         internal void Copy(int SourceAddress, MemoryRAM Destination, int DestAddress, int Length)

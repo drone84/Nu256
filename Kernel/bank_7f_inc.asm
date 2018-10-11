@@ -22,10 +22,8 @@ TXT_CURSOR_FLASH_2   = $04 ; Byte  Bits 1-2: Cursor Flash: 2-1Hz
 TXT_CURSOR_FLASH_3   = $06 ; Byte  Bits 1-2: Cursor Flash: 3-2Hz
 
 TXT_CURSOR_COLOR     = $7F000B ;1 Byte  
-CURSOR_X             = $7F000C ;2 Bytes Cursor Column
 TXT_CURSOR_X_REG_L   = $7F000C ;1 Byte  
 TXT_CURSOR_X_REG_H   = $7F000D ;1 Byte  
-CURSOR_Y             = $7F000E ;2 Bytes Cursor Row
 TXT_CURSOR_Y_REG_L   = $7F000E ;1 Byte  
 TXT_CURSOR_Y_REG_H   = $7F000F ;1 Byte  
 

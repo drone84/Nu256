@@ -93,58 +93,63 @@ IMREADY         ;set the READY handler to jump here instead of BASIC
 ; Arguments: none
 ; Modifies: A,X,Y
 IMSTATUS        ; Print the MONITOR prompt (registers header)
-                setdbr `mregisters_msg
-                LDX #<>mregisters_msg
-                JSL IPRINT
-                
+                setdbr `MONITOR_DATA
+
+                PRINT mregisters_msg
+                setxl
                 setas
+                setdbr $0
                 LDA #';'
                 JSL IPUTC
                 
-                setaxl
-                setdbr $0
                 ; print Program Counter
                 LDY #3
                 LDX #CPUPC+2
                 JSL IPRINTH
                 
                 ; print A register
-                LDA ' '
+                setas 
+                LDA #' '
                 JSL IPUTC
                 LDY #2
                 LDX #CPUA+1
                 JSL IPRINTH
                 
                 ; print X register
-                LDA ' '
+                setas 
+                LDA #' '
                 JSL IPUTC
                 LDY #2
                 LDX #CPUX+1
                 JSL IPRINTH
                 
                 ; print Y register
-                LDA ' '
+                setas 
+                LDA #' '
                 JSL IPUTC
                 LDY #2
                 LDX #CPUY+1
                 JSL IPRINTH
                 
                 ; print Stack Pointer
-                LDA ' '
+                setas 
+                LDA #' '
                 JSL IPUTC
                 LDY #2
                 LDX #CPUSTACK+1
                 JSL IPRINTH
                 
                 ; print DBR
-                LDA ' '
+                setas 
+                LDA #' '
                 JSL IPUTC
                 LDY #1
                 LDX #CPUDBR
                 JSL IPRINTH
                 
                 ; print Direct Page
-                LDA ' '
+                setas 
+                LDA #' '
                 JSL IPUTC
                 JSL IPUTC
                 LDY #2
@@ -152,7 +157,8 @@ IMSTATUS        ; Print the MONITOR prompt (registers header)
                 JSL IPRINTH
                 
                 ; print Flags
-                LDA ' '
+                setas 
+                LDA #' '
                 JSL IPUTC
                 LDY #1
                 LDX #CPUFLAGS
@@ -161,8 +167,20 @@ IMSTATUS        ; Print the MONITOR prompt (registers header)
                 JSL IPRINTCR
                 
                 JML IREADYWAIT
+
+;
+; IMRETURN 
+; Handles the RETURN key.
+; This will process the line of text under the cursor, spliting arguments
+; and placing them in the correct variables in Direct Page
+; It will then execute the command.                 
+IMRETURN        PHA     ; Store the registers 
+                PHX
+                PHY
+                PHP
                 
-IMRETURN        RTL ; Handle RETURN key (ie: execute command)
+
+
 IMPARSE         BRK ; Parse the current command line
 IMPARSE1        BRK ; Parse one word on the current command line
 IMEXECUTE       BRK ; Execute the current command line (requires MCMD and MARG1-MARG8 to be populated)
@@ -187,7 +205,6 @@ IMDOS           BRK ; Execute DOS command
 ; 
 ; MMESSAGES
 ; MONITOR messages and responses.                
-MMESSAGES
-MMERROR         .text                
-
+MONITOR_DATA     
+MMERROR         .null "ERROR"
 mregisters_msg  .null $0D," PC     A    X    Y    SP   DBR DP   NVMXDIZC"

@@ -39,19 +39,25 @@ namespace Nu256
         {
             Memory = new MemoryManager
             {
-                SRAM = new MemoryRAM(MemoryMap.SRAM_START, MemoryMap.SRAM_SIZE), // 1MB SRAM
-                DRAM = new MemoryRAM(MemoryMap.DRAM_START, MemoryMap.DRAM_SIZE), // 8MB DRAM
-                IOBuffer = new IODevice(MemoryMap.IO_START, MemoryMap.IO_SIZE)   // 64K IO space in bank $7F
+                //
+                // The simulator will allocate 16MB of static RAM, but the memory map will
+                // break that down into a 1MB chunk at bank $00-$0F and an 8MB chunk at $80-$FF. 
+                //
+                RAM = new MemoryRAM(0, MemoryMap.SYSTEM_SIZE), 
+                //
+                // The IO Buffer will be allocated for the IO space in bank $7F
+                // The IO Buffer can hold separate values for input and output, unlike the 
+                // emulated RAM. 
+                IOBuffer = new IODevice(MemoryMap.IO_START, MemoryMap.IO_SIZE)
             };
             this.CPU = new CPU(Memory);
             this.CPU.SimulatorCommand += CPU_SimulatorCommand;
             this.gpu = gpu;
-            gpu.VRAM = Memory.DRAM;
-            gpu.CodeRAM = Memory.SRAM;
-            gpu.LoadCharacterData(Memory.DRAM, Memory.SRAM);
+            gpu.VRAM = Memory.RAM;
+            gpu.LoadCharacterData(Memory.RAM);
 
             KeyboardBuffer = new MemoryBuffer(
-                Memory.SRAM,
+                Memory.RAM,
                 MemoryMap.KEY_BUFFER,
                 MemoryMap.KEY_BUFFER_SIZE,
                 MemoryMap.KEY_BUFFER_RPOS,
@@ -90,7 +96,7 @@ namespace Nu256
             MemoryRAM flashROM = new MemoryRAM(0, 16 * 65536);
             this.ReadyHandler = Monitor;
             HexFile.Load(flashROM, @"ROMs\kernel.hex");
-            flashROM.Copy(0, Memory.SRAM, 0, 2 * 65536);
+            flashROM.Copy(0, Memory.RAM, 0, 2 * 65536);
             CPU.Reset();
 
             //CPUTest test= new CPUTest(this);

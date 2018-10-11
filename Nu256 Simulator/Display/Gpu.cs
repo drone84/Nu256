@@ -23,15 +23,17 @@ namespace Nu256.Display
         const int MAX_TEXT_LINES = 64;
         const int SCREEN_PAGE_SIZE = 128 * 64;
 
-        private int startAddress;
         private int length = 128 * 64 * 4; //Text mode uses 32K, 4 planes of 8K each.
-        private int endAddress;
 
+        [Browsable(false)]
         public int StartAddress
         {
             get
             {
-                return characterMatrixStart;
+                if (VRAM == null)
+                    return -1;
+
+                return VRAM.ReadLong(MemoryMap.SCREENBEGIN);
             }
         }
 
@@ -47,12 +49,13 @@ namespace Nu256.Display
         {
             get
             {
-                return startAddress + length - 1;
+                if (StartAddress < 0)
+                    return -1;
+                return StartAddress + length - 1;
             }
         }
 
         public MemoryRAM VRAM = null;
-        public MemoryRAM CodeRAM = null;
 
         // Video page 0 is 0x1000. Each page is 8192 (128x64) bytes long.
         private int characterMatrixStart = MemoryLocations.MemoryMap.SCREEN_PAGE0;
@@ -101,9 +104,9 @@ namespace Nu256.Display
 
         private int GetCharPos(int row, int col)
         {
-            if (CodeRAM == null)
+            if (VRAM == null)
                 return 0;
-            int baseAddress = CodeRAM.ReadLong(MemoryMap.SCREENBEGIN);
+            int baseAddress = VRAM.ReadLong(MemoryMap.SCREENBEGIN);
             return baseAddress + row * COLS_PER_LINE + col;
         }
 
@@ -115,10 +118,10 @@ namespace Nu256.Display
         {
             get
             {
-                if (CodeRAM == null)
+                if (VRAM == null)
                     return 0;
 
-                return CodeRAM.ReadByte(MemoryMap.CURSORX);
+                return VRAM.ReadByte(MemoryMap.CURSOR_X);
             }
             set
             {
@@ -127,8 +130,8 @@ namespace Nu256.Display
                     x = 0;
                 if (x >= ColumnsVisible)
                     x = ColumnsVisible - 1;
-                if (CodeRAM != null)
-                    CodeRAM.WriteByte(MemoryMap.CURSORX, (byte)x);
+                if (VRAM != null)
+                    VRAM.WriteByte(MemoryMap.CURSOR_X, (byte)x);
                 ResetDrawTimer();
                 CursorPos = GetCharPos(Y, x);
             }
@@ -142,10 +145,10 @@ namespace Nu256.Display
         {
             get
             {
-                if (CodeRAM == null)
+                if (VRAM == null)
                     return 0;
 
-                return CodeRAM.ReadByte(MemoryMap.CURSORY);
+                return VRAM.ReadByte(MemoryMap.CURSOR_Y);
             }
             set
             {
@@ -154,8 +157,8 @@ namespace Nu256.Display
                     y = 0;
                 if (y >= LinesVisible)
                     y = LinesVisible - 1;
-                if (CodeRAM != null)
-                    CodeRAM.WriteByte(MemoryMap.CURSORY, (byte)y);
+                if (VRAM != null)
+                    VRAM.WriteByte(MemoryMap.CURSOR_Y, (byte)y);
                 ResetDrawTimer();
                 CursorPos = GetCharPos(y, X);
             }
@@ -166,14 +169,14 @@ namespace Nu256.Display
         {
             get
             {
-                if (CodeRAM == null)
+                if (VRAM == null)
                     return 0;
 
-                return CodeRAM.ReadByte(MemoryMap.COLS_VISIBLE);
+                return VRAM.ReadByte(MemoryMap.COLS_VISIBLE);
             }
             set
             {
-                if (CodeRAM == null)
+                if (VRAM == null)
                     return;
 
                 int i = value;
@@ -181,7 +184,7 @@ namespace Nu256.Display
                     i = 0;
                 if (i > MAX_TEXT_COLS)
                     i = MAX_TEXT_COLS;
-                CodeRAM.WriteWord(MemoryMap.COLS_VISIBLE, i);
+                VRAM.WriteWord(MemoryMap.COLS_VISIBLE, i);
             }
         }
 
@@ -190,13 +193,13 @@ namespace Nu256.Display
         {
             get
             {
-                if (CodeRAM == null)
+                if (VRAM == null)
                     return 0;
-                return CodeRAM.ReadByte(MemoryMap.LINES_VISIBLE);
+                return VRAM.ReadByte(MemoryMap.LINES_VISIBLE);
             }
             set
             {
-                if (CodeRAM == null)
+                if (VRAM == null)
                     return;
 
                 int i = value;
@@ -204,7 +207,7 @@ namespace Nu256.Display
                     i = 0;
                 if (i > MAX_TEXT_LINES)
                     i = MAX_TEXT_LINES;
-                CodeRAM.WriteWord(MemoryMap.LINES_VISIBLE, i);
+                VRAM.WriteWord(MemoryMap.LINES_VISIBLE, i);
             }
         }
 
@@ -212,14 +215,14 @@ namespace Nu256.Display
         {
             get
             {
-                if (CodeRAM == null)
+                if (VRAM == null)
                     return 0;
 
-                return CodeRAM.ReadByte(MemoryMap.COLS_PER_LINE);
+                return VRAM.ReadByte(MemoryMap.COLS_PER_LINE);
             }
             set
             {
-                if (CodeRAM == null)
+                if (VRAM == null)
                     return;
 
                 int i = value;
@@ -227,7 +230,7 @@ namespace Nu256.Display
                     i = 0;
                 if (i > MAX_TEXT_COLS)
                     i = MAX_TEXT_COLS;
-                CodeRAM.WriteWord(MemoryMap.COLS_PER_LINE, i);
+                VRAM.WriteWord(MemoryMap.COLS_PER_LINE, i);
             }
         }
 
@@ -269,10 +272,9 @@ namespace Nu256.Display
             }
         }
 
-        public void LoadCharacterData(MemoryRAM VideoRAM, MemoryRAM CodeRAM)
+        public void LoadCharacterData(MemoryRAM RAM)
         {
-            this.VRAM = VideoRAM;
-            this.CodeRAM = CodeRAM;
+            this.VRAM = RAM;
             LoadCharacterSet("ASCII-PET", @"Resources\FOENIX-CHARACTER-ASCII.bin", 0, CharacterSet.CharTypeCodes.ASCII_PET, CharacterSet.SizeCodes.Size8x8);
             //LoadCharacterSet("ASCII-PET", @"Resources\FOENIX-CHARACTER-ASCII.bin", 0, CharacterSet.CharTypeCodes.ASCII_PET, CharacterSet.SizeCodes.Size8x8);
             //LoadCharacterSet("PETSCII_GRAPHICS", @"Resources\PETSCII.901225-01.bin", 0, CharacterSet.CharTypeCodes.PETSCII_GRAPHICS, CharacterSet.SizeCodes.Size8x8);
@@ -365,16 +367,16 @@ namespace Nu256.Display
         {
             get
             {
-                if (CodeRAM == null)
+                if (VRAM == null)
                     return 0;
-                return CodeRAM.ReadWord(MemoryMap.CURSORPOS);
+                return VRAM.ReadWord(MemoryMap.CURSORPOS);
             }
 
             set
             {
-                if (CodeRAM == null)
+                if (VRAM == null)
                     return;
-                CodeRAM.WriteWord(MemoryMap.CURSORPOS, value);
+                VRAM.WriteWord(MemoryMap.CURSORPOS, value);
             }
         }
 
@@ -392,12 +394,11 @@ namespace Nu256.Display
                 g.DrawString("VRAM Not initialized", this.Font, TextBrush, 0, 0);
                 return;
             }
-            if (CodeRAM == null)
+            if (StartAddress < VRAM.StartAddress || (StartAddress + Length) > VRAM.EndAddress)
             {
-                g.DrawString("CodeRAM Not initialized", this.Font, TextBrush, 0, 0);
+                g.DrawString("StartAddress(" + StartAddress.ToString() + ") or Length(" + Length.ToString() + ") invalid", this.Font, TextBrush, 0, 0);
                 return;
             }
-
             if (ColumnsVisible < 1 || ColumnsVisible > 128)
             {
                 g.DrawString("ColumnsVisible invalid:" + ColumnsVisible.ToString(), this.Font, TextBrush, 0, 0);
@@ -408,7 +409,7 @@ namespace Nu256.Display
                 g.DrawString("LinesVisible invalid:" + LinesVisible.ToString(), this.Font, TextBrush, 0, 0);
                 return;
             }
-
+            characterMatrixStart = StartAddress;
             //DrawVectorText(e.Graphics);
             DrawBitmapText(e.Graphics);
         }
@@ -514,8 +515,8 @@ namespace Nu256.Display
 
             g.Clear(Color.Blue);
 
-            //this._cursorCol = Memory.ReadByte(MemoryMap_DirectPage.CURSORX);
-            //this._cursorRow = Memory.ReadByte(MemoryMap_DirectPage.CURSORY);
+            //this._cursorCol = Memory.ReadByte(MemoryMap_DirectPage.CURSOR_X);
+            //this._cursorRow = Memory.ReadByte(MemoryMap_DirectPage.CURSOR_Y);
 
             int col = 0, line = 0;
             int screenStart = characterMatrixStart - VRAM.StartAddress;

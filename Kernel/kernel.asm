@@ -4,9 +4,9 @@
 .include "bank_00_inc.asm"
 .include "bank_00_data.asm"
 .include "bank_00_code.asm"
+.include "bank_02_inc.asm"
+.include "bank_7f_inc.asm"
 .include "dram_inc.asm"
-.include "vicky_def.asm"
-.include "super_io_def.asm"
 .include "keyboard_def.asm"
 .include "monitor.asm"
 
@@ -20,8 +20,6 @@
 
 * = $010400
 
-* = $010400
-
 IBOOT           ; boot the system
                 CLC                 ; clear the carry flag
                 XCE                 ; move carry to emulation flag.
@@ -29,16 +27,16 @@ IBOOT           ; boot the system
                 LDA #STACK_END      ; initialize stack pointer
                 TAS
                 setdp 0
-                LDA #<>SCREEN_PAGE0 ; store initial screen buffer location
+                LDA #<>TEXT_PAGE0 ; store initial screen buffer location
                 STA SCREENBEGIN
                 setas
-                LDA #`SCREEN_PAGE0
+                LDA #`TEXT_PAGE0
                 STA SCREENBEGIN+2
                 setaxl
-                LDA #<>SCREEN_PAGE0 ; store initial screen buffer location
+                LDA #<>TEXT_PAGE0 ; store initial screen buffer location
                 STA CURSORPOS
                 setas
-                LDA #`SCREEN_PAGE0
+                LDA #`TEXT_PAGE0
                 STA CURSORPOS+2
                 setaxl
 
@@ -55,9 +53,9 @@ IBOOT           ; boot the system
                 STY LINES_MAX
 
                 ; Initialize Super IO Chip
-                JSL IINITSUPERIO
+                ;JSL IINITSUPERIO
                 ; Initialize the Character Color Foreground/Background LUT First
-                JSL IINITCHLUT
+                ;JSL IINITCHLUT
                 ; Now, clear the screen and Setup Foreground/Background Bytes,
                 ; so we can see the Text on screen
                 JSL ICLRSCREEN
@@ -70,13 +68,6 @@ IBOOT           ; boot the system
                 ; reset keyboard buffer
                 STZ KEY_BUFFER_RPOS
                 STZ KEY_BUFFER_WPOS
-
-                ; ; Copy vectors from ROM to Direct Page
-                ; setaxl
-                ; LDA #$FF
-                ; LDX #$FF00
-                ; LDY #$FF00
-                ; MVP $00, $FF
 
                 ; display boot message
 greet           setdbr `greet_msg       ;Set data bank to ROM
@@ -228,29 +219,26 @@ iputs_done      INX
                 RTL
 
 ;
-;IPUTC
-; Print a single character to a channel.
-; Handles terminal sequences, based on the selected text mode
-; Modifies: none
+; IPUTC
+;  Print a single character to a channel.
+;  Handles terminal sequences, based on the selected text mode
+;  Input: A: character to print 
+;         Direct Page: Must be 0
+;  Modifies: None
 ;
-IPUTC           PHD
-                PHP             ; stash the flags (we'll be changing M)
-                setdp 0
+IPUTC           .dpage 0
                 setas
                 CMP #$0D        ; handle CR
                 BNE iputc_bs
                 JSL IPRINTCR
-                bra iputc_done
+                BRA iputc_done
 iputc_bs        CMP #$08        ; backspace
                 BNE iputc_print
                 JSL IPRINTBS
                 BRA iputc_done
 iputc_print     STA [CURSORPOS] ; Save the character on the screen
                 JSL ICSRRIGHT
-iputc_done	sim_refresh
-                PLP
-                PLD
-                RTL
+iputc_done	RTL
 
 ;
 ;IPUTB
@@ -269,28 +257,32 @@ IPUTB
 ; Prints a carriage return.
 ; This moves the cursor to the beginning of the next line of text on the screen
 ; Modifies: Flags
-IPRINTCR	PHX
+; Notes: Direct Page Register must be set to 0. 
+IPRINTCR	PHA 
+                PHX
                 PHY
                 PHP
                 LDX #0
-                LDY CURSORY
+                LDY CURSOR_Y
                 INY
                 JSL ILOCATE
                 PLP
                 PLY
                 PLX
+                PLA 
                 RTL
 
 ;
 ; IPRINTBS
-; Prints a carriage return.
+; Prints a backspace
 ; This moves the cursor to the beginning of the next line of text on the screen
 ; Modifies: Flags
+; Notes: Direct Page Register must be set to 0. 
 IPRINTBS	PHX
                 PHY
                 PHP
-                LDX CURSORX
-                LDY CURSORY
+                LDX CURSOR_X
+                LDY CURSOR_Y
                 DEX
                 JSL ILOCATE
                 PLP
@@ -306,36 +298,40 @@ IPRINTBS	PHX
 ICSRRIGHT	; move the cursor right one space
                 PHX
                 PHB
+                PHP 
                 setal
                 setxl
                 setdp $0
                 INC CURSORPOS
-                LDX CURSORX
+                LDX CURSOR_X
                 INX
                 CPX COLS_VISIBLE
                 BCC icsr_nowrap  ; wrap if the cursor is at or past column 80
                 LDX #0
                 PHY
-                LDY CURSORY
+                LDY CURSOR_Y
                 INY
                 JSL ILOCATE
                 PLY
-icsr_nowrap     STX CURSORX
+icsr_nowrap     STX CURSOR_X
+                PLP 
                 PLB
                 PLX
                 RTL
 
-ISRLEFT	RTL
-ICSRUP	RTL
+ISRLEFT	        RTL
+ICSRUP	        RTL
 ICSRDOWN	RTL
 
-;ILOCATE
-;Sets the cursor X and Y positions to the X and Y registers
-;Direct Page must be set to 0
-;Input:
-; X: column to set cursor
-; Y: row to set cursor
-;Modifies: none
+;
+; ILOCATE
+; Sets the cursor X and Y positions to the X and Y registers
+; Direct Page must be set to 0
+; Input:
+;  Direct Page: Must be 0
+;  X: column to set cursor
+;  Y: row to set cursor
+; Modifies: none
 ILOCATE         PHA
                 PHP
                 setaxl
@@ -349,9 +345,9 @@ ilocate_scroll  ; If the cursor is below the bottom row of the screen
                 ; repeat until the cursor is visible again
                 BRA ilocate_scroll
 ilocate_scrolldone
-                ; done scrolling store the resultant cursor positions.
-                STX CURSORX
-                STY CURSORY
+                ; store row and column in the display registers 
+                STX CURSOR_X
+                STY CURSOR_Y
                 LDA SCREENBEGIN
 ilocate_row     ; compute the row
                 CPY #$0
@@ -364,10 +360,16 @@ ilocate_down    CLC
                 BRA ilocate_down
                 ; compute the column
 ilocate_right   CLC
-                ADC CURSORX             ; move the cursor right X columns
+                ADC CURSOR_X             ; move the cursor right X columns
                 STA CURSORPOS
-                LDY CURSORY
-ilocate_done    PLP
+                LDY CURSOR_Y
+                
+ilocate_done    ; Copy the cursor locations (X and Y) to the VICKY registers 
+                TXA
+                STA TXT_CURSOR_X_REG_L
+                TYA
+                STA TXT_CURSOR_Y_REG_L
+                PLP
                 PLA
                 RTL
 ;
@@ -385,20 +387,29 @@ ISCROLLUP       ; Scroll the screen up by one row
                 PHY
                 PHB
                 PHP
-                setaxl
-                ; Set block move source to second row
-                CLC
-                LDA SCREENBEGIN
-                TAY             ; Destination is first row
-                ADC COLS_PER_LINE
-                TAX             ; Source is second row
-                ;TODO compute screen bottom with multiplier
-                ;(once implemented)
-                ; for now, should be 8064 or $1f80 bytes
-                LDA #SCREEN_PAGE1-SCREEN_PAGE0-COLS_PER_LINE
-                ; Move the data
-                MVP $00,$00
+                setaxl 
 
+                LDX #<>TEXT_PAGE0+128
+                LDY #<>TEXT_PAGE0
+                LDA #8063
+                MVP `TEXT_PAGE0,`TEXT_PAGE0
+
+                LDX #<>TEXT_PAGE1+128
+                LDY #<>TEXT_PAGE1
+                LDA #8063
+                MVP `TEXT_PAGE0,`TEXT_PAGE0
+
+                LDX #<>TEXT_PAGE2+128
+                LDY #<>TEXT_PAGE2
+                LDA #8063
+                MVP `TEXT_PAGE0,`TEXT_PAGE0
+
+                LDX #<>TEXT_PAGE3+128
+                LDY #<>TEXT_PAGE3
+                LDA #8063
+                MVP `TEXT_PAGE0,`TEXT_PAGE0
+
+iscrollup_done
                 PLP
                 PLB
                 PLY
@@ -414,8 +425,8 @@ ISCROLLUP       ; Scroll the screen up by one row
 ;   Y: Length in bytes of data to print
 ; Modifies:
 ;   X,Y, results undefined
-IPRINTH         PHP
-                PHA
+IPRINTH         PHA 
+                PHP
 iprinth1        setas
                 LDA #0,b,x      ; Read the value to be printed
                 LSR
@@ -428,8 +439,8 @@ iprinth1        setas
                 DEX
                 DEY
                 BNE iprinth1
-                PLA
                 PLP
+                PLA
                 RTL
 
 ;
@@ -454,31 +465,30 @@ iprint_digit    PHX
 ; ICLRSCREEN
 ; Clear the screen and set the background and foreground colors to the
 ; currently selected colors.
-ICLRSCREEN	    PHD
-                PHP
+ICLRSCREEN	PHD
                 PHA
-                PHX
-                setas
-                setxl 			; Set 16bits
-                LDX #$0000		; Only Use One Pointer
+                PHY
+                PHP
+                setas                   
+                setxl 			
+
+                LDY #$0000		; We'll use X to loop through screen memory 
                 LDA #$20		; Fill the Entire Screen with Space
-iclearloop0     STA $800000,x	;
-                inx
-                cpx #$2000
-                bne iclearloop0
+iclearloop0     STA [SCREENBEGIN],Y	;
+                INY
+                CPY #TEXT_PAGE_SIZE
+                BNE iclearloop0
+                
                 ; Now Set the Colors so we can see the text
-                LDX	#$0000		; Only Use One Pointer
                 LDA #$ED		; Fill the Color Memory with Foreground: 75% Purple, Background 12.5% White
-iclearloop1   	STA $802000,x	;
-                INX
-                CPX #$2000
+iclearloop1   	STA [SCREENBEGIN],Y	;
+                INY
+                CPY #TEXT_PAGE_SIZE*2
                 BNE iclearloop1
 
-                setxl
-                setal
-                PLX
-                PLA
                 PLP
+                PLY
+                PLA
                 PLD
                 RTL
 ;
@@ -808,47 +818,47 @@ greet_msg       .text $20, $20, $20, $20, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9
                 .text $20, $20, $20, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $20, "OPEN SOURCE COMPUTER",$0D
                 .text $20, $20, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $20, $20, "HARDWARE DESIGNER: STEFANY ALLAIRE",$0D
                 .text $20, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $20, $20, $20, "SOFTWARE DESIGNER: TOM WILSON",$0D
-                .text $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $20, $20, $20, $20, "1024KB BASIC RAM  8192K MEDIA RAM",$00
+                .text $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $EC, $A9, $20, $20, $20, $20, "1024KB BASIC RAM  8192K MEDIA RAM",$0D,$00
 
-greet_clr_line1 .text $1D, $1D, $1D, $1D, $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D
-greet_clr_line2 .text $1D, $1D, $1D, $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D, $5D
-greet_clr_line3 .text $1D, $1D, $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D, $5D, $5D
-greet_clr_line4 .text $1D, $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D, $5D, $5D, $5D
-greet_clr_line5 .text $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D, $5D, $5D, $5D, $5D
+greet_clr_line1 .byte $1D, $1D, $1D, $1D, $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D
+greet_clr_line2 .byte $1D, $1D, $1D, $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D, $5D
+greet_clr_line3 .byte $1D, $1D, $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D, $5D, $5D
+greet_clr_line4 .byte $1D, $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D, $5D, $5D, $5D
+greet_clr_line5 .byte $1D, $1D, $8D, $8D, $4D, $4D, $2D, $2D, $5D, $5D, $5D, $5D, $5D, $5D
 
-fg_color_lut	.text $00, $00, $00, $FF
-                .text $00, $00, $C0, $FF
-                .text $00, $C0, $00, $FF
-                .text $C0, $00, $00, $FF
-                .text $00, $C0, $C0, $FF
-                .text $C0, $C0, $00, $FF
-                .text $C0, $00, $C0, $FF
-                .text $C0, $C0, $C0, $FF
-                .text $00, $7F, $FF, $FF
-                .text $13, $45, $8B, $FF
-                .text $00, $00, $40, $FF
-                .text $00, $40, $00, $FF
-                .text $40, $00, $00, $FF
-                .text $40, $40, $40, $FF
-                .text $80, $80, $80, $FF
-                .text $FF, $FF, $FF, $FF
+fg_color_lut	.byte $00, $00, $00, $FF
+                .byte $00, $00, $C0, $FF
+                .byte $00, $C0, $00, $FF
+                .byte $C0, $00, $00, $FF
+                .byte $00, $C0, $C0, $FF
+                .byte $C0, $C0, $00, $FF
+                .byte $C0, $00, $C0, $FF
+                .byte $C0, $C0, $C0, $FF
+                .byte $00, $7F, $FF, $FF
+                .byte $13, $45, $8B, $FF
+                .byte $00, $00, $40, $FF
+                .byte $00, $40, $00, $FF
+                .byte $40, $00, $00, $FF
+                .byte $40, $40, $40, $FF
+                .byte $80, $80, $80, $FF
+                .byte $FF, $FF, $FF, $FF
 
-bg_color_lut	.text $00, $00, $00, $FF
-                .text $00, $00, $C0, $FF
-                .text $00, $C0, $00, $FF
-                .text $C0, $00, $00, $FF
-                .text $00, $40, $40, $FF
-                .text $40, $40, $00, $FF
-                .text $40, $00, $40, $FF
-                .text $40, $40, $40, $FF
-                .text $1E, $69, $D2, $FF
-                .text $13, $45, $8B, $FF
-                .text $00, $00, $40, $FF
-                .text $00, $40, $00, $FF
-                .text $40, $00, $00, $FF
-                .text $20, $20, $20, $FF
-                .text $80, $80, $80, $FF
-                .text $FF, $FF, $FF, $FF
+bg_color_lut	.byte $00, $00, $00, $FF
+                .byte $00, $00, $C0, $FF
+                .byte $00, $C0, $00, $FF
+                .byte $C0, $00, $00, $FF
+                .byte $00, $40, $40, $FF
+                .byte $40, $40, $00, $FF
+                .byte $40, $00, $40, $FF
+                .byte $40, $40, $40, $FF
+                .byte $1E, $69, $D2, $FF
+                .byte $13, $45, $8B, $FF
+                .byte $00, $00, $40, $FF
+                .byte $00, $40, $00, $FF
+                .byte $40, $00, $00, $FF
+                .byte $20, $20, $20, $FF
+                .byte $80, $80, $80, $FF
+                .byte $FF, $FF, $FF, $FF
 
 ready_msg       .null $0D,"READY."
 hello_basic     .null "10 PRINT ""Hello World""",$0D
