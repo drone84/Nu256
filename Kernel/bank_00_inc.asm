@@ -3,25 +3,35 @@
 ;
 ;* Addresses are the byte AFTER the block. Use this to confirm block locations and check for overlaps
 BANK0_BEGIN      = $000000 ;Start of bank 0 and Direct page
-unused_0000      = $000000 ;12 Bytes unused
-SCREENBEGIN      = $00000C ;3 Bytes Start of screen in video RAM. This is the upper-left corrner of the current video page being written to. This may not be what VICKY is displaying, especiall if you are using mirror mode.
-COLS_VISIBLE     = $00000F ;2 Bytes Columns visible per screen line. A virtual line can be longer than displayed, up to COLS_PER_LINE long. Default = 80
-COLS_PER_LINE    = $000011 ;2 Bytes Columns in memory per screen line. A virtual line can be this long. Default=128
-LINES_VISIBLE    = $000013 ;2 Bytes The number of rows visible on the screen. Default=25
-LINES_MAX        = $000015 ;2 Bytes The number of rows in memory for the screen. Default=64
-CURSORPOS        = $000017 ;3 Bytes The next character written to the screen will be written in this location. 
-CURSORROW        = $00001A ;3 Bytes Address of the beginning of the current text row
-MIRROR_MODE      = $00001D ;1 Byte  1=Mirror Mode enabled. Reserve 32K (somewhere) in SRAM for a display mirror. 0=Disable Mirror Mode and write directly to VICKY. 
-CURSOR_X         = $00001E ;2 Bytes Address of the beginning of the current text row
-CURSOR_Y         = $000020 ;2 Bytes 1=Mirror Mode enabled. Reserve 32K (somewhere) in SRAM for a display mirror. 0=Disable Mirror Mode and write directly to VICKY. 
-CURCOLOR         = $000022 ;2 Bytes Color of next character to be printed to the screen. 
-CURATTR          = $000024 ;2 Bytes Attribute of next character to be printed to the screen.
-STACKBOT         = $000026 ;2 Bytes Lowest location the stack should be allowed to write to. If SP falls below this value, the runtime should generate STACK OVERFLOW error and abort.
-STACKTOP         = $000028 ;2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort. 
-KERNEL_TEMP      = $0000D0 ;32 Bytes Temp space for kernel
-USER_TEMP        = $0000F0 ;32 Bytes Temp space for user programs
+CPU_REGISTERS    = $000000 ; Byte  
+CPUPC            = $000000 ;2 Bytes Program Counter (PC)
+CPUPBR           = $000002 ;1 Byte  Program Bank Register (K)
+CPUA             = $000003 ;2 Bytes Accumulator (A)
+CPUX             = $000005 ;2 Bytes X Register (X)
+CPUY             = $000007 ;2 Bytes Y Register (Y)
+CPUSTACK         = $000009 ;2 Bytes Stack Pointer (S)
+CPUDP            = $00000B ;2 Bytes Direct Page Register (D)
+CPUDBR           = $00000D ;1 Byte  Data Bank Register (B)
+CPUFLAGS         = $00000E ;1 Byte  Flags (P)
+SCREENBEGIN      = $000010 ;3 Bytes Start of screen in video RAM. This is the upper-left corrner of the current video page being written to. This may not be what VICKY is displaying, especiall if you are using mirror mode.
+COLS_VISIBLE     = $000013 ;2 Bytes Columns visible per screen line. A virtual line can be longer than displayed, up to COLS_PER_LINE long. Default = 80
+COLS_PER_LINE    = $000015 ;2 Bytes Columns in memory per screen line. A virtual line can be this long. Default=128
+LINES_VISIBLE    = $000017 ;2 Bytes The number of rows visible on the screen. Default=25
+LINES_MAX        = $000019 ;2 Bytes The number of rows in memory for the screen. Default=64
+CURSORPOS        = $00001B ;3 Bytes The next character written to the screen will be written in this location. 
+CURSORROW        = $00001E ;3 Bytes Address of the beginning of the current text row
+MIRROR_MODE      = $000021 ;1 Byte  1=Mirror Mode enabled. Reserve 32K (somewhere) in SRAM for a display mirror. 0=Disable Mirror Mode and write directly to VICKY. 
+CURSOR_X         = $000022 ;2 Bytes Address of the beginning of the current text row
+CURSOR_Y         = $000024 ;2 Bytes 1=Mirror Mode enabled. Reserve 32K (somewhere) in SRAM for a display mirror. 0=Disable Mirror Mode and write directly to VICKY. 
+CURCOLOR         = $000026 ;2 Bytes Color of next character to be printed to the screen. 
+CURATTR          = $000028 ;2 Bytes Attribute of next character to be printed to the screen.
+STACKBOT         = $00002A ;2 Bytes Lowest location the stack should be allowed to write to. If SP falls below this value, the runtime should generate STACK OVERFLOW error and abort.
+STACKTOP         = $00002C ;2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort. 
+KERNEL_TEMP      = $0000C0 ;32 Bytes Temp space for kernel
+USER_TEMP        = $0000E0 ;32 Bytes Temp space for user programs
+Page0_Check      = $000100 ; Byte  Expected $0000100
 
-GAVIN_BLOCK      = $000100 ;256 Bytes Gavin reserved, overlaps debugging registers at $1F0
+GAVIN_BLOCK      = $000100 ;256 Bytes Gavin reserved
 MULTIPLIER_0     = $000100 ;0 Byte  Unsigned multiplier
 M0_OPERAND_A     = $000100 ;2 Bytes Operand A (ie: A x B)
 M0_OPERAND_B     = $000102 ;2 Bytes Operand B (ie: A x B)
@@ -43,50 +53,11 @@ D1_REMAINDER     = $00011E ;2 Bytes Signed remainder of A/B ex: 1 in 7/2=3 r 1
 GAVIN_MISC       = $000120 ;224 Bytes GAVIN vector controller (TBD)
 VECTOR_STATE     = $0001FF ;1 Byte  Interrupt Vector State. See VECTOR_STATE_ENUM
 
-CPU_REGISTERS    = $000200 ; Byte  
-CPUPC            = $000200 ;2 Bytes Program Counter (PC)
-CPUPBR           = $000202 ;1 Byte  Program Bank Register (K)
-CPUA             = $000203 ;2 Bytes Accumulator (A)
-CPUX             = $000205 ;2 Bytes X Register (X)
-CPUY             = $000207 ;2 Bytes Y Register (Y)
-CPUSTACK         = $000209 ;2 Bytes Stack Pointer (S)
-CPUDP            = $00020B ;2 Bytes Direct Page Register (D)
-CPUDBR           = $00020D ;1 Byte  Data Bank Register (B)
-CPUFLAGS         = $00020E ;1 Byte  Flags (P)
-
-MONITOR_VARS     = $000210 ; Byte  MONITOR Variables. BASIC variables may overlap this space
-MCMDADDR         = $000210 ;3 Bytes Address of the current line of text being processed by the command parser. Can be in display memory or a variable in memory. MONITOR will parse up to MTEXTLEN characters or to a null character.
-MCMP_TEXT        = $000213 ;3 Bytes Address of symbol being evaluated for COMPARE routine
-MCMP_LEN         = $000216 ;2 Bytes Length of symbol being evaluated for COMPARE routine
-MCMD             = $000218 ;3 Bytes Address of the current command/function string
-MCMD_LEN         = $00021B ;2 Bytes Length of the current command/function string
-MARG1            = $00021D ;4 Bytes First command argument. May be data or address, depending on command
-MARG2            = $000221 ;4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
-MARG3            = $000225 ;4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
-MARG4            = $000229 ;4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
-MARG5            = $00022D ;4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
-MARG6            = $000231 ;4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
-MARG7            = $000235 ;4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
-MARG8            = $000239 ;4 Bytes First command argument. May be data or address, depending on command. Data is 32-bit number. Address is 24-bit address and 8-bit length.
-
-LOADFILE_VARS    = $000300 ; Byte  
-LOADFILE_NAME    = $000300 ;3 Bytes (addr) Name of file to load. Address in Data Page
-LOADFILE_LEN     = $000303 ;1 Byte  Length of filename. 0=Null Terminated
-LOADPBR          = $000304 ;1 Byte  First Program Bank of loaded file ($05 segment)
-LOADPC           = $000305 ;2 Bytes Start address of loaded file ($05 segment)
-LOADDBR          = $000307 ;1 Byte  First data bank of loaded file ($06 segment)
-LOADADDR         = $000308 ;2 Bytes FIrst data address of loaded file ($06 segment)
-LOADFILE_TYPE    = $00030A ;3 Bytes (addr) File type string in loaded data file. Actual string data will be in Bank 1. Valid values are BIN, PRG, P16
-BLOCK_LEN        = $00030D ;2 Bytes Length of block being loaded
-BLOCK_ADDR       = $00030F ;2 Bytes (temp) Address of block being loaded
-BLOCK_BANK       = $000311 ;1 Byte  (temp) Bank of block being loaded
-BLOCK_COUNT      = $000312 ;2 Bytes (temp) Counter of bytes read as file is loaded
-
-KEY_BUFFER       = $000F00 ;64 Bytes keyboard buffer
-KEY_BUFFER_SIZE  = $40 ;64 Bytes (constant) keyboard buffer length
-KEY_BUFFER_END   = $000F40 ;1 Byte  Last byte of keyboard buffer
-KEY_BUFFER_RPOS  = $000F41 ;2 Bytes keyboard buffer read position
-KEY_BUFFER_WPOS  = $000F43 ;2 Bytes keyboard buffer write position
+KEY_BUFFER       = $000200 ;64 Bytes keyboard buffer
+KEY_BUFFER_SIZE  = $40     ;64 Bytes (constant) keyboard buffer length
+KEY_BUFFER_END   = $000240 ;1 Byte  Last byte of keyboard buffer
+KEY_BUFFER_RPOS  = $000241 ;2 Bytes keyboard buffer read position
+KEY_BUFFER_WPOS  = $000243 ;2 Bytes keyboard buffer write position
 
 TEST_BEGIN       = $001000 ;28672 Bytes Test/diagnostic code for prototype.
 TEST_END         = $007FFF ;0 Byte  

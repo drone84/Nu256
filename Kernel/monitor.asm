@@ -65,6 +65,7 @@ IMONITOR        CLC           ; clear the carry flag
 ; Print the status prompt, then wait for input
 ;
 IMREADY         ;set the READY handler to jump here instead of BASIC
+                setdbr `JMP_READY
                 setaxl 
                 LDA #<>IMREADY
                 STA JMP_READY+1
@@ -174,14 +175,81 @@ IMSTATUS        ; Print the MONITOR prompt (registers header)
 ; This will process the line of text under the cursor, spliting arguments
 ; and placing them in the correct variables in Direct Page
 ; It will then execute the command.                 
-IMRETURN        PHA     ; Store the registers 
-                PHX
-                PHY
-                PHP
+IMRETURN        JSL IMPARSE 
+                RTL 
+;
+; IMPARSE
+; Parse the current command line. 
+; Places the command in MCMD  
+; Places the numeric arguments in MARG1-MARG8
+; If the command has string arguments, the value in MARG will be the address+length of the string
+; Registers affected: All. Save any register data before calling this procedure. 
+IMPARSE         PHP
+                setaxl 
+                setdp 0
+                
+                ; MCMP_LEN stores the number of bytes parsed 
+                ; if this passes the edge of the screen, complete the parse operation. 
+                LDA #0
+                STA MCMP_LEN
+                ; Get the start of the current line and copy that
+                ; to the parse variables 
+                LDX #0
+                LDY CURSOR_Y
+                JSL ILOCATE  
+                LDA CURSORPOS
+                STA MCMP_TEXT
+                STA MCMDADDR
+                setas 
+                LDA CURSORPOS+2
+                STA MCMP_TEXT+2
+                STA MCMDADDR+2
+                ; Set the DBR to the screen bank 
+                PHA
+                PLB 
+                
+                JSL IPRINTCR
+                PRINT MMERROR
+                
+                PLP
+                RTL
+
+;
+; IMPARSECMD 
+; Reads the current command on the command line 
+; and places the first 4 characters in MCMD. 
+; unused bytes in MCMD will be filled with 0.                
+; Input: DBR - bank of text to parse 
+; Modifies: All.
+; Output: none. 
+; Memory: 
+;   MCMP_TEXT - starting address of text to parse
+;   MCMD - will be set to command text 
+IMPARSECMD      setaxl
+                LDY MCMP_TEXT,B
+                setas 
+                JSL IMSEEK_TEXT
+impcmd_found    STA MCMD
+                RTL 
+;
+; IMSEEK_TEXT
+; Advance the Y register until the address in the data bank 
+; points to a non-whitespace character value (whitespace is anything <= $20)       
+;         
+IMSEEK_TEXT     
+                LDA 0,b,y
+                CMP #$20
+                BCS IMSEEK_TEXT_DONE
+                INY
+                ; 
+                LDX 
+                INX 
+                CPX COLS_VISIBLE
+                BCS IMSEEK_TEXT
+                        
+                
                 
 
-
-IMPARSE         BRK ; Parse the current command line
 IMPARSE1        BRK ; Parse one word on the current command line
 IMEXECUTE       BRK ; Execute the current command line (requires MCMD and MARG1-MARG8 to be populated)
 IMASSEMBLE      BRK ; Assemble a line of text. 
@@ -206,5 +274,26 @@ IMDOS           BRK ; Execute DOS command
 ; MMESSAGES
 ; MONITOR messages and responses.                
 MONITOR_DATA     
-MMERROR         .null "ERROR"
+MMERROR         .null "?ERROR"
 mregisters_msg  .null $0D," PC     A    X    Y    SP   DBR DP   NVMXDIZC"
+mhelp_msg       .null "Cmd   Command      Params",$0D
+                .null "A     ASSEMBLE     [Start] [Assembly code]",$0D
+                .null "C     COMPARE      Start1 Start2 [Len (1 if blank)]",$0D
+                .null "D     DISASSEMBLE  Start [End]",$0D
+                .null "F     FILL         Start End Byte",$0D
+                .null "G     GO           [Address]",$0D
+                .null "J                  [Address]",$0D
+                .null "H     HUNT (find)  Start End Byte [Byte]...",$0D
+                .null "L     LOAD         "File" [Device] [Start]",$0D
+                .null "M     MEMORY       [Start] [End]",$0D
+                .null "R     REGISTERS    Register [Value]  (A 1234, F 00100011)",$0D
+                .null ""                  PC A X Y SP DBR DP NVMXDIZC",$0D
+                .null "S     SAVE         "File" Device Start End",$0D
+                .null "T     TRANSFER     Start End Destination",$0D
+                .null "V     VERIFY       "File" [Device] [Start]",$0D
+                .null "X     EXIT",$0D
+                .null ">     MODIFY       Start Byte [Byte]...",$0D
+                .null "@     DOS          [Command] Returns drive status if no params.",$0D
+                .null "?     HELP         Display a short help screen ",$0D
+                
+       

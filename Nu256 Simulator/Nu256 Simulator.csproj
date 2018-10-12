@@ -64,6 +64,7 @@
     <Compile Include="MemoryLocations\MemoryMap_Other.cs" />
     <Compile Include="Processor\Breakpoints.cs" />
     <Compile Include="Processor\CPUPins.cs" />
+    <Compile Include="Processor\CPUTrace.cs" />
     <Compile Include="Processor\InteruptTypes.cs" />
     <Compile Include="Processor\RegisterAccumulator.cs" />
     <Compile Include="Processor\AddressingModeEnum.cs" />
@@ -141,6 +142,12 @@
     </Compile>
     <Compile Include="RingBuffer.cs" />
     <Compile Include="SystemLog.cs" />
+    <Compile Include="UI\TraceViewer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\TraceViewer.Designer.cs">
+      <DependentUpon>TraceViewer.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="Editor\EditBox.resx">
       <DependentUpon>EditBox.cs</DependentUpon>
     </EmbeddedResource>

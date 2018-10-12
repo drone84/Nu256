@@ -23,6 +23,7 @@
 IBOOT           ; boot the system
                 CLC                 ; clear the carry flag
                 XCE                 ; move carry to emulation flag.
+                setdbr 0
                 setaxl
                 LDA #STACK_END      ; initialize stack pointer
                 TAS
@@ -125,7 +126,13 @@ IREADY          setdbr `ready_msg
 ;  *Does not return. Execution in your program should continue via the RETURN direct page
 ;  vector.
 IREADYWAIT      ; Check the keyboard buffer.
-                JSL IGETCHE
+                JSL IGETCHW     ; Read a character from the buffer 
+                CMP #$0D         ; If it is Return, run the Return handler 
+                BEQ ireadywait_return
+                JSL IPUTC 
+                BRA IREADYWAIT
+ireadywait_return
+                JSL RRETURN 
                 BRA IREADYWAIT
 
 IKEYDOWN        STP             ; Keyboard key pressed
@@ -359,8 +366,9 @@ ilocate_down    CLC
                 BEQ ilocate_right
                 BRA ilocate_down
                 ; compute the column
-ilocate_right   CLC
-                ADC CURSOR_X             ; move the cursor right X columns
+ilocate_right   STA CURSORROW   ; Location of the beginning of the current row 
+                CLC
+                ADC CURSOR_X   ; move the cursor right X columns
                 STA CURSORPOS
                 LDY CURSOR_Y
                 
