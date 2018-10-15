@@ -60,18 +60,17 @@ IBOOT           ; boot the system
                 JSL IINITCHLUT
                 ; Now, clear the screen and Setup Foreground/Background Bytes, so we can see the Text on screen
                 JSL ICLRSCREEN
+                ; Go Enable and Setup the Cursor's Position
+                JSL IINITCURSOR
                 ; Write the Greeting Message Here, after Screen Cleared and Colored
-
 greet           setdbr `greet_msg       ;Set data bank to ROM
                 LDX #<>greet_msg
                 JSL IPRINT       ; print the first line
                 JSL ICOLORFLAG   ; Let's go put some Colors
+
                 LDX #<>version_msg
                 JSL IPRINT       ; print the first line
                 ; Initialize Super IO Chip
-                JSL IINITSUPERIO
-                LDX #<>init_lpc_msg
-                JSL IPRINT       ; print the Init
 
                 ; Init the VIAs (to do some Test)
                 JSL IINITVIAS
@@ -87,6 +86,10 @@ greet           setdbr `greet_msg       ;Set data bank to ROM
                 JSL ITESTSID
                 LDX #<>test_SID_msg
                 JSL IPRINT       ; print the SID Test Message
+
+                JSL IINITSUPERIO
+                LDX #<>init_lpc_msg
+                JSL IPRINT       ; print the Init
 
                 setdp 0
                 JSL ITESTMATH
@@ -595,13 +598,19 @@ IINITSUPERIO	  PHD
 
                 LDA #$01		;Default Value - C256 Doesn't use this IO Pin
                 STA GP10_REG
+                LDA GP10_REG
                 LDA #$01		;Default Value - C256 Doesn't use this IO Pin
                 STA GP11_REG
+                LDA @lSTATUS_PORT
+                LDA GP11_REG
                 LDA #$01		;Default Value - C256 Doesn't use this IO Pin
+                STA GP12_REG
         				LDA #$01		;Default Value - C256 Doesn't use this IO Pin
         				STA GP13_REG
         				LDA #$05		;(C256 - POT A Analog BX) Bit[0] = 1, Bit[2] = 1
         				STA GP14_REG
+                LDA GP14_REG
+                LDA @lKBD_OUT_BUF
         				LDA #$05		;(C256 - POT A Analog BY) Bit[0] = 1, Bit[2] = 1
         				STA GP15_REG
         				LDA #$05		;(C256 - POT B Analog BX) Bit[0] = 1, Bit[2] = 1
@@ -746,7 +755,7 @@ initkb_loop3	  LDA @lSTATUS_PORT,x		; Wait for test to complete
 				        CMP #$00			;Should be 00
 				        BNE	initkb_loop_out
 
-				        LDA #$AE			; Enable the Keyboard
+				        LDA #$F4			; Enable the Keyboard
 				        STA @lKBD_DATA_BUF,x
 
 initkb_loop8	  LDA @lSTATUS_PORT,x		; Wait for test to complete
@@ -957,6 +966,26 @@ ITESTMATH       PHA
                 PLA
                 RTL
 
+;
+; ITESTMATH
+; Author: Stefany
+; Note: We assume that A & X are 16Bits Wide when entering here.
+; Verify that the Math Block Works
+; Inputs:
+; None
+IINITCURSOR     PHA
+                setas
+                LDA #$A0      ;The Cursor Character will be a Fully Filled Block
+                STA TXT_CURSOR_CHAR
+                LDA #$03      ;Set Cursor Enable And Flash Rate @1Hz
+                STA TXT_CURSOR_CTRL ;
+                setaxl        ; Set Acc back to 16bits before setting the Cursor Position
+                LDA #$0001;
+                STA TXT_CURSOR_X_REG_L; // Set the X to Position 1
+                LDA #$0006;
+                STA TXT_CURSOR_Y_REG_L; // Set the Y to Position 6 (Below)
+                PLA
+                RTL
 
 ;
 ;Not-implemented routines
@@ -1041,7 +1070,7 @@ bg_color_lut	  .text $00, $00, $00, $FF
                 .text $80, $80, $80, $FF
                 .text $FF, $FF, $FF, $FF
 
-version_msg     .text "Degug Code Version 0.0.1 - Oct 8th, 2018", $0D, $00
+version_msg     .text $0D, "Degug Code Version 0.0.3 - Oct 14th, 2018", $0D, $00
 init_lpc_msg    .text "Init SuperIO...", $0D, $00
 init_kbrd_msg   .text "Init Keyboard...", $0D, $00
 init_via_msg    .text "Init VIAs...", $0D, $00
