@@ -9,9 +9,9 @@ using System.Windows.Forms;
 using System.Drawing.Text;
 using System.Drawing.Imaging;
 using Nu256.Common;
-using Nu256.MemoryLocations;
+using Nu256.Simulator.MemoryLocations;
 
-namespace Nu256.Display
+namespace Nu256.Simulator.Display
 {
     public partial class Gpu : UserControl, IMappable
     {
@@ -58,7 +58,7 @@ namespace Nu256.Display
         public MemoryRAM VRAM = null;
 
         // Video page 0 is 0x1000. Each page is 8192 (128x64) bytes long.
-        private int characterMatrixStart = MemoryLocations.MemoryMap.SCREEN_PAGE0;
+        private int characterMatrixStart = MemoryLocations.MemoryMap.TEXT_PAGE0;
         //private int colorMatrixStart = 6096;
         //private int attributeStart = 8096;
         // character bitmaps are stored in the reserved video memory space.

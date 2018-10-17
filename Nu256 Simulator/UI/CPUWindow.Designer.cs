@@ -1,4 +1,4 @@
-﻿namespace Nu256.UI
+﻿namespace Nu256.Simulator.UI
 {
     partial class CPUWindow
     {
@@ -49,7 +49,7 @@
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.panel2 = new System.Windows.Forms.Panel();
             this.ClearTraceButton = new System.Windows.Forms.Button();
-            this.registerDisplay1 = new Nu256.RegisterDisplay();
+            this.registerDisplay1 = new Nu256.Simulator.RegisterDisplay();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.SuspendLayout();

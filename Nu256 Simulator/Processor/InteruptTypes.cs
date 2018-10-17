@@ -1,4 +1,4 @@
-﻿namespace Nu256.Processor
+﻿namespace Nu256.Simulator.Processor
 {
     public enum InteruptTypes
     {

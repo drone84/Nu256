@@ -61,7 +61,8 @@
     <Compile Include="MemoryBuffer.cs" />
     <Compile Include="MemoryLocations\MemoryMap_IO.cs" />
     <Compile Include="MemoryLocations\MemoryMap_Blocks.cs" />
-    <Compile Include="MemoryLocations\MemoryMap_Other.cs" />
+    <Compile Include="MemoryLocations\MemoryMap_Page02_Buffers.cs" />
+    <Compile Include="MemoryLocations\MemoryMap_Page80_VICKY.cs" />
     <Compile Include="Processor\Breakpoints.cs" />
     <Compile Include="Processor\CPUPins.cs" />
     <Compile Include="Processor\CPUTrace.cs" />

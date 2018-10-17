@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Nu256.Editor
+namespace Nu256.Simulator.Editor
 {
     public partial class EditBox : UserControl
     {

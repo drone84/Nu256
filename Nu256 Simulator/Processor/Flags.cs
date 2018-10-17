@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Nu256.Processor
+namespace Nu256.Simulator.Processor
 {
     public class Flags : Register8
     {

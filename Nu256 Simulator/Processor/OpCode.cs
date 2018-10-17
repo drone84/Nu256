@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Nu256;
 
-namespace Nu256.Processor
+namespace Nu256.Simulator.Processor
 {
     public class OpCode
     {

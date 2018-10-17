@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Nu256;
-using Nu256.MemoryLocations;
+using Nu256.Simulator.MemoryLocations;
 
-namespace Nu256.Processor
+namespace Nu256.Simulator.Processor
 {
     /* 
      * This file contains all of the opcode routines for the Operations class. 
@@ -936,8 +936,8 @@ namespace Nu256.Processor
         public void ExecuteLDA(byte instruction, AddressModes addressMode, int signature)
         {
             int val = GetValue(addressMode, signature);
-            if (addressMode == AddressModes.AbsoluteIndexedWithX && (val & 0xff) == 0)
-                global::System.Diagnostics.Debug.WriteLine("break");
+            //if (addressMode == AddressModes.AbsoluteIndexedWithX && (val & 0xff) == 0)
+            //    global::System.Diagnostics.Debug.WriteLine("break");
             cpu.A.Value = val;
             cpu.Flags.SetNZ(cpu.A);
         }

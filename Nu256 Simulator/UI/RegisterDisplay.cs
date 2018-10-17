@@ -7,9 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Nu256.Processor;
+using Nu256.Simulator.Processor;
 
-namespace Nu256
+namespace Nu256.Simulator
 {
     public partial class RegisterDisplay : UserControl
     {

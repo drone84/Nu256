@@ -1,6 +1,6 @@
-﻿using Nu256.Display;
+﻿using Nu256.Simulator.Display;
 
-namespace Nu256.UI
+namespace Nu256.Simulator.UI
 {
     partial class MainWindow
     {
@@ -50,7 +50,7 @@ namespace Nu256.UI
             this.panel2 = new System.Windows.Forms.Panel();
             this.panel3 = new System.Windows.Forms.Panel();
             this.panel4 = new System.Windows.Forms.Panel();
-            this.gpu = new Nu256.Display.Gpu();
+            this.gpu = new Nu256.Simulator.Display.Gpu();
             this.statusStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();

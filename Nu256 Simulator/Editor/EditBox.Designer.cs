@@ -1,4 +1,4 @@
-﻿namespace Nu256.Editor
+﻿namespace Nu256.Simulator.Editor
 {
     partial class EditBox
     {

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Nu256.Processor;
-using Nu256.Display;
-using Nu256.MemoryLocations;
+using Nu256.Simulator.Processor;
+using Nu256.Simulator.Display;
+using Nu256.Simulator.MemoryLocations;
 using Nu256.Common;
 
 namespace Nu256

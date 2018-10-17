@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Nu256;
-using Nu256.MemoryLocations;
+using Nu256.Simulator.MemoryLocations;
 
-namespace Nu256.Processor
+namespace Nu256.Simulator.Processor
 {
     /// <summary>
     /// Operations. This class encompasses the CPU operations and the support routines needed to execute
@@ -425,7 +425,7 @@ namespace Nu256.Processor
 
             if (!Flags.Emulation)
                 Push(ProgramBank);
-            Push(PC, 2);
+            Push(PC);
             Push(Flags);
 
             int addr = 0;

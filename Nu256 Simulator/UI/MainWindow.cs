@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Nu256.UI
+namespace Nu256.Simulator.UI
 {
     public partial class MainWindow : Form
     {

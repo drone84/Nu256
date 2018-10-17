@@ -1,23 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Nu256.Basic;
-using Nu256.Processor;
-using Nu256.Monitor;
-using Nu256.Display;
+﻿using Nu256.Simulator.Processor;
+using Nu256.Simulator.Display;
 using Nu256.Common;
 using System.Threading;
-using Nu256.MemoryLocations;
+using Nu256.Simulator.MemoryLocations;
+using Nu256.Simulator.Processor;
 
-namespace Nu256
+namespace Nu256.Simulator   
 {
     public class NuSystem
     {
         private const int TAB_WIDTH = 4;
         public MemoryManager Memory = null;
-        public Processor.CPU CPU = null;
+        public CPU CPU = null;
         public Gpu gpu = null;
         public MemoryBuffer KeyboardBuffer = null;
         public ColorCodes CurrentColor = ColorCodes.Green;
@@ -63,7 +57,7 @@ namespace Nu256
                 MemoryMap.KEY_BUFFER_RPOS,
                 MemoryMap.KEY_BUFFER_WPOS);
 
-            for (int i = MemoryMap.SCREEN_PAGE0; i < MemoryMap.SCREEN_PAGE1; i++)
+            for (int i = MemoryMap.TEXT_PAGE0; i < MemoryMap.TEXT_PAGE1; i++)
             {
                 this.Memory[i] = 64;
             }
@@ -179,7 +173,7 @@ namespace Nu256
                     gpu.CurrentColor = gpu.CurrentColor & (int.MaxValue - ColorCodes.Reverse);
                     break;
                 default:
-                    Memory[MemoryMap.SCREEN_PAGE0 + gpu.CursorPos] = (byte)c;
+                    Memory[MemoryMap.TEXT_PAGE0 + gpu.CursorPos] = (byte)c;
                     //gpu.ColorData[gpu.CursorPos] = CurrentColor;
                     AdvanceCursor();
                     break;
@@ -248,7 +242,7 @@ namespace Nu256
 
         public void Scroll1()
         {
-            int addr = MemoryMap.SCREEN_PAGE0;
+            int addr = MemoryMap.TEXT_PAGE0;
             for (int c = 0; c < gpu.BufferSize - gpu.ColumnsVisible; c++)
             {
                 for (int col = 0; col < gpu.ColumnsVisible; col++)
@@ -362,7 +356,7 @@ namespace Nu256
         {
             for (int i = 0; i < gpu.BufferSize; i++)
             {
-                Memory[MemoryMap.SCREEN_PAGE0 + i] = c;
+                Memory[MemoryMap.TEXT_PAGE0 + i] = c;
                 //gpu.ColorData[i] = _currentForeground;
             }
         }

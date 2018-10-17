@@ -7,9 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Nu256.Processor;
+using Nu256.Simulator.Processor;
 
-namespace Nu256.UI
+namespace Nu256.Simulator.UI
 {
     public partial class RegisterControl : UserControl
     {
@@ -20,8 +20,8 @@ namespace Nu256.UI
 
         string _caption;
         string _value;
-        Nu256.Processor.Register _register = null;
-        Nu256.Processor.RegisterBankNumber _bank = null;
+        Nu256.Simulator.Processor.Register _register = null;
+        Nu256.Simulator.Processor.RegisterBankNumber _bank = null;
 
         public string Caption
         {

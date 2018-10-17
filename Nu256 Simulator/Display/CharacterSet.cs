@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
 
-namespace Nu256.Display
+namespace Nu256.Simulator.Display
 {
     public class CharacterSet
     {

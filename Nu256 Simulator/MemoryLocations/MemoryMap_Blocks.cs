@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Nu256.MemoryLocations
+namespace Nu256.Simulator.MemoryLocations
 {
     public static partial class MemoryMap
     {

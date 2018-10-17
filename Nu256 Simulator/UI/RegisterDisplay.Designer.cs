@@ -1,4 +1,4 @@
-﻿namespace Nu256
+﻿namespace Nu256.Simulator
 {
     partial class RegisterDisplay
     {
@@ -39,14 +39,14 @@
             this.panel1 = new global::System.Windows.Forms.Panel();
             this.panel8 = new global::System.Windows.Forms.Panel();
             this.timer1 = new global::System.Windows.Forms.Timer(this.components);
-            this.Flags = new Nu256.UI.RegisterControl();
-            this.D = new Nu256.UI.RegisterControl();
-            this.DBR = new Nu256.UI.RegisterControl();
-            this.Stack = new Nu256.UI.RegisterControl();
-            this.Y = new Nu256.UI.RegisterControl();
-            this.X = new Nu256.UI.RegisterControl();
-            this.A = new Nu256.UI.RegisterControl();
-            this.PC = new Nu256.UI.RegisterControl();
+            this.Flags = new Nu256.Simulator.UI.RegisterControl();
+            this.D = new Nu256.Simulator.UI.RegisterControl();
+            this.DBR = new Nu256.Simulator.UI.RegisterControl();
+            this.Stack = new Nu256.Simulator.UI.RegisterControl();
+            this.Y = new Nu256.Simulator.UI.RegisterControl();
+            this.X = new Nu256.Simulator.UI.RegisterControl();
+            this.A = new Nu256.Simulator.UI.RegisterControl();
+            this.PC = new Nu256.Simulator.UI.RegisterControl();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 

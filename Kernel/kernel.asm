@@ -138,6 +138,48 @@ ireadywait_return
 IKEYDOWN        STP             ; Keyboard key pressed
 IRETURN         STP
 
+
+;
+; IPUSHKEY 
+;  Push the keystroke in A into the keyboard buffer. 
+;  The keystroke should be a two-byte sequence:
+;  KEY MODIFIER
+;  KEY is the low byte, and is the ASCII value of the key pressed. If the key 
+;  is a cursor key or function key, the MODIFIER byte should have a value of 
+;  KEY_NonPrintable ($40)
+; Input:
+;  A - 16-bit, The keystroke to write to the buffer 
+; Modifies:
+;  A - undefined
+;
+
+IPUSHKEY        PHD 
+                PHP 
+                setdp <>KEY_BUFFER
+                
+                ;Write two bytes at the location indicated by KEY_BUFFER_WPOS
+                ;Byte 0 - the ASCII key value (or scan code for non-printable keys)
+                ;Byte 1 - Modifier key; 1-Shift, 2-Control, 4-Alt, $40-Unprintable (F-key, cursor key), $80-Key up. 
+                setaxl  ; macro that sets A and X to 16-bits and tells the assembler to use 16-bit instructions
+                STA (KEY_BUFFER_WPOS)
+
+                ;Increment KEY_BUFFER_WPOS by two:
+                INC KEY_BUFFER_WPOS
+                INC KEY_BUFFER_WPOS
+
+                ;If KEY_BUFFER_WPOS > KEY_BUFFER_END then reset KEY_BUFFER_WPOS to KEY_BUFFER.
+                LDA KEY_BUFFER_WPOS
+                CMP KEY_BUFFER_END
+                BCC readkb_done
+                LDA #KEY_BUFFER
+                STA KEY_BUFFER_WPOS
+
+                ; clean up and return 
+readkb_done     ; pull any values saved to the stack
+                PLP
+                PLD 
+                RTL
+
 ;
 ;IGETCHE
 ; Get a character from the current input chnannel and echo it to screen.
@@ -161,8 +203,8 @@ IGETCHE         JSL IGETCHW
 IGETCHW         PHD
                 PHX
                 PHP
-                setdp $0F00
-                setaxl
+                setdp <>KEY_BUFFER
+                setaxl 
                 ; Read from the keyboard buffer
                 ; If the read position and write position are the same
                 ; no data is waiting.
@@ -366,8 +408,7 @@ ilocate_down    CLC
                 BEQ ilocate_right
                 BRA ilocate_down
                 ; compute the column
-ilocate_right   STA CURSORROW   ; Location of the beginning of the current row 
-                CLC
+ilocate_right   CLC
                 ADC CURSOR_X   ; move the cursor right X columns
                 STA CURSORPOS
                 LDY CURSOR_Y
@@ -697,93 +738,94 @@ IINITSUPERIO	PHD
 ; Affects:
 ;   None
 IINITKEYBOARD	PHD
-				PHP
-				PHA
+                PHA
+                PHP
+
                 setas				;just make sure we are in 8bit mode
 initkb_loop1	LDA STATUS_PORT		; Load Status Byte
-				AND	#INPT_BUF_FULL	; Test bit $02 (if 0, Empty)
-				CMP #INPT_BUF_FULL
-				BEQ initkb_loop1
+                AND	#INPT_BUF_FULL	; Test bit $02 (if 0, Empty)
+                CMP #INPT_BUF_FULL
+                BEQ initkb_loop1
 
-				LDA #$0AA			;Send self test command
-				STA KBD_CMD_BUF
+                LDA #$0AA			;Send self test command
+                STA KBD_CMD_BUF
 
 initkb_loop2	LDA STATUS_PORT		; Wait for test to complete
-				AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
-				CMP #OUT_BUF_FULL
-				BEQ initkb_loop2
+                AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
+                CMP #OUT_BUF_FULL
+                BEQ initkb_loop2
 
-				LDA KBD_OUT_BUF		;Check self test result
-				CMP #$55
-				BNE	initkb_loop_out
+                LDA KBD_OUT_BUF		;Check self test result
+                CMP #$55
+                BNE	initkb_loop_out
 
-				LDA #$AB			;Send test Interface command
-				STA KBD_DATA_BUF
+                LDA #$AB			;Send test Interface command
+                STA KBD_DATA_BUF
 
 initkb_loop3	LDA STATUS_PORT		; Wait for test to complete
-				AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
-				CMP #OUT_BUF_FULL
-				BEQ initkb_loop3
+                AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
+                CMP #OUT_BUF_FULL
+                BEQ initkb_loop3
 
-				LDA KBD_OUT_BUF		;Display Interface test results
-				CMP #$00			;Should be 00
-				BNE	initkb_loop_out
+                LDA KBD_OUT_BUF		;Display Interface test results
+                CMP #$00			;Should be 00
+                BNE	initkb_loop_out
 
-				LDA #$60			;Send command byte
-				STA KBD_CMD_BUF
+                LDA #$60			;Send command byte
+                STA KBD_CMD_BUF
 
 initkb_loop4	LDA STATUS_PORT		; Load Status Byte
-				AND	#INPT_BUF_FULL	; Test bit $02 (if 0, Empty)
-				CMP #INPT_BUF_FULL
-				BEQ initkb_loop4
+                AND	#INPT_BUF_FULL	; Test bit $02 (if 0, Empty)
+                CMP #INPT_BUF_FULL
+                BEQ initkb_loop4
 
-				LDA #$69		;Send command byte
-				STA KBD_DATA_BUF
+                LDA #$69		;Send command byte
+                STA KBD_DATA_BUF
 
 initkb_loop5	LDA STATUS_PORT		; Load Status Byte
-				AND	#INPT_BUF_FULL	; Test bit $02 (if 0, Empty)
-				CMP #INPT_BUF_FULL
-				BEQ initkb_loop5
+                AND	#INPT_BUF_FULL	; Test bit $02 (if 0, Empty)
+                CMP #INPT_BUF_FULL
+                BEQ initkb_loop5
 
-				LDA #$FF			; Send Keyboard Reset command
-				STA KBD_DATA_BUF
-				; Call DLY1
+                LDA #$FF			; Send Keyboard Reset command
+                STA KBD_DATA_BUF
+                ; Call DLY1
 
 initkb_loop6	LDA STATUS_PORT		; Wait for test to complete
-				AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
-				CMP #OUT_BUF_FULL
-				BEQ initkb_loop6
+                AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
+                CMP #OUT_BUF_FULL
+                BEQ initkb_loop6
 
-				LDA KBD_OUT_BUF
+                LDA KBD_OUT_BUF
 
-				LDA #$EE			; Send Echo EE Command
-				STA KBD_DATA_BUF
-				; Call DLY1
+                LDA #$EE			; Send Echo EE Command
+                STA KBD_DATA_BUF
+                ; Call DLY1
 
 initkb_loop7	LDA STATUS_PORT		; Wait for test to complete
-				AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
-				CMP #OUT_BUF_FULL
-				BEQ initkb_loop7
+                AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
+                CMP #OUT_BUF_FULL
+                BEQ initkb_loop7
 
-				LDA KBD_OUT_BUF		; Read Echo from Keyboard
-				; Call DLY1
-				CMP #$EE
-				BNE initkb_loop_out
+                LDA KBD_OUT_BUF		; Read Echo from Keyboard
+                ; Call DLY1
+                CMP #$EE
+                BNE initkb_loop_out
 
-				LDA #$F4			; Enable the Keyboard
-				STA KBD_DATA_BUF
+                LDA #$F4			; Enable the Keyboard
+                STA KBD_DATA_BUF
 
 initkb_loop8	LDA STATUS_PORT		; Wait for test to complete
-				AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
-				CMP #OUT_BUF_FULL
-				BEQ initkb_loop8
+                AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
+                CMP #OUT_BUF_FULL
+                BEQ initkb_loop8
 
 initkb_loop_out	LDA KBD_OUT_BUF		; Clear the Output buffer
 
-				setal
+                setal
+                PLP
                 PLA
-				PLP
-				PLD
+                PLD
                 RTL
 ;
 ;Not-implemented routines
@@ -811,7 +853,6 @@ IPRINTF         BRK ; Print a float value
 IPRINTI         BRK ; Prints integer value in TEMP
 IPRINTAI        BRK ; Prints integer value in A
 IPRINTAH        BRK ; Prints hex value in A. Printed value is 2 wide if M flag is 1, 4 wide if M=0
-IPUSHKEY        BRK ;
 IPUSHKEYS       BRK ;
 ICSRLEFT        BRK ;
 ICSRHOME        BRK ;

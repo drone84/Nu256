@@ -13,20 +13,28 @@ CPUSTACK         = $000009 ;2 Bytes Stack Pointer (S)
 CPUDP            = $00000B ;2 Bytes Direct Page Register (D)
 CPUDBR           = $00000D ;1 Byte  Data Bank Register (B)
 CPUFLAGS         = $00000E ;1 Byte  Flags (P)
-SCREENBEGIN      = $000010 ;3 Bytes Start of screen in video RAM. This is the upper-left corrner of the current video page being written to. This may not be what VICKY is displaying, especiall if you are using mirror mode.
+
+SCREENBEGIN      = $000010 ;2 Bytes Start of screen in video RAM. This is the upper-left corrner of the current video page being written to. This may not be what VICKY is displaying, especiall if you are using mirror mode.
+SCREENBANK       = $000012 ;1 Byte  Start of screen in video RAM. This is the upper-left corrner of the current video page being written to. This may not be what VICKY is displaying, especiall if you are using mirror mode.
 COLS_VISIBLE     = $000013 ;2 Bytes Columns visible per screen line. A virtual line can be longer than displayed, up to COLS_PER_LINE long. Default = 80
 COLS_PER_LINE    = $000015 ;2 Bytes Columns in memory per screen line. A virtual line can be this long. Default=128
 LINES_VISIBLE    = $000017 ;2 Bytes The number of rows visible on the screen. Default=25
 LINES_MAX        = $000019 ;2 Bytes The number of rows in memory for the screen. Default=64
-CURSORPOS        = $00001B ;3 Bytes The next character written to the screen will be written in this location. 
-CURSORROW        = $00001E ;3 Bytes Address of the beginning of the current text row
-MIRROR_MODE      = $000021 ;1 Byte  1=Mirror Mode enabled. Reserve 32K (somewhere) in SRAM for a display mirror. 0=Disable Mirror Mode and write directly to VICKY. 
-CURSOR_X         = $000022 ;2 Bytes Address of the beginning of the current text row
-CURSOR_Y         = $000024 ;2 Bytes 1=Mirror Mode enabled. Reserve 32K (somewhere) in SRAM for a display mirror. 0=Disable Mirror Mode and write directly to VICKY. 
-CURCOLOR         = $000026 ;2 Bytes Color of next character to be printed to the screen. 
-CURATTR          = $000028 ;2 Bytes Attribute of next character to be printed to the screen.
-STACKBOT         = $00002A ;2 Bytes Lowest location the stack should be allowed to write to. If SP falls below this value, the runtime should generate STACK OVERFLOW error and abort.
-STACKTOP         = $00002C ;2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort. 
+CURSORPOS        = $00001B ;2 Bytes The next character written to the screen will be written in this location. 
+CURSORPOS_B      = $00001D ;1 Byte  The next character written to the screen will be written in this location. 
+MIRROR_MODE      = $00001E ;1 Byte  1=Mirror Mode enabled. Reserve 32K (somewhere) in SRAM for a display mirror. 0=Disable Mirror Mode and write directly to VICKY. 
+CURSOR_X         = $00001F ;2 Bytes Address of the beginning of the current text row
+CURSOR_Y         = $000021 ;2 Bytes 1=Mirror Mode enabled. Reserve 32K (somewhere) in SRAM for a display mirror. 0=Disable Mirror Mode and write directly to VICKY. 
+CURCOLOR         = $000023 ;2 Bytes Color of next character to be printed to the screen. 
+CURATTR          = $000025 ;2 Bytes Attribute of next character to be printed to the screen.
+STACKBOT         = $000027 ;2 Bytes Lowest location the stack should be allowed to write to. If SP falls below this value, the runtime should generate STACK OVERFLOW error and abort.
+STACKTOP         = $000029 ;2 Bytes Highest location the stack can occupy. If SP goes above this value, the runtime should generate STACK OVERFLOW error and abort. 
+READPOS          = $00002B ;2 Bytes Location of input buffer for parsing text
+READPOS_B        = $00002D ;1 Byte  Location of input buffer for parsing text
+READEND          = $00002E ;2 Bytes End of the input buffer
+READEND_B        = $000030 ;1 Byte  End of the input buffer
+WRITEPOS         = $000031 ;2 Bytes Address to write parsed data
+WRITEPOS_B       = $000033 ;1 Byte  Address to write parsed data
 KERNEL_TEMP      = $0000C0 ;32 Bytes Temp space for kernel
 USER_TEMP        = $0000E0 ;32 Bytes Temp space for user programs
 Page0_Check      = $000100 ; Byte  Expected $0000100
@@ -54,10 +62,10 @@ GAVIN_MISC       = $000120 ;224 Bytes GAVIN vector controller (TBD)
 VECTOR_STATE     = $0001FF ;1 Byte  Interrupt Vector State. See VECTOR_STATE_ENUM
 
 KEY_BUFFER       = $000200 ;64 Bytes keyboard buffer
-KEY_BUFFER_SIZE  = $40     ;64 Bytes (constant) keyboard buffer length
-KEY_BUFFER_END   = $000240 ;1 Byte  Last byte of keyboard buffer
-KEY_BUFFER_RPOS  = $000241 ;2 Bytes keyboard buffer read position
-KEY_BUFFER_WPOS  = $000243 ;2 Bytes keyboard buffer write position
+KEY_BUFFER_SIZE  = $40 ;64 Bytes (constant) keyboard buffer length
+KEY_BUFFER_END   = $000240 ;2 Bytes Last byte of keyboard buffer
+KEY_BUFFER_RPOS  = $000242 ;2 Bytes keyboard buffer read position
+KEY_BUFFER_WPOS  = $000244 ;2 Bytes keyboard buffer write position
 
 TEST_BEGIN       = $001000 ;28672 Bytes Test/diagnostic code for prototype.
 TEST_END         = $007FFF ;0 Byte  

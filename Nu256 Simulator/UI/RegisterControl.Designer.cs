@@ -1,4 +1,4 @@
-﻿namespace Nu256.UI
+﻿namespace Nu256.Simulator.UI
 {
     partial class RegisterControl
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Nu256.Basic
+namespace Nu256.Simulator.Basic
 {
     public class Parser
     {

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Nu256;
-using Nu256.MemoryLocations;
+using Nu256.Simulator.MemoryLocations;
 
-namespace Nu256.Monitor
+namespace Nu256.Simulator.Monitor
 {
     public class Monitor : ReadyHandler
     {

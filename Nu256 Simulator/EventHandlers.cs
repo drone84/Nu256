@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
-using Nu256.Display;
+using Nu256.Simulator.Display;
 
 namespace Nu256
 {

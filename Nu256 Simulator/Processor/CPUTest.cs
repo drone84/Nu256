@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Nu256.MemoryLocations;
+using Nu256.Simulator.MemoryLocations;
 
-namespace Nu256.Processor
+namespace Nu256.Simulator.Processor
 {
     class CPUTest : ReadyHandler
     {

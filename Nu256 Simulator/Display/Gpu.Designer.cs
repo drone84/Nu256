@@ -1,4 +1,4 @@
-﻿namespace Nu256.Display
+﻿namespace Nu256.Simulator.Display
 {
     public partial class Gpu
     {
