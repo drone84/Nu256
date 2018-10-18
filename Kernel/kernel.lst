@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.53.1515 listing file
 ; 64tass --long-address --intel-hex -o kernel.hex --list kernel.lst kernel.asm
-; Wed Oct 17 13:55:11 2018
+; Wed Oct 17 22:09:14 2018
 
 ;Offset	;Hex		;Monitor	;Source
 
@@ -764,11 +764,10 @@
 >0184fe	61 6e 64 5d 20 52 65 74 75 72 6e 73 20 64 72 69
 >01850e	76 65 20 73 74 61 74 75 73 20 69 66 20 6e 6f 20
 >01851e	70 61 72 61 6d 73 2e 0d
->018526	3f 20 20 20 20 20 48 45		                .text "?     HELP         Display a short help screen ",$0D
+>018526	3f 20 20 20 20 20 48 45		                .text "?     HELP         Display a short help screen ",$00
 >01852e	4c 50 20 20 20 20 20 20 20 20 20 44 69 73 70 6c
 >01853e	61 79 20 61 20 73 68 6f 72 74 20 68 65 6c 70 20
->01854e	73 63 72 65 65 6e 20 0d
->018556	00				                .null
+>01854e	73 63 72 65 65 6e 20 00
 
 ;******  Return to file: kernel.asm
 

@@ -42,7 +42,7 @@ namespace Nu256.Simulator.UI
                 {
                     registerDisplay1.CPU = cpu;
                     this.breakpoints = cpu.Breakpoints;
-                    traceViewer1.Trace = cpu.Trace;
+                    traceViewer1.CPU = cpu;
                 }
             }
         }

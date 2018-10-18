@@ -18,7 +18,40 @@ namespace Nu256.Simulator.UI
             InitializeComponent();
         }
 
-        public CPUTrace Trace = null;
+        public int Scrollback
+        {
+            get
+            {
+                return CPUTrace.TRACE_STEPS_MIN - vScrollBar1.Maximum;
+            }
+
+            set
+            {
+                if (value >= 0 && value < CPUTrace.TRACE_STEPS_MIN)
+                {
+                    vScrollBar1.Value = vScrollBar1.Maximum - value;
+                }
+                this.Refresh();
+            }
+        }
+
+
+        private Processor.CPU cpu = null;
+        public Processor.CPU CPU
+        {
+            get
+            {
+                return this.cpu;
+            }
+
+            set
+            {
+                this.cpu = value;
+                vScrollBar1.Minimum = 0;
+                vScrollBar1.Maximum = CPUTrace.TRACE_STEPS_MIN;
+                vScrollBar1.Value = vScrollBar1.Maximum;
+            }
+        }
 
         private void TraceViewer_Paint(object sender, PaintEventArgs e)
         {
@@ -35,21 +68,30 @@ namespace Nu256.Simulator.UI
             g.DrawString(header, this.Font, textBrush, r.Location);
             pen.Width = 2;
             g.DrawLine(pen, r.Left, r.Bottom, r.Right, r.Bottom);
-            r.Y += r.Height + 2;
+            r.Y = this.ClientRectangle.Height - r.Height;
 
-            if (Trace != null)
+            if (cpu != null && cpu.Trace != null && cpu.TraceEnabled == true)
             {
-                for (int i = 0; i < Trace.Count; i++)
+
+                cpu.TraceWait = true;
+                int i = cpu.Trace.Count - Scrollback - 1;
+                while(i >= 0 && r.Y > headerSize.Height)
                 {
-                    g.DrawString(Trace[i], this.Font, textBrush, r.Location);
-                    r.Y += r.Height;
+                    g.DrawString(cpu.Trace[i--], this.Font, textBrush, r.Location);
+                    r.Y -= r.Height;
                 }
+                cpu.TraceWait = false;
             }
         }
 
         internal void Clear()
         {
 
+        }
+
+        private void vScrollBar1_ValueChanged(object sender, EventArgs e)
+        {
+            Refresh();
         }
     }
 }

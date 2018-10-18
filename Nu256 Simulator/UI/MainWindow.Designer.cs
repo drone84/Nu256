@@ -149,14 +149,14 @@ namespace Nu256.Simulator.UI
             // resetToolStripMenuItem1
             // 
             this.resetToolStripMenuItem1.Name = "resetToolStripMenuItem1";
-            this.resetToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+            this.resetToolStripMenuItem1.Size = new System.Drawing.Size(139, 22);
             this.resetToolStripMenuItem1.Text = "Start/Restart";
             this.resetToolStripMenuItem1.Click += new System.EventHandler(this.resetToolStripMenuItem1_Click);
             // 
             // debugToolStripMenuItem
             // 
             this.debugToolStripMenuItem.Name = "debugToolStripMenuItem";
-            this.debugToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.debugToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
             this.debugToolStripMenuItem.Text = "Start/Debug";
             this.debugToolStripMenuItem.Click += new System.EventHandler(this.debugToolStripMenuItem_Click);
             // 

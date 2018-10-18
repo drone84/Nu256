@@ -210,6 +210,7 @@
             // 
             // timer1
             // 
+            this.timer1.Enabled = true;
             this.timer1.Interval = 1000;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
@@ -252,10 +253,12 @@
             // 
             // traceViewer1
             // 
+            this.traceViewer1.CPU = null;
             this.traceViewer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.traceViewer1.Font = new System.Drawing.Font("Consolas", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.traceViewer1.Location = new System.Drawing.Point(0, 101);
             this.traceViewer1.Name = "traceViewer1";
+            this.traceViewer1.Scrollback = 9900;
             this.traceViewer1.Size = new System.Drawing.Size(666, 452);
             this.traceViewer1.TabIndex = 6;
             // 

@@ -39,6 +39,7 @@ namespace Nu256.Simulator.Processor
         /// </summary>
         public bool DebugPause = false;
         public bool TraceEnabled;
+        public bool TraceWait = false;
 
         /// <summary>
         /// Length of the currently executing opcode
@@ -174,9 +175,7 @@ namespace Nu256.Simulator.Processor
         /// </summary>
         public void ExecuteNext()
         {
-            if (Pins.Ready_)
-                return;
-            if (Waiting)
+            if (!Pins.Ready ||  Waiting || TraceWait)
                 return;
 
             CurrentAddress = GetLongPC();
@@ -213,12 +212,13 @@ namespace Nu256.Simulator.Processor
             CPUThread = new Thread(new ThreadStart(this.RunLoop));
             StartTime = DateTime.Now;
             clockCyles = 0;
+            Halted = false;
             CPUThread.Start();
         }
 
         public void RunLoop()
         {
-            while (!DebugPause && !Pins.Ready_)
+            while (!Halted)
             {
                 if (Pins.Reset)
                     Reset();

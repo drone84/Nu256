@@ -13,7 +13,7 @@ namespace Nu256.Simulator.Processor
         /// Pause the CPU to allow slow I/O or memory operations. When true, the CPU will not execute 
         /// the next instruction.
         /// </summary>
-        public bool Ready_ = false;
+        public bool Ready = true;
 
         /// <summary>
         /// When high, the CPU is being reset. The CPU will not execute

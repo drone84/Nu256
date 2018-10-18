@@ -372,5 +372,4 @@ MHELP_MSG       .text "Cmd   Command      Params",$0D
                 .text "X     EXIT",$0D
                 .text ">     MODIFY       Start Byte [Byte]...",$0D
                 .text "@     DOS          [Command] Returns drive status if no params.",$0D
-                .text "?     HELP         Display a short help screen ",$0D
-                .null 
+                .text "?     HELP         Display a short help screen ",$00

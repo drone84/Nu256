@@ -50,6 +50,10 @@ namespace Nu256.Simulator.Processor
         /// to restart the CPU.
         /// </summary>
         public bool Waiting;
+        /// <summary>
+        /// CPU is halted. The CPU can only be restarted with a RESET
+        /// </summary>
+        public bool Halted;
 
         // Aliases for long names:
         /// <summary>
