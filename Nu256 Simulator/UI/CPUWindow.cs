@@ -16,8 +16,7 @@ namespace Nu256.Simulator.UI
         private const int MNEMONIC_COLUMN = 22;
         private const int REGISTER_COLUMN = 34;
         private int StepCounter = 0;
-        string[] listing;
-        Processor.Breakpoints breakpoints = new Processor.Breakpoints();
+        Processor.Breakpoints breakpoints = null;
 
         public CPUWindow()
         {
@@ -26,23 +25,25 @@ namespace Nu256.Simulator.UI
         }
 
         public static CPUWindow Instance = null;
-        private Processor.CPU _cpu = null;
+        private Processor.CPU cpu = null;
         private NuSystem _kernel = null;
-
-        List<string> PrintQueue = new List<string>();
-        static StringBuilder lineBuffer = new StringBuilder();
 
         public CPU CPU
         {
             get
             {
-                return this._cpu;
+                return this.cpu;
             }
 
             set
             {
-                this._cpu = value;
-                registerDisplay1.CPU = value;
+                this.cpu = value;
+                if (cpu != null)
+                {
+                    registerDisplay1.CPU = cpu;
+                    this.breakpoints = cpu.Breakpoints;
+                    traceViewer1.Trace = cpu.Trace;
+                }
             }
         }
 
@@ -60,29 +61,6 @@ namespace Nu256.Simulator.UI
         }
 
 
-        public static void PrintChar(char c)
-        {
-            if (c == '\r')
-            {
-                PrintLine(lineBuffer.ToString());
-                lineBuffer.Clear();
-            }
-            else if (c == '\n')
-            {
-                // do nothing
-            }
-            else
-            {
-                lineBuffer.Append(c);
-            }
-        }
-
-        public static void PrintTab(int x)
-        {
-            while (lineBuffer.Length < x)
-                lineBuffer.Append(" ");
-        }
-
         private void PauseButton_Click(object sender, EventArgs e)
         {
             CPU.DebugPause = true;
@@ -92,6 +70,7 @@ namespace Nu256.Simulator.UI
 
         private void StepButton_Click(object sender, EventArgs e)
         {
+            CPUTraceCheckBox.Checked = true;
             CPU.DebugPause = true;
             timer1.Enabled = false;
 
@@ -110,119 +89,9 @@ namespace Nu256.Simulator.UI
         private void RefreshStatus()
         {
             this.Text = "Debug: " + StepCounter.ToString();
+            traceViewer1.Refresh();
             UpdateStackDisplay();
             Kernel.gpu.Refresh();
-
-            if (messageText.Text.Length > 32000)
-                messageText.Text = messageText.Text.Substring(0, 20000);
-
-            if (PrintQueue.Count > 5)
-            {
-                string[] lines = new string[messageText.Lines.Length + PrintQueue.Count];
-                if (messageText.Lines.Length > 0)
-                    Array.Copy(messageText.Lines, lines, messageText.Lines.Length);
-                PrintQueue.CopyTo(lines, messageText.Lines.Length);
-                messageText.Lines = lines;
-
-                messageText.AppendText(" ");
-            }
-            else
-            {
-                for (int i = 0; i < PrintQueue.Count; i++)
-                {
-                    messageText.AppendText("\r\n");
-                    messageText.AppendText(PrintQueue[i]);
-                }
-            }
-            PrintQueue.Clear();
-            PrintNextInstruction();
-        }
-
-        private void PrintNextInstruction()
-        {
-            //if (listing != null || listing.Length > 0)
-            //{
-            //    string pc = "." + CPU.GetLongPC().ToString("x6");
-            //    foreach (string line in listing)
-            //    {
-            //        if (line.StartsWith(pc))
-            //        {
-            //            lastLine.Text = line;
-            //            return;
-            //        }
-            //    }
-            //}
-
-            OpCode oc = CPU.PreFetch();
-            int start = CPU.GetLongPC();
-            PrintPC(start);
-
-            int end = start + oc.Length;
-            for (int i = start; i < end; i++)
-            {
-                Print(CPU.Memory[i].ToString("X2"));
-                Print(" ");
-            }
-
-            int s = CPU.ReadSignature(oc);
-            PrintTab(MNEMONIC_COLUMN);
-            Print(oc.ToString(s));
-            //PrintTab(REGISTER_COLUMN);
-            //Print(Kernel.Monitor.GetRegisterText());
-            Instance.lastLine.Text = lineBuffer.ToString();
-            lineBuffer.Clear();
-        }
-
-        string GetHeaderText()
-        {
-            StringBuilder s = new StringBuilder();
-            s.Append("PC    INSTRUCTION");
-            s.Append(new string(' ', REGISTER_COLUMN - s.Length));
-            s.Append(Kernel.Monitor.GetRegisterHeader());
-            return s.ToString();
-        }
-
-        const int MAX_LINES = 25;
-        const int TRIM_LINES = 1;
-        private void PrintPC(int pc1)
-        {
-            Print("." + pc1.ToString("X6") + "  ");
-        }
-
-        public void PrintStatus(int lastPC, int newPC)
-        {
-            for (int i = lastPC; i < newPC; i++)
-            {
-                Print(CPU.Memory[i].ToString("X2"));
-                Print(" ");
-            }
-            PrintTab(MNEMONIC_COLUMN);
-            Print(CPU.Opcode.ToString(CPU.SignatureBytes));
-            PrintTab(REGISTER_COLUMN);
-            Print(Kernel.Monitor.GetRegisterText());
-            PrintLine();
-        }
-
-        public static void Print(string message)
-        {
-            lineBuffer.Append(message);
-        }
-
-        public static void PrintLine(string message)
-        {
-            lineBuffer.Append(message);
-            PrintLine();
-        }
-
-        public static void PrintClear()
-        {
-            lineBuffer.Clear();
-        }
-
-        public static void PrintLine()
-        {
-            Instance.PrintQueue.Add(lineBuffer.ToString());
-            PrintClear();
         }
 
         int TopOfStack = 0xd6ff;
@@ -254,8 +123,8 @@ namespace Nu256.Simulator.UI
         private void RunButton_Click(object sender, EventArgs e)
         {
             RefreshStatus();
-            //int counter = COUNTER_STEPS;
-            CPU.DebugPause = false;
+            cpu.DebugPause = false;
+            cpu.Run();
             timer1.Enabled = true;
         }
 
@@ -278,14 +147,7 @@ namespace Nu256.Simulator.UI
             {
                 StepCounter++;
 
-                PrintClear();
-
-                int pc1 = CPU.GetLongPC();
-                PrintPC(pc1);
                 CPU.ExecuteNext();
-                int pc2 = pc1 + CPU.Opcode.Length;
-                PrintStatus(pc1, pc2);
-
                 int pc = CPU.GetLongPC();
                 if (breakpoints.ContainsKey(pc))
                 {
@@ -296,7 +158,7 @@ namespace Nu256.Simulator.UI
             }
             catch (Exception ex)
             {
-                Print(ex.Message);
+                MessageBox.Show(ex.Message);
                 CPU.Halt();
             }
         }
@@ -305,8 +167,6 @@ namespace Nu256.Simulator.UI
         {
             //if (messageText.Lines.Length == 0)
             //    PrintLine(GetHeaderText());
-            PrintTab(REGISTER_COLUMN);
-            HeaderTextbox.Text = GetHeaderText();
             //PrintLine(Kernel.Monitor.GetRegisterText());
             ClearTrace();
             RefreshStatus();
@@ -314,13 +174,6 @@ namespace Nu256.Simulator.UI
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            DateTime t = DateTime.Now.AddMilliseconds(timer1.Interval / 2);
-            while (DateTime.Now < t)
-            {
-                if (CPU.DebugPause || CPU.Waiting)
-                    break;
-                ExecuteStep();
-            }
             RefreshStatus();
         }
 
@@ -373,8 +226,12 @@ namespace Nu256.Simulator.UI
         public void ClearTrace()
         {
             StepCounter = 0;
-            messageText.Clear();
-            //this.listing = global::System.IO.File.ReadAllLines(@"ROMs\kernel.lst");
+            traceViewer1.Clear();
+        }
+
+        private void CPUTraceCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            CPU.TraceEnabled = CPUTraceCheckBox.Checked;
         }
     }
 }

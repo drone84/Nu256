@@ -149,14 +149,14 @@ namespace Nu256.Simulator.UI
             // resetToolStripMenuItem1
             // 
             this.resetToolStripMenuItem1.Name = "resetToolStripMenuItem1";
-            this.resetToolStripMenuItem1.Size = new System.Drawing.Size(139, 22);
+            this.resetToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
             this.resetToolStripMenuItem1.Text = "Start/Restart";
             this.resetToolStripMenuItem1.Click += new System.EventHandler(this.resetToolStripMenuItem1_Click);
             // 
             // debugToolStripMenuItem
             // 
             this.debugToolStripMenuItem.Name = "debugToolStripMenuItem";
-            this.debugToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
+            this.debugToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.debugToolStripMenuItem.Text = "Start/Debug";
             this.debugToolStripMenuItem.Click += new System.EventHandler(this.debugToolStripMenuItem_Click);
             // 
@@ -243,7 +243,7 @@ namespace Nu256.Simulator.UI
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainWindow";
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-            this.Text = "Nu64 BASIC";
+            this.Text = "Nu256 Simulator";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindow_FormClosing);
             this.Load += new System.EventHandler(this.BasicWindow_Load);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.BasicWindow_KeyDown);

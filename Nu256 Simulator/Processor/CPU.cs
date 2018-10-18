@@ -38,6 +38,7 @@ namespace Nu256.Simulator.Processor
         /// to allow the user to analyze memory and the execution trace. 
         /// </summary>
         public bool DebugPause = false;
+        public bool TraceEnabled;
 
         /// <summary>
         /// Length of the currently executing opcode
@@ -64,6 +65,45 @@ namespace Nu256.Simulator.Processor
         /// The last time the performance was checked. 
         /// </summary>
         private DateTime checkStartTime = DateTime.Now;
+
+        /// <summary>
+        /// Breakpoints, used to pause the CPU during debugging. 
+        /// </summary>
+        private Breakpoints breakpoints = new Breakpoints();
+        public Breakpoints Breakpoints
+        {
+            get
+            {
+                return this.breakpoints;
+            }
+            protected set
+            {
+                this.breakpoints = value;
+            }
+        }
+
+        /// <summary>
+        /// The address of the currently executing opcode. May not be equal to PC after the current
+        /// instruction is complete. 
+        /// </summary>
+        public int CurrentAddress;
+        /// <summary>
+        /// CPU Trace. This stores the recent CPU steps. The number of steps retained will
+        /// be between TRACE_STEPS_MIN and TRACE_STEPS_MAX.
+        /// </summary>
+        private CPUTrace trace = new CPUTrace();
+        public CPUTrace Trace
+        {
+            get
+            {
+                return this.trace;
+            }
+
+            protected set
+            {
+                this.trace = value;
+            }
+        }
 
         public MemoryManager Memory = null;
         public Thread CPUThread = null;
@@ -122,7 +162,7 @@ namespace Nu256.Simulator.Processor
         public void ExecuteCycles(int Cycles)
         {
             ResetCounter(Cycles);
-            while (clockCyles < nextCycleCheck 
+            while (clockCyles < nextCycleCheck
                 && !DebugPause)
             {
                 ExecuteNext();
@@ -139,11 +179,24 @@ namespace Nu256.Simulator.Processor
             if (Waiting)
                 return;
 
+            CurrentAddress = GetLongPC();
             opcodeByte = GetNextInstruction();
             this.Opcode = Decode(opcodeByte);
             PC.Value += OpcodeLength;
             Opcode.Execute(SignatureBytes);
             clockCyles += OpcodeCycles;
+            if (TraceEnabled)
+                trace.Add(this);
+
+
+            if (breakpoints.Count > 0 && breakpoints.ContainsKey(GetLongPC()))
+            {
+                if (!TraceEnabled)
+                    trace.Add(this);
+                this.DebugPause = true;
+                this.TraceEnabled = true;
+            }
+
         }
 
         /// <summary>
@@ -151,8 +204,13 @@ namespace Nu256.Simulator.Processor
         /// </summary>
         public void Run()
         {
-            CPUThread = new Thread(new ThreadStart(this.RunLoop));
+            if (CPUThread != null && CPUThread.ThreadState == ThreadState.Running)
+            {
+                DebugPause = false;
+                return;
+            }
 
+            CPUThread = new Thread(new ThreadStart(this.RunLoop));
             StartTime = DateTime.Now;
             clockCyles = 0;
             CPUThread.Start();
@@ -474,6 +532,27 @@ namespace Nu256.Simulator.Processor
             clockCyles = 0;
             nextCycleCheck = maxCycles;
             checkStartTime = DateTime.Now;
+        }
+
+        public override string ToString()
+        {
+            StringBuilder s = new StringBuilder();
+            s.Append(".");
+            s.Append(CurrentAddress.ToString("X6"));
+            s.Append(" ");
+            s.Append(Memory.GetHex(CurrentAddress, OpcodeLength).PadRight(CPUStep.columns[1]));
+            s.Append(Opcode.ToString(SignatureBytes).PadRight(CPUStep.columns[2]));
+            s.Append(";");
+            s.Append(GetLongPC().ToString("X6"));
+            s.Append(" ");
+            s.Append(A.ToString().PadRight(CPUStep.columns[4]));
+            s.Append(X.ToString().PadRight(CPUStep.columns[5]));
+            s.Append(Y.ToString().PadRight(CPUStep.columns[6]));
+            s.Append(Stack.ToString().PadRight(CPUStep.columns[7]));
+            s.Append(DataBank.ToString().PadRight(CPUStep.columns[8]));
+            s.Append(DirectPage.ToString().PadRight(CPUStep.columns[9]));
+            s.Append(Flags.ToString().PadRight(CPUStep.columns[10]));
+            return s.ToString();
         }
     }
 }

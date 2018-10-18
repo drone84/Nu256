@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.messageText = new System.Windows.Forms.TextBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.stepsInput = new System.Windows.Forms.TextBox();
             this.BPLabel = new System.Windows.Forms.Label();
@@ -43,27 +42,16 @@
             this.locationLabel = new System.Windows.Forms.Label();
             this.locationInput = new System.Windows.Forms.TextBox();
             this.JumpButton = new System.Windows.Forms.Button();
-            this.lastLine = new System.Windows.Forms.TextBox();
             this.stackText = new System.Windows.Forms.TextBox();
-            this.HeaderTextbox = new System.Windows.Forms.TextBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.panel2 = new System.Windows.Forms.Panel();
+            this.CPUTraceCheckBox = new System.Windows.Forms.CheckBox();
             this.ClearTraceButton = new System.Windows.Forms.Button();
+            this.traceViewer1 = new Nu256.Simulator.UI.TraceViewer();
             this.registerDisplay1 = new Nu256.Simulator.RegisterDisplay();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // messageText
-            // 
-            this.messageText.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.messageText.Font = new System.Drawing.Font("Consolas", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.messageText.Location = new System.Drawing.Point(0, 121);
-            this.messageText.Multiline = true;
-            this.messageText.Name = "messageText";
-            this.messageText.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.messageText.Size = new System.Drawing.Size(621, 409);
-            this.messageText.TabIndex = 2;
             // 
             // panel1
             // 
@@ -79,7 +67,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(621, 24);
+            this.panel1.Size = new System.Drawing.Size(666, 24);
             this.panel1.TabIndex = 2;
             // 
             // stepsInput
@@ -96,7 +84,7 @@
             // BPLabel
             // 
             this.BPLabel.Dock = System.Windows.Forms.DockStyle.Right;
-            this.BPLabel.Location = new System.Drawing.Point(356, 0);
+            this.BPLabel.Location = new System.Drawing.Point(401, 0);
             this.BPLabel.Name = "BPLabel";
             this.BPLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
             this.BPLabel.Size = new System.Drawing.Size(96, 24);
@@ -108,7 +96,7 @@
             // 
             this.BPCombo.Dock = System.Windows.Forms.DockStyle.Right;
             this.BPCombo.FormattingEnabled = true;
-            this.BPCombo.Location = new System.Drawing.Point(452, 0);
+            this.BPCombo.Location = new System.Drawing.Point(497, 0);
             this.BPCombo.Name = "BPCombo";
             this.BPCombo.Size = new System.Drawing.Size(121, 21);
             this.BPCombo.TabIndex = 6;
@@ -116,7 +104,7 @@
             // AddBPButton
             // 
             this.AddBPButton.Dock = System.Windows.Forms.DockStyle.Right;
-            this.AddBPButton.Location = new System.Drawing.Point(573, 0);
+            this.AddBPButton.Location = new System.Drawing.Point(618, 0);
             this.AddBPButton.Name = "AddBPButton";
             this.AddBPButton.Size = new System.Drawing.Size(24, 24);
             this.AddBPButton.TabIndex = 7;
@@ -127,7 +115,7 @@
             // DeleteBPButton
             // 
             this.DeleteBPButton.Dock = System.Windows.Forms.DockStyle.Right;
-            this.DeleteBPButton.Location = new System.Drawing.Point(597, 0);
+            this.DeleteBPButton.Location = new System.Drawing.Point(642, 0);
             this.DeleteBPButton.Name = "DeleteBPButton";
             this.DeleteBPButton.Size = new System.Drawing.Size(24, 24);
             this.DeleteBPButton.TabIndex = 8;
@@ -210,43 +198,24 @@
             this.JumpButton.UseVisualStyleBackColor = true;
             this.JumpButton.Click += new System.EventHandler(this.JumpButton_Click);
             // 
-            // lastLine
-            // 
-            this.lastLine.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.lastLine.Font = new System.Drawing.Font("Consolas", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lastLine.Location = new System.Drawing.Point(0, 530);
-            this.lastLine.Name = "lastLine";
-            this.lastLine.Size = new System.Drawing.Size(621, 23);
-            this.lastLine.TabIndex = 4;
-            this.lastLine.Text = "Click [Step] to execute an instruction";
-            // 
             // stackText
             // 
             this.stackText.Dock = System.Windows.Forms.DockStyle.Right;
             this.stackText.Font = new System.Drawing.Font("Consolas", 10F);
-            this.stackText.Location = new System.Drawing.Point(621, 0);
+            this.stackText.Location = new System.Drawing.Point(666, 0);
             this.stackText.Multiline = true;
             this.stackText.Name = "stackText";
             this.stackText.Size = new System.Drawing.Size(150, 553);
             this.stackText.TabIndex = 3;
             // 
-            // HeaderTextbox
-            // 
-            this.HeaderTextbox.Dock = System.Windows.Forms.DockStyle.Top;
-            this.HeaderTextbox.Font = new System.Drawing.Font("Consolas", 10F);
-            this.HeaderTextbox.Location = new System.Drawing.Point(0, 101);
-            this.HeaderTextbox.Multiline = true;
-            this.HeaderTextbox.Name = "HeaderTextbox";
-            this.HeaderTextbox.Size = new System.Drawing.Size(621, 20);
-            this.HeaderTextbox.TabIndex = 1;
-            // 
             // timer1
             // 
-            this.timer1.Interval = 50;
+            this.timer1.Interval = 1000;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // panel2
             // 
+            this.panel2.Controls.Add(this.CPUTraceCheckBox);
             this.panel2.Controls.Add(this.locationInput);
             this.panel2.Controls.Add(this.locationLabel);
             this.panel2.Controls.Add(this.JumpButton);
@@ -254,8 +223,21 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel2.Location = new System.Drawing.Point(0, 24);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(621, 24);
+            this.panel2.Size = new System.Drawing.Size(666, 24);
             this.panel2.TabIndex = 5;
+            // 
+            // CPUTraceCheckBox
+            // 
+            this.CPUTraceCheckBox.AutoSize = true;
+            this.CPUTraceCheckBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.CPUTraceCheckBox.Dock = System.Windows.Forms.DockStyle.Left;
+            this.CPUTraceCheckBox.Location = new System.Drawing.Point(288, 0);
+            this.CPUTraceCheckBox.Name = "CPUTraceCheckBox";
+            this.CPUTraceCheckBox.Size = new System.Drawing.Size(79, 24);
+            this.CPUTraceCheckBox.TabIndex = 13;
+            this.CPUTraceCheckBox.Text = "CPU Trace";
+            this.CPUTraceCheckBox.UseVisualStyleBackColor = true;
+            this.CPUTraceCheckBox.CheckedChanged += new System.EventHandler(this.CPUTraceCheckBox_CheckedChanged);
             // 
             // ClearTraceButton
             // 
@@ -268,26 +250,33 @@
             this.ClearTraceButton.UseVisualStyleBackColor = true;
             this.ClearTraceButton.Click += new System.EventHandler(this.ClearTraceButton_Click);
             // 
+            // traceViewer1
+            // 
+            this.traceViewer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.traceViewer1.Font = new System.Drawing.Font("Consolas", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.traceViewer1.Location = new System.Drawing.Point(0, 101);
+            this.traceViewer1.Name = "traceViewer1";
+            this.traceViewer1.Size = new System.Drawing.Size(666, 452);
+            this.traceViewer1.TabIndex = 6;
+            // 
             // registerDisplay1
             // 
             this.registerDisplay1.CPU = null;
             this.registerDisplay1.Dock = System.Windows.Forms.DockStyle.Top;
             this.registerDisplay1.Location = new System.Drawing.Point(0, 48);
             this.registerDisplay1.Name = "registerDisplay1";
-            this.registerDisplay1.Size = new System.Drawing.Size(621, 53);
+            this.registerDisplay1.Size = new System.Drawing.Size(666, 53);
             this.registerDisplay1.TabIndex = 0;
             // 
             // CPUWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(771, 553);
-            this.Controls.Add(this.messageText);
-            this.Controls.Add(this.HeaderTextbox);
+            this.ClientSize = new System.Drawing.Size(816, 553);
+            this.Controls.Add(this.traceViewer1);
             this.Controls.Add(this.registerDisplay1);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
-            this.Controls.Add(this.lastLine);
             this.Controls.Add(this.stackText);
             this.Location = new System.Drawing.Point(1280, 0);
             this.Name = "CPUWindow";
@@ -306,19 +295,16 @@
         #endregion
 
         public RegisterDisplay registerDisplay1;
-        private global::System.Windows.Forms.TextBox messageText;
         private global::System.Windows.Forms.Panel panel1;
         private global::System.Windows.Forms.TextBox locationInput;
         private global::System.Windows.Forms.Button JumpButton;
         private global::System.Windows.Forms.Button RunButton;
         private global::System.Windows.Forms.Button StepButton;
         private global::System.Windows.Forms.Button PauseButton;
-        private global::System.Windows.Forms.TextBox lastLine;
         private global::System.Windows.Forms.TextBox stackText;
         private global::System.Windows.Forms.Label locationLabel;
         private global::System.Windows.Forms.Label stepsLabel;
         private global::System.Windows.Forms.TextBox stepsInput;
-        private global::System.Windows.Forms.TextBox HeaderTextbox;
         private global::System.Windows.Forms.Timer timer1;
         private global::System.Windows.Forms.Label BPLabel;
         private global::System.Windows.Forms.ComboBox BPCombo;
@@ -326,5 +312,7 @@
         private global::System.Windows.Forms.Button DeleteBPButton;
         private global::System.Windows.Forms.Panel panel2;
         private global::System.Windows.Forms.Button ClearTraceButton;
+        private TraceViewer traceViewer1;
+        private System.Windows.Forms.CheckBox CPUTraceCheckBox;
     }
 }

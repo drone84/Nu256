@@ -65,6 +65,7 @@
     <Compile Include="MemoryLocations\MemoryMap_Page80_VICKY.cs" />
     <Compile Include="Processor\Breakpoints.cs" />
     <Compile Include="Processor\CPUPins.cs" />
+    <Compile Include="Processor\CPUStep.cs" />
     <Compile Include="Processor\CPUTrace.cs" />
     <Compile Include="Processor\InteruptTypes.cs" />
     <Compile Include="Processor\RegisterAccumulator.cs" />
@@ -182,6 +183,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\RegisterDisplay.resx">
       <DependentUpon>RegisterDisplay.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\TraceViewer.resx">
+      <DependentUpon>TraceViewer.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

@@ -125,7 +125,6 @@ namespace Nu256.Simulator
 
             if (OutputDevice == DeviceEnum.DebugWindow)
             {
-                UI.CPUWindow.PrintChar(c);
             }
         }
 
@@ -198,7 +197,6 @@ namespace Nu256.Simulator
             }
             else if (OutputDevice == DeviceEnum.DebugWindow)
             {
-                UI.CPUWindow.PrintTab(Col);
             }
         }
 

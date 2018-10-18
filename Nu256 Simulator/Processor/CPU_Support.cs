@@ -8,7 +8,6 @@ namespace Nu256.Simulator.Processor
 {
     public partial class CPU
     {
-
         /// <summary>
         ///  Sets the registers to 8 bits. Sets the emulation flag.
         /// </summary>

@@ -17,6 +17,19 @@ namespace Nu256
     public class MemoryManager : Nu256.Common.IMappable
     {
         public const int MinAddress = 0x000000;
+
+        public string GetHex(int Address, int Length)
+        {
+            StringBuilder s = new StringBuilder();
+            for(int i=0; i<Length; i++)
+            {
+                if (i > 0)
+                    s.Append(" ");
+                s.Append(ReadByte(Address + i).ToString("X2"));
+            }
+            return s.ToString();
+        }
+
         public const int MaxAddress = 0xffffff;
 
         public MemoryRAM RAM = null;
