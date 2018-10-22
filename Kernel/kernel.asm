@@ -87,17 +87,17 @@ greet           setdbr `greet_msg       ;Set data bank to ROM
                 LDX #<>test_SID_msg
                 JSL IPRINT       ; print the SID Test Message
 
-                JSL IINITSUPERIO
-                LDX #<>init_lpc_msg
-                JSL IPRINT       ; print the Init
+                ;JSL IINITSUPERIO
+                ;LDX #<>init_lpc_msg
+                ;JSL IPRINT       ; print the Init
 
                 setdp 0
                 JSL ITESTMATH
 
                 ; Init KeyBoard
-                JSL IINITKEYBOARD
-                LDX #<>init_kbrd_msg
-                JSL IPRINT       ; print the Keybaord Init Message
+                ;JSL IINITKEYBOARD
+                ;LDX #<>init_kbrd_msg
+                ;JSL IPRINT       ; print the Keybaord Init Message
                 ; set the location of the cursor (top left corner of screen)
                 setdp 0
                 setal
