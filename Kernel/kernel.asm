@@ -87,22 +87,22 @@ greet           setdbr `greet_msg       ;Set data bank to ROM
                 LDX #<>test_SID_msg
                 JSL IPRINT       ; print the SID Test Message
 
-                ;JSL IINITSUPERIO
-                ;LDX #<>init_lpc_msg
-                ;JSL IPRINT       ; print the Init
+                JSL IINITSUPERIO
+                LDX #<>init_lpc_msg
+                JSL IPRINT       ; print the Init
 
                 setdp 0
                 JSL ITESTMATH
 
                 ; Init KeyBoard
-                ;JSL IINITKEYBOARD
+                JSL IINITKEYBOARD
                 ;LDX #<>init_kbrd_msg
                 ;JSL IPRINT       ; print the Keybaord Init Message
                 ; set the location of the cursor (top left corner of screen)
                 setdp 0
                 setal
                 LDX #$0
-                LDY #$0
+                LDY #30
                 JSL ILOCATE
 
                 ; reset keyboard buffer
@@ -405,6 +405,10 @@ ilocate_right   CLC
                 ADC CURSORX             ; move the cursor right X columns
                 STA CURSORPOS
                 LDY CURSORY
+                TYA
+                STA @lTXT_CURSOR_Y_REG_L  ;Store in Vicky's registers
+                TXA
+                STA @lTXT_CURSOR_X_REG_L  ;Store in Vicky's register
 ilocate_done    PLP
                 PLA
                 RTL
@@ -601,16 +605,12 @@ IINITSUPERIO	  PHD
                 LDA GP10_REG
                 LDA #$01		;Default Value - C256 Doesn't use this IO Pin
                 STA GP11_REG
-                LDA @lSTATUS_PORT
-                LDA GP11_REG
                 LDA #$01		;Default Value - C256 Doesn't use this IO Pin
                 STA GP12_REG
         				LDA #$01		;Default Value - C256 Doesn't use this IO Pin
         				STA GP13_REG
         				LDA #$05		;(C256 - POT A Analog BX) Bit[0] = 1, Bit[2] = 1
         				STA GP14_REG
-                LDA GP14_REG
-                LDA @lKBD_OUT_BUF
         				LDA #$05		;(C256 - POT A Analog BY) Bit[0] = 1, Bit[2] = 1
         				STA GP15_REG
         				LDA #$05		;(C256 - POT B Analog BX) Bit[0] = 1, Bit[2] = 1
@@ -631,8 +631,6 @@ IINITSUPERIO	  PHD
 				        STA GP25_REG
 			        	LDA #$84		;(C256 - MIDI OUT) Bit[2] = 1, Bit[7] = 1 (Open Drain - To be Checked)
 				        STA GP26_REG
-        				LDA #$01		;Default Value - C256 Doesn't use this IO Pin
-				        STA GP24_REG
 
 				        LDA #$01		;Default Value - (C256 - JP1 Fanout Pin 1) Setup as GPIO Input for now
 				        STA GP30_REG
@@ -655,13 +653,10 @@ IINITSUPERIO	  PHD
 				        ;STA GP40_REG
 				        ;LDA #$01		;(C256 - FLOPPY - DRVDEN1) - TBD Later, Floppy Stuff (JIM DREW)
 				        ;STA GP41_REG
-
 				        LDA #$01		;Default Value - C256 Doesn't use this IO Pin
 				        STA GP42_REG
-
 			          LDA #$01		;(C256 - INPUT PLL CLK INTERRUPT) Default Value - Will keep it as an input for now, no real usage for now
 				        STA GP43_REG
-
 				        LDA #$05		;(C256 - UART2 - RI2) - Input - Set Secondary Function
 				        STA GP50_REG
 				        LDA #$05		;(C256 - UART2 - DCD2) - Input - Set Secondary Function
@@ -678,12 +673,10 @@ IINITSUPERIO	  PHD
 				        STA GP56_REG
 				        LDA #$04		;(C256 - UART2 - DTR2) - Output - Set Secondary Function
 				        STA GP57_REG
-
 				        LDA #$84		;(C256 - LED1) - Open Drain - Output
 				        STA GP60_REG
 				        LDA #$84		;(C256 - LED2) - Open Drain - Output
 				        STA GP61_REG
-
 			        	LDA #$00		;GPIO Data Register (GP10..GP17) - Not Used
 				        STA GP1_REG
 				        LDA #$01		;GPIO Data Register (GP20..GP27) - Bit[0] - Headphone Mute (Enabling it)
@@ -717,62 +710,128 @@ IINITSUPERIO	  PHD
 ; Inputs:
 ;   None
 ; Affects:
-;   None
+;   Carry (c)
 IINITKEYBOARD	  PHD
 				        PHP
 				        PHA
 				        PHX
+
                 setas				;just make sure we are in 8bit mode
-                setxs 					; Set 8bits
+                setxl 					; Set 8bits
+
 				; Setup Foreground LUT First
-				        LDX	#$00
-initkb_loop1	  LDA @lSTATUS_PORT,x		; Load Status Byte
-				        AND	#INPT_BUF_FULL	; Test bit $02 (if 0, Empty)
-				        CMP #INPT_BUF_FULL
-				        BEQ initkb_loop1
+                CLC
 
+                JSR Poll_Inbuf ;
+;; Test AA
 				        LDA #$0AA			;Send self test command
-				        STA @lKBD_CMD_BUF,x
+				        STA KBD_CMD_BUF
 								;; Sent Self-Test Code and Waiting for Return value, it ought to be 0x55.
-initkb_loop2	  LDA @lSTATUS_PORT,x		; Wait for test to complete
-				        AND	#OUT_BUF_FULL	; Test bit $01 (0 = No Data)
-				        CMP #OUT_BUF_FULL
-				        BNE initkb_loop2
+                JSR Poll_Outbuf ;
 
-				        LDA @lKBD_OUT_BUF,x		;Check self test result
+				        LDA KBD_OUT_BUF		;Check self test result
 				        CMP #$55
-				        BNE	initkb_loop_out
+				        BEQ	passAAtest
 
+                BRL initkb_loop_out
+
+passAAtest      LDX #<>pass_tst0xAAmsg
+                JSL IPRINT      ; print Message
+;; Test AB
 				        LDA #$AB			;Send test Interface command
-				        STA @lKBD_DATA_BUF,x
+				        STA KBD_CMD_BUF
 
-initkb_loop3	  LDA @lSTATUS_PORT,x		; Wait for test to complete
-				        AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
-				        CMP #OUT_BUF_FULL
-			        	BNE initkb_loop3
+                JSR Poll_Outbuf ;
 
-				        LDA @lKBD_OUT_BUF,x		;Display Interface test results
+				        LDA KBD_OUT_BUF		;Display Interface test results
 				        CMP #$00			;Should be 00
-				        BNE	initkb_loop_out
+				        BEQ	passABtest
+
+                BRL initkb_loop_out
+
+passABtest      LDX #<>pass_tst0xABmsg
+                JSL IPRINT       ; print Message
+;; Program the Keyboard & Enable Interrupt with Cmd 0x60
+                LDA #$60            ; Send Command 0x60 so to Enable Interrupt
+                STA KBD_CMD_BUF
+
+                JSR Poll_Inbuf ;
+
+                LDA #%01101001      ; Enable Interrupt
+                STA KBD_DATA_BUF
+
+                JSR Poll_Inbuf ;
+
+                LDX #<>pass_cmd0x60msg
+                JSL IPRINT       ; print Message
+;; Reset Keyboard
+;                LDA #$FF      ; Send Keyboard Reset command
+;                STA KBD_DATA_BUF
+                ; Must wait here;
+;                LDX #$FFFF
+;DLY_LOOP1       DEX
+;                CPX #$0000
+;                BNE DLY_LOOP1
+
+;                JSR Poll_Outbuf ;
+
+;                LDA KBD_OUT_BUF   ; Read Output Buffer
+
+;                LDX #<>pass_cmd0xFFmsg
+;                JSL IPRINT       ; print Message
+;; Test Echo - Cmd$EE
+                LDA #$EE      ; Send Keyboard Reset command
+                STA KBD_DATA_BUF
+
+                LDX #$4000
+DLY_LOOP2       DEX
+                CPX #$0000
+                BNE DLY_LOOP2
+
+                JSR Poll_Outbuf ;
+
+                LDA KBD_OUT_BUF
+                CMP #$EE
+                BNE initkb_loop_out
+
+                LDX #<>pass_cmd0xEEmsg
+                JSL IPRINT       ; print Message
 
 				        LDA #$F4			; Enable the Keyboard
-				        STA @lKBD_DATA_BUF,x
+				        STA KBD_DATA_BUF
 
-initkb_loop8	  LDA @lSTATUS_PORT,x		; Wait for test to complete
-				        AND	#OUT_BUF_FULL	; Test bit $01 (if 0, Empty)
-				        CMP #OUT_BUF_FULL
-				        BNE initkb_loop8
+                JSR Poll_Outbuf ;
 
-				        LDA @lKBD_OUT_BUF,x		; Clear the Output buffer
+				        LDA KBD_OUT_BUF		; Clear the Output buffer
 
-initkb_loop_out
-                setal
-                setxl 					; Set 8bits
+                LDX #<>Success_kb_init
+                SEC
+                BCS InitSuccess
+
+initkb_loop_out LDX #<>Failed_kb_init
+InitSuccess     JSL IPRINT       ; print Message
+                setal 					; Set 16bits
+                setxl 					; Set 16bits
+
                 PLX
                 PLA
 				        PLP
 				        PLD
                 RTL
+
+Poll_Inbuf	    .as
+                LDA STATUS_PORT		; Load Status Byte
+				        AND	#<INPT_BUF_FULL	; Test bit $02 (if 0, Empty)
+				        CMP #<INPT_BUF_FULL
+				        BEQ Poll_Inbuf
+                RTS
+
+Poll_Outbuf	    .as
+                LDA STATUS_PORT
+                AND #OUT_BUF_FULL ; Test bit $01 (if 1, Full)
+                CMP #OUT_BUF_FULL
+                BNE Poll_Outbuf
+                RTS
 ;
 ; IINITVIAS
 ; Author: Stefany
@@ -980,13 +1039,12 @@ IINITCURSOR     PHA
                 LDA #$03      ;Set Cursor Enable And Flash Rate @1Hz
                 STA TXT_CURSOR_CTRL ;
                 setaxl        ; Set Acc back to 16bits before setting the Cursor Position
-                LDA #$0001;
+                LDA #$0000;
                 STA TXT_CURSOR_X_REG_L; // Set the X to Position 1
                 LDA #$0006;
                 STA TXT_CURSOR_Y_REG_L; // Set the Y to Position 6 (Below)
                 PLA
                 RTL
-
 ;
 ;Not-implemented routines
 ;
@@ -1070,13 +1128,19 @@ bg_color_lut	  .text $00, $00, $00, $FF
                 .text $80, $80, $80, $FF
                 .text $FF, $FF, $FF, $FF
 
-version_msg     .text $0D, "Degug Code Version 0.0.3 - Oct 14th, 2018", $0D, $00
+version_msg     .text $0D, "Debug Code Version 0.0.4 - Oct 23th, 2018", $0D, $00
 init_lpc_msg    .text "Init SuperIO...", $0D, $00
 init_kbrd_msg   .text "Init Keyboard...", $0D, $00
 init_via_msg    .text "Init VIAs...", $0D, $00
 init_rtc_msg    .text "Init RTC...", $0D, $00
 test_SID_msg    .text "Testing Right & Left SID", $0D, $00
-
+pass_tst0xAAmsg .text "Cmd 0xAA Test passed...", $0D, $00
+pass_tst0xABmsg .text "Cmd 0xAB Test passed...", $0D, $00
+pass_cmd0x60msg .text "Cmd 0x60 Executed.", $0D, $00
+pass_cmd0xFFmsg .text "Cmd 0xFF (Reset) Done.", $0D, $00
+pass_cmd0xEEmsg .text "Cmd 0xEE Echo Test passed...", $0D, $00
+Success_kb_init .text "Keyboard Init Succeeded!", $0D, $00
+Failed_kb_init  .text "Keyboard Init Failed...", $0D, $00
 ready_msg       .null $0D,"READY."
 hello_basic     .null "10 PRINT ""Hello World""",$0D
                 .null "RUN",$0D
